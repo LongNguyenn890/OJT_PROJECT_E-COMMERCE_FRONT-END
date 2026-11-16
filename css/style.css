@@ -1,21 +1,56 @@
+
 /* ==========================================================
-   Style chung cho mọi trang.
-   Đổi màu chủ đạo cả web: sửa các biến trong :root bên dưới.
+   SHOPEASE - GLOBAL COMPONENT CSS
+   CSS dùng chung cho toàn bộ dự án
    ========================================================== */
+
+
+/* ==========================================================
+   1. VARIABLES - BIẾN GIAO DIỆN
+   ========================================================== */
+
 :root {
   --color-primary: #2563eb;
   --color-primary-dark: #1d4ed8;
+  --color-primary-light: #eff6ff;
+
   --color-danger: #dc2626;
+  --color-danger-light: #fee2e2;
+
   --color-success: #16a34a;
+  --color-success-light: #dcfce7;
+
+  --color-warning: #d97706;
+  --color-warning-light: #fef3c7;
+
+  --color-info: #0891b2;
+  --color-info-light: #cffafe;
+
   --color-text: #1f2937;
   --color-muted: #6b7280;
+
   --color-border: #e5e7eb;
   --color-bg: #f3f4f6;
   --color-card: #ffffff;
+
   --radius: 8px;
+  --radius-lg: 12px;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, .08);
+  --shadow: 0 4px 12px rgba(0, 0, 0, .08);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, .12);
+
+  --transition: .2s ease;
 }
 
-* { box-sizing: border-box; }
+
+/* ==========================================================
+   2. RESET - CHUẨN HÓA GIAO DIỆN
+   ========================================================== */
+
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
@@ -28,92 +63,902 @@ body {
   flex-direction: column;
 }
 
-a { color: var(--color-primary); }
-code { background: #eef2ff; padding: 1px 6px; border-radius: 4px; }
-h1, h2 { margin-top: 0; }
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
 
-.container { width: 100%; max-width: 1100px; margin: 0 auto; padding: 0 16px; }
-main.container { flex: 1; padding-top: 24px; padding-bottom: 24px; }
+a:hover {
+  color: var(--color-primary-dark);
+}
 
-/* ---------- Header / Footer ---------- */
-#app-header { background: var(--color-card); border-bottom: 1px solid var(--color-border); }
-.header-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 60px; }
-.brand { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--color-text); text-decoration: none; }
-.nav { display: flex; gap: 4px; flex-wrap: wrap; }
-.nav a { padding: 6px 12px; border-radius: var(--radius); color: var(--color-muted); text-decoration: none; }
-.nav a:hover { background: var(--color-bg); }
-.nav a.active { background: #eef2ff; color: var(--color-primary); font-weight: 600; }
-#app-footer { padding: 16px 0; text-align: center; color: var(--color-muted); font-size: 14px; }
+h1, h2, h3, h4, h5 {
+  margin-top: 0;
+  color: var(--color-text);
+}
 
-/* ---------- Card ---------- */
-.card {
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 20px;
+button, input, textarea, select {
+  font: inherit;
+}
+
+img {
+  max-width: 100%;
+}
+
+
+/* ==========================================================
+   3. LAYOUT - BỐ CỤC CHUNG
+   ========================================================== */
+
+.container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+main.container {
+  flex: 1;
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+
+.page-container {
+  width: 100%;
+  padding: 24px;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
   margin-bottom: 20px;
 }
 
-/* Trang 2 cột: form bên trái, danh sách bên phải (màn hình nhỏ thì xếp dọc) */
-.layout-2col { display: grid; grid-template-columns: 320px 1fr; gap: 20px; align-items: start; }
-@media (max-width: 800px) { .layout-2col { grid-template-columns: 1fr; } }
+.page-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
 
-/* ---------- Form ---------- */
-label { display: block; margin: 12px 0 4px; font-weight: 600; font-size: 14px; }
-input, textarea {
+.page-description {
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.layout-2col {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.layout-3col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+
+/* ==========================================================
+   4. HEADER - THANH ĐIỀU HƯỚNG
+   ========================================================== */
+
+#app-header {
+  background: var(--color-card);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 64px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.nav a {
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  color: var(--color-muted);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.nav a:hover {
+  background: var(--color-bg);
+  color: var(--color-primary);
+}
+
+.nav a.active {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+
+/* ==========================================================
+   5. SIDEBAR - MENU QUẢN TRỊ
+   ========================================================== */
+
+.sidebar {
+  width: 250px;
+  min-height: 100%;
+  padding: 16px;
+  background: var(--color-card);
+  border-right: 1px solid var(--color-border);
+}
+
+.sidebar-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  margin: 16px 0 8px;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-menu a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  color: var(--color-muted);
+  transition: var(--transition);
+}
+
+.sidebar-menu a:hover {
+  background: var(--color-bg);
+  color: var(--color-primary);
+}
+
+.sidebar-menu a.active {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+
+/* ==========================================================
+   6. FOOTER
+   ========================================================== */
+
+#app-footer {
+  padding: 16px 0;
+  text-align: center;
+  color: var(--color-muted);
+  font-size: 14px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-card);
+}
+
+
+/* ==========================================================
+   7. CARD - THẺ NỘI DUNG
+   ========================================================== */
+
+.card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.card-title {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.card-body {
   width: 100%;
-  padding: 8px 10px;
+}
+
+.card-footer {
+  padding-top: 16px;
+  margin-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+
+/* ==========================================================
+   8. DASHBOARD - THẺ THỐNG KÊ
+   ========================================================== */
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--color-card);
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-title {
+  color: var(--color-muted);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.stat-description {
+  font-size: 13px;
+  color: var(--color-muted);
+  margin-top: 6px;
+}
+
+
+/* ==========================================================
+   9. FORM - INPUT, SELECT, TEXTAREA
+   ========================================================== */
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+label {
+  display: block;
+  margin: 12px 0 6px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  padding: 9px 12px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  font: inherit;
+  background: var(--color-card);
+  color: var(--color-text);
+  outline: none;
+  transition: var(--transition);
 }
-input:focus, textarea:focus { outline: 2px solid var(--color-primary); border-color: transparent; }
-.form-actions { display: flex; gap: 8px; margin-top: 16px; }
 
-/* ---------- Button ---------- */
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+}
+
+input:disabled,
+textarea:disabled,
+select:disabled {
+  background: var(--color-bg);
+  cursor: not-allowed;
+}
+
+textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  width: auto;
+}
+
+.input-error {
+  border-color: var(--color-danger);
+}
+
+.input-success {
+  border-color: var(--color-success);
+}
+
+.form-error {
+  color: var(--color-danger);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.form-hint {
+  color: var(--color-muted);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+
+/* ==========================================================
+   10. BUTTON - NÚT BẤM
+   ========================================================== */
+
 .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 8px 16px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-card);
+  color: var(--color-text);
   font: inherit;
   cursor: pointer;
+  transition: var(--transition);
 }
-.btn:hover { background: var(--color-bg); }
-.btn:disabled { opacity: .6; cursor: not-allowed; }
-.btn-primary { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
-.btn-primary:hover { background: var(--color-primary-dark); }
-.btn-danger { color: var(--color-danger); }
-.btn-small { padding: 4px 10px; font-size: 13px; }
 
-/* ---------- Table ---------- */
-.list-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-.list-header input { max-width: 240px; }
-.table-wrap { overflow-x: auto; margin-top: 12px; }
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 10px; border-bottom: 1px solid var(--color-border); text-align: left; vertical-align: top; }
-th { font-size: 13px; color: var(--color-muted); text-transform: uppercase; }
-.actions { white-space: nowrap; text-align: right; }
+.btn:hover {
+  background: var(--color-bg);
+}
 
-/* ---------- Trạng thái / tiện ích ---------- */
-.muted { color: var(--color-muted); font-size: 14px; }
-.text-right { text-align: right; }
-.text-error { color: var(--color-danger); }
+.btn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
 
-.status { padding: 12px; border-radius: var(--radius); margin: 12px 0; }
-.status-loading { background: var(--color-bg); }
-.status-ok { background: #dcfce7; color: #166534; }
-.status-error { background: #fee2e2; color: #991b1b; }
+.btn-primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-dark);
+  color: #fff;
+}
+
+.btn-secondary {
+  background: #64748b;
+  border-color: #64748b;
+  color: #fff;
+}
+
+.btn-success {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: #fff;
+}
+
+.btn-danger {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: #fff;
+}
+
+.btn-warning {
+  background: var(--color-warning);
+  border-color: var(--color-warning);
+  color: #fff;
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.btn-outline:hover {
+  background: var(--color-primary-light);
+}
+
+.btn-small {
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+.btn-large {
+  padding: 12px 22px;
+  font-size: 16px;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+
+/* ==========================================================
+   11. TABLE - BẢNG DỮ LIỆU
+   ========================================================== */
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.list-header input {
+  max-width: 280px;
+}
+
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 12px;
+  background: var(--color-card);
+  border-radius: var(--radius);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 12px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+th {
+  background: #f9fafb;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+tbody tr:hover {
+  background: #f9fafb;
+}
+
+.actions {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.table-empty {
+  padding: 30px;
+  text-align: center;
+  color: var(--color-muted);
+}
+
+
+/* ==========================================================
+   12. BADGE - NHÃN TRẠNG THÁI
+   ========================================================== */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-primary {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.badge-success {
+  background: var(--color-success-light);
+  color: #166534;
+}
+
+.badge-danger {
+  background: var(--color-danger-light);
+  color: #991b1b;
+}
+
+.badge-warning {
+  background: var(--color-warning-light);
+  color: #92400e;
+}
+
+.badge-info {
+  background: var(--color-info-light);
+  color: #155e75;
+}
+
+.badge-secondary {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+
+/* ==========================================================
+   13. MODAL - HỘP THOẠI
+   ========================================================== */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, .5);
+}
+
+.modal {
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+
+/* ==========================================================
+   14. TOAST - THÔNG BÁO
+   ========================================================== */
 
 .toast {
   position: fixed;
   right: 16px;
   bottom: 16px;
+  z-index: 1100;
+  min-width: 250px;
+  max-width: 400px;
   padding: 12px 16px;
   border-radius: var(--radius);
   color: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
-  z-index: 100;
+  box-shadow: var(--shadow);
 }
-.toast-success { background: var(--color-success); }
-.toast-error { background: var(--color-danger); }
+
+.toast-success {
+  background: var(--color-success);
+}
+
+.toast-error {
+  background: var(--color-danger);
+}
+
+.toast-warning {
+  background: var(--color-warning);
+}
+
+.toast-info {
+  background: var(--color-info);
+}
+
+
+/* ==========================================================
+   15. STATUS - TRẠNG THÁI HỆ THỐNG
+   ========================================================== */
+
+.status {
+  padding: 12px;
+  border-radius: var(--radius);
+  margin: 12px 0;
+}
+
+.status-loading {
+  background: var(--color-bg);
+  color: var(--color-muted);
+}
+
+.status-ok {
+  background: var(--color-success-light);
+  color: #166534;
+}
+
+.status-error {
+  background: var(--color-danger-light);
+  color: #991b1b;
+}
+
+
+/* ==========================================================
+   16. SEARCH - TÌM KIẾM
+   ========================================================== */
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.search-bar input {
+  flex: 1;
+  min-width: 0;
+}
+
+
+/* ==========================================================
+   17. PAGINATION - PHÂN TRANG
+   ========================================================== */
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.pagination a,
+.pagination button {
+  min-width: 36px;
+  padding: 7px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-card);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.pagination .active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+
+/* ==========================================================
+   18. LOADING - TRẠNG THÁI TẢI
+   ========================================================== */
+
+.loading {
+  padding: 24px;
+  text-align: center;
+  color: var(--color-muted);
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  margin: 0 auto 10px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* ==========================================================
+   19. UTILITIES - TIỆN ÍCH DÙNG CHUNG
+   ========================================================== */
+
+.muted {
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-error {
+  color: var(--color-danger);
+}
+
+.text-success {
+  color: var(--color-success);
+}
+
+.text-primary {
+  color: var(--color-primary);
+}
+
+.d-flex {
+  display: flex;
+}
+
+.align-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-1 {
+  gap: 4px;
+}
+
+.gap-2 {
+  gap: 8px;
+}
+
+.gap-3 {
+  gap: 12px;
+}
+
+.mt-1 {
+  margin-top: 8px;
+}
+
+.mt-2 {
+  margin-top: 16px;
+}
+
+.mb-1 {
+  margin-bottom: 8px;
+}
+
+.mb-2 {
+  margin-bottom: 16px;
+}
+
+.w-100 {
+  width: 100%;
+}
+
+.hidden {
+  display: none;
+}
+
+
+/* ==========================================================
+   20. RESPONSIVE - ĐIỆN THOẠI VÀ TABLET
+   ========================================================== */
+
+@media (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .layout-3col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 800px) {
+  .layout-2col {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    width: 100%;
+    min-height: auto;
+  }
+
+  .header-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .nav {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .page-container {
+    padding: 16px;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .layout-3col {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  .list-header {
+    align-items: stretch;
+  }
+
+  .list-header input {
+    max-width: 100%;
+  }
+
+  .search-bar {
+    max-width: 100%;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions .btn {
+    width: 100%;
+  }
+
+  .modal {
+    max-width: 100%;
+  }
+
+  th, td {
+    padding: 9px;
+    font-size: 13px;
+  }
+}
