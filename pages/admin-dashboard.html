@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tổng quan Quản trị (Dashboard) | ShopEase</title>
+  <link rel="icon" href="../assets/images/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .admin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: #ffffff;
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .kpi-title {
+      font-size: 13px;
+      color: var(--color-muted);
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    .kpi-value {
+      font-family: var(--se-font-heading, sans-serif);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--color-text);
+      line-height: 1.2;
+    }
+    .kpi-desc {
+      font-size: 12px;
+      color: var(--color-primary);
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<!-- data-auth="admin": Kích hoạt Route Guard tự động chặn nếu không phải ADMIN / STAFF -->
+<body data-root="../" data-auth="admin">
+  <header id="app-header"></header>
+
+  <main class="container page-container">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title" style="font-family: var(--se-font-heading, sans-serif);">Tổng quan Quản trị (Dashboard)</h1>
+        <p class="page-description">Theo dõi các chỉ số kinh doanh, đơn hàng và kho hàng theo thời gian thực (FR-036, FR-037)</p>
+      </div>
+      <div>
+        <span class="badge badge-primary" style="padding: 6px 14px; font-size: 13px;">Khu vực Quản trị viên (Bảo mật)</span>
+      </div>
+    </div>
+
+    <!-- KPI Cards Grid (FR-036, FR-037, BR-11, BR-14) -->
+    <div class="admin-grid">
+      <div class="kpi-card">
+        <div class="kpi-title">Tổng doanh thu tháng</div>
+        <div class="kpi-value" style="color: var(--color-primary);">148.650.000 ₫</div>
+        <div class="kpi-desc">Tăng 12% so với tháng trước</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Tổng đơn hàng</div>
+        <div class="kpi-value">320</div>
+        <div class="kpi-desc" style="color: var(--color-success);">252 đơn hoàn thành</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Đơn chờ xác nhận</div>
+        <div class="kpi-value" style="color: var(--color-warning);">14</div>
+        <div class="kpi-desc" style="color: var(--color-warning);">Cần xử lý ngay</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Cảnh báo sắp hết hàng</div>
+        <div class="kpi-value" style="color: var(--color-danger);">6</div>
+        <div class="kpi-desc" style="color: var(--color-danger);">Dưới ngưỡng an toàn</div>
+      </div>
+    </div>
+
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">Các module quản trị hệ thống</h2>
+      </div>
+      <div class="card-body">
+        <p style="color: var(--color-muted); margin-bottom: 16px;">
+          Trang này được bảo vệ bởi <strong>Route Guard</strong>. Chỉ tài khoản có vai trò <code>ADMIN</code> hoặc <code>STAFF</code> mới có thể truy cập.
+        </p>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <a href="items.html" class="btn btn-outline">Quản lý Sản phẩm</a>
+          <a href="javascript:void(0)" class="btn btn-outline" onclick="showToast('Chức năng đang phát triển', 'info')">Quản lý Danh mục</a>
+          <a href="javascript:void(0)" class="btn btn-outline" onclick="showToast('Chức năng đang phát triển', 'info')">Quản lý Kho hàng</a>
+          <a href="javascript:void(0)" class="btn btn-outline" onclick="showToast('Chức năng đang phát triển', 'info')">Quản lý Đơn hàng</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="app-footer"></footer>
+
+  <!-- Scripts: Thứ tự nạp chuẩn -->
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/layout.js"></script>
+</body>
+</html>
