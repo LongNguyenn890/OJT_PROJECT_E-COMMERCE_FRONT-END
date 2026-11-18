@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hồ sơ cá nhân | ShopEase</title>
+  <link rel="icon" href="../assets/images/logo_shop.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/items.css">
+  <link rel="stylesheet" href="../css/profile.css">
+</head>
+<body class="shop-page" data-root="../" data-auth="required">
+  <!-- Thanh thông tin đầu trang -->
+  <div class="shop-topline">
+    <span>
+      <img src="../assets/images/giao hàng.svg" alt="">
+      Miễn phí giao hàng đơn hàng từ 500.000₫ · Thanh toán khi nhận hàng (COD) miễn phí
+    </span>
+    <span>
+      <img src="../assets/images/tổng đài.svg" alt="">
+      CSKH toàn quốc: 1900 6868
+    </span>
+  </div>
+
+  <!-- Header chung cửa hàng -->
+  <header id="app-header"></header>
+
+  <!-- NỘI DUNG CHÍNH TRANG HỒ SƠ CÁ NHÂN -->
+  <main class="profile-page-main">
+    <div style="max-width: var(--shop-container-max, 1280px); margin: 0 auto;">
+
+      <!-- 1. Breadcrumb -->
+      <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+        <a href="customer-home.html" class="breadcrumb-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          Trang chủ
+        </a>
+        <span class="breadcrumb-separator">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </span>
+        <a href="profile.html" class="breadcrumb-item">Tài khoản</a>
+        <span class="breadcrumb-separator">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </span>
+        <span class="breadcrumb-item active" id="breadcrumb-current-text">Thông tin cá nhân</span>
+      </nav>
+
+      <!-- 2. Khối tiêu đề trang -->
+      <div class="profile-header-block">
+        <div class="profile-title-area">
+          <h1 id="page-main-heading">Hồ sơ cá nhân</h1>
+          <p>Quản lý thông tin tài khoản cá nhân, điểm thưởng và sổ địa chỉ giao hàng.</p>
+        </div>
+      </div>
+
+      <!-- 3. Bố cục 2 cột -->
+      <div class="profile-layout-grid">
+
+        <!-- CỘT TRÁI (ASIDE: 320px) -->
+        <aside class="profile-aside">
+
+          <!-- Card 1: Thẻ định danh người dùng -->
+          <div class="profile-identity-card">
+            <div class="identity-banner"></div>
+            <div class="identity-avatar-wrapper">
+              <img id="side-avatar-img" class="identity-avatar-img" src="../assets/images/avt người dùng.svg" alt="Avatar">
+              <span class="identity-status-dot" title="Tài khoản đang hoạt động"></span>
+            </div>
+            <h2 id="side-user-name" class="identity-name">Đang tải...</h2>
+            <p id="side-user-email" class="identity-email">email@example.com</p>
+            <div class="identity-role-pill">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+              <span id="side-user-role">Tài khoản cá nhân</span>
+            </div>
+
+            <!-- Thống kê điểm thưởng (Chỉ hiển thị điểm thưởng theo yêu cầu) -->
+            <div class="identity-stats">
+              <div class="identity-stat-item">
+                <span class="stat-value" id="stat-reward-points">340</span>
+                <span class="stat-label">Điểm thưởng tích lũy</span>
+              </div>
+              <button type="button" id="btn-open-redeem-modal" class="btn-redeem-link" title="Quy đổi điểm thưởng lấy mã giảm giá">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                  <polyline points="3.29 7 12 12 20.71 7"/>
+                  <line x1="12" y1="22" x2="12" y2="12"/>
+                </svg>
+                <span>Đổi mã giảm giá</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Card 2: Menu điều hướng tài khoản -->
+          <nav class="profile-nav-card" aria-label="Menu tài khoản">
+            <a href="javascript:void(0)" id="nav-item-view-profile" class="profile-nav-link active">
+              <div class="profile-nav-link-left">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span>Hồ sơ cá nhân</span>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </a>
+            <a href="javascript:void(0)" id="nav-item-addresses" class="profile-nav-link">
+              <div class="profile-nav-link-left">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                <span>Sổ địa chỉ</span>
+              </div>
+              <span class="nav-address-count" id="nav-address-count-badge">0</span>
+            </a>
+            <a href="javascript:void(0)" id="nav-item-change-pwd" class="profile-nav-link">
+              <div class="profile-nav-link-left">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <span>Đổi mật khẩu</span>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </a>
+            <a href="customer-home.html#products" class="profile-nav-link">
+              <div class="profile-nav-link-left">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+                  <path d="M3 6h18"/>
+                  <path d="M16 10a4 4 0 0 1-8 0"/>
+                </svg>
+                <span>Lịch sử đơn mua</span>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </a>
+          </nav>
+        </aside>
+
+        <!-- CỘT PHẢI: NỘI DUNG PROFILE -->
+        <div class="profile-content">
+
+          <!-- ========================================== -->
+          <!-- 1. CHẾ ĐỘ XEM: HIỂN THỊ THÔNG TIN CÁ NHÂN (MẶC ĐỊNH) -->
+          <!-- ========================================== -->
+          <section id="view-profile-card" class="profile-card">
+            <div class="card-header-bar">
+              <div class="card-header-title">
+                <h2>Thông tin cá nhân</h2>
+                <p>Chi tiết hồ sơ tài khoản của bạn trên ShopEase.</p>
+              </div>
+              <!-- Cặp nút: Chỉnh sửa thông tin & Đổi mật khẩu -->
+              <div class="profile-view-actions">
+                <button type="button" id="btn-open-edit" class="btn-profile-primary">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                    <path d="m15 5 4 4"/>
+                  </svg>
+                  <span>Chỉnh sửa thông tin</span>
+                </button>
+                <button type="button" id="btn-open-password" class="btn-profile-outline">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                  <span>Đổi mật khẩu</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Khối tóm tắt thông tin người dùng -->
+            <div class="profile-view-avatar-row">
+              <div class="view-avatar-box">
+                <img id="view-avatar-img" src="../assets/images/avt người dùng.svg" alt="Avatar">
+              </div>
+              <div class="view-user-meta">
+                <h3 id="view-user-name">Đang tải...</h3>
+                <p id="view-user-email">email@example.com</p>
+                <span class="view-user-badge" id="view-user-role-badge">Tài khoản cá nhân</span>
+              </div>
+            </div>
+
+            <!-- Bảng thông tin cá nhân dạng 2 cột chi tiết -->
+            <div class="profile-details-list">
+              <div class="profile-detail-row">
+                <span class="detail-label">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  Họ và tên
+                </span>
+                <span class="detail-value" id="view-fullname">Đang tải...</span>
+              </div>
+
+              <div class="profile-detail-row">
+                <span class="detail-label">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                  Email
+                </span>
+                <span class="detail-value" id="view-email">Đang tải...</span>
+              </div>
+
+              <div class="profile-detail-row">
+                <span class="detail-label">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  Số điện thoại
+                </span>
+                <span class="detail-value" id="view-phone">Đang tải...</span>
+              </div>
+            </div>
+
+            <!-- Khối thông tin địa chỉ nhận hàng bên dưới phần thông tin cá nhân -->
+            <div class="profile-address-overview-section">
+              <div class="address-overview-header">
+                <div class="address-overview-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00288e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                  <h3>Địa chỉ nhận hàng</h3>
+                </div>
+                <div class="address-overview-actions">
+                  <button type="button" id="btn-edit-overview-address" class="btn-profile-outline btn-sm">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                      <path d="m15 5 4 4"/>
+                    </svg>
+                    <span>Chỉnh sửa địa chỉ</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Nội dung hiển thị thông tin địa chỉ -->
+              <div id="address-overview-card" class="address-overview-card">
+                <div class="addr-card-top">
+                  <div class="addr-user-meta">
+                    <span class="addr-receiver-title" id="overview-addr-name">Đang tải...</span>
+                    <span class="addr-divider">|</span>
+                    <span class="addr-phone-title" id="overview-addr-phone">Đang tải...</span>
+                    <span class="badge-default-addr" id="overview-addr-badge">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                      Mặc định
+                    </span>
+                  </div>
+                </div>
+                <div class="addr-card-middle" style="margin-top: 8px;">
+                  <div class="addr-street-line" id="overview-addr-street">Đang tải...</div>
+                  <div class="addr-location-line" style="margin-top: 4px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <span id="overview-addr-location">Đang tải...</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ========================================== -->
+          <!-- 2. CHẾ ĐỘ SỬA: FORM CHỈNH SỬA THÔNG TIN CÁ NHÂN -->
+          <!-- ========================================== -->
+          <section id="edit-profile-card" class="profile-card" style="display: none;">
+            <div class="card-header-bar">
+              <div class="card-header-title">
+                <h2>Chỉnh sửa thông tin cá nhân</h2>
+                <p>Cập nhật họ tên, ảnh đại diện, số điện thoại và thông tin liên lạc.</p>
+              </div>
+              <button type="button" id="btn-back-from-edit" class="btn-profile-outline btn-sm">
+                ← Quay lại xem
+              </button>
+            </div>
+
+            <!-- Khung cập nhật Ảnh đại diện -->
+            <div class="avatar-upload-box">
+              <div class="avatar-preview-container">
+                <img id="form-avatar-preview" class="avatar-preview-img" src="../assets/images/avt người dùng.svg" alt="Ảnh xem trước">
+              </div>
+              <div class="avatar-upload-controls">
+                <div class="avatar-upload-btn-row">
+                  <input type="file" id="avatar-file-input" accept="image/jpeg,image/png,image/webp" style="display: none;">
+                  <button type="button" id="btn-choose-avatar" class="btn-upload-avatar">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="17 8 12 3 7 8"/>
+                      <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    Chọn ảnh mới
+                  </button>
+                  <button type="button" id="btn-delete-avatar" class="btn-remove-avatar">
+                    Xóa ảnh
+                  </button>
+                </div>
+                <p class="avatar-upload-hint">
+                  Định dạng file cho phép: <strong>JPG, PNG, WEBP</strong>. Dung lượng tối đa: <strong>2.0 MB</strong>.
+                </p>
+              </div>
+            </div>
+
+            <!-- Form các trường nhập liệu -->
+            <form id="profile-info-form" novalidate>
+              <div class="form-fields-stack">
+
+                <!-- Trường 1: Họ và tên -->
+                <div class="form-field-row">
+                  <label class="field-label" for="profile-fullname">
+                    Họ và tên <span class="required-star">*</span>
+                  </label>
+                  <div class="field-control-wrapper">
+                    <input type="text" id="profile-fullname" class="field-input-styled" placeholder="Nhập họ và tên đầy đủ của bạn">
+                    <span id="fullname-error" class="field-error-text"></span>
+                  </div>
+                </div>
+
+                <!-- Trường 2: Email liên hệ -->
+                <div class="form-field-row">
+                  <label class="field-label" for="profile-email">
+                    Email liên hệ <span class="required-star">*</span>
+                  </label>
+                  <div class="field-control-wrapper">
+                    <input type="email" id="profile-email" class="field-input-styled" placeholder="name@example.com">
+                    <span id="email-error" class="field-error-text"></span>
+                  </div>
+                </div>
+
+                <!-- Trường 3: Số điện thoại -->
+                <div class="form-field-row">
+                  <label class="field-label" for="profile-phone">
+                    Số điện thoại <span class="required-star">*</span>
+                  </label>
+                  <div class="field-control-wrapper">
+                    <input type="tel" id="profile-phone" class="field-input-styled" placeholder="0987 654 321">
+                    <span id="phone-error" class="field-error-text"></span>
+                  </div>
+                </div>
+
+                <!-- Cặp nút Hủy bỏ & Lưu thay đổi -->
+                <div class="form-submit-actions">
+                  <button type="button" id="btn-cancel-profile" class="btn-profile-cancel">Hủy bỏ</button>
+                  <button type="submit" id="btn-save-profile" class="btn-profile-save">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                      <polyline points="17 21 17 13 7 13 7 21"/>
+                      <polyline points="7 3 7 8 15 8"/>
+                    </svg>
+                    <span>Lưu thay đổi</span>
+                  </button>
+                </div>
+
+              </div>
+            </form>
+          </section>
+
+          <!-- ========================================== -->
+          <!-- 3. CHẾ ĐỘ ĐỔI MẬT KHẨU: FORM ĐỔI MẬT KHẨU -->
+          <!-- ========================================== -->
+          <section id="password-profile-card" class="profile-card" style="display: none;">
+            <div class="card-header-bar">
+              <div class="card-header-title">
+                <h2>Đổi mật khẩu tài khoản</h2>
+                <p>Nên sử dụng mật khẩu mạnh có ít nhất 6–8 ký tự, bao gồm chữ hoa, chữ số.</p>
+              </div>
+              <button type="button" id="btn-back-from-pwd" class="btn-profile-outline btn-sm">
+                ← Quay lại xem
+              </button>
+            </div>
+
+            <!-- Form đổi mật khẩu -->
+            <form id="change-password-form" novalidate>
+              <div class="form-fields-stack">
+
+                <!-- Mật khẩu hiện tại -->
+                <div class="form-field-row">
+                  <label class="field-label" for="pwd-current">
+                    Mật khẩu hiện tại <span class="required-star">*</span>
+                  </label>
+                  <div class="field-control-wrapper">
+                    <div class="password-input-wrapper">
+                      <input type="password" id="pwd-current" class="field-input-styled" placeholder="Nhập mật khẩu đang dùng">
+                      <button type="button" class="btn-toggle-eye" data-target="pwd-current" title="Ẩn/Hiện mật khẩu">
+                        <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                      </button>
+                    </div>
+                    <span id="pwd-current-error" class="field-error-text"></span>
+                  </div>
+                </div>
+
+                <!-- Mật khẩu mới -->
+                <div class="form-field-row">
+                  <label class="field-label" for="pwd-new">
+                    Mật khẩu mới <span class="required-star">*</span>
+                  </label>
+                  <div class="field-control-wrapper">
+                    <div class="password-input-wrapper">
+                      <input type="password" id="pwd-new" class="field-input-styled" placeholder="Tối thiểu 6 ký tự">
+                      <button type="button" class="btn-toggle-eye" data-target="pwd-new" title="Ẩn/Hiện mật khẩu">
+                        <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                      </button>
+                    </div>
+                    <span id="pwd-new-error" class="field-error-text"></span>
+                  </div>
+                </div>
+
+                <!-- Nhập lại mật khẩu mới -->
+                <div class="form-field-row">
+                  <label class="field-label" for="pwd-confirm">
+                    Nhập lại mật khẩu mới <span class="required-star">*</span>
+                  </label>
+                  <div class="field-control-wrapper">
+                    <div class="password-input-wrapper">
+                      <input type="password" id="pwd-confirm" class="field-input-styled" placeholder="Nhập lại chính xác mật khẩu mới">
+                      <button type="button" class="btn-toggle-eye" data-target="pwd-confirm" title="Ẩn/Hiện mật khẩu">
+                        <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                      </button>
+                    </div>
+                    <span id="pwd-confirm-error" class="field-error-text"></span>
+                  </div>
+                </div>
+
+                <!-- Cặp nút Hủy bỏ & Cập nhật mật khẩu -->
+                <div class="form-submit-actions">
+                  <button type="button" id="btn-cancel-pwd" class="btn-profile-cancel">Hủy bỏ</button>
+                  <button type="submit" id="btn-submit-pwd" class="btn-profile-save">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>Cập nhật mật khẩu</span>
+                  </button>
+                </div>
+
+              </div>
+            </form>
+          </section>
+
+          <!-- ========================================== -->
+          <!-- 4. CHUYÊN MỤC RIÊNG: SỔ ĐỊA CHỈ NHẬN HÀNG -->
+          <!-- Không gộp chung vào phần thông tin cá nhân -->
+          <!-- ========================================== -->
+          <section id="addresses-profile-card" class="profile-card" style="display: none;">
+            <div class="card-header-bar">
+              <div class="card-header-title">
+                <h2>Sổ địa chỉ nhận hàng</h2>
+                <p>Quản lý danh sách địa chỉ giao hàng để thuận tiện khi đặt đơn và thanh toán.</p>
+              </div>
+              <button type="button" id="btn-open-add-addr" class="btn-profile-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                <span>Thêm địa chỉ mới</span>
+              </button>
+            </div>
+
+            <!-- Container danh sách địa chỉ -->
+            <div id="addresses-list-container" class="addresses-list-container">
+              <!-- Sẽ render động qua profile.js -->
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODAL POPUP THÊM & CHỈNH SỬA ĐỊA CHỈ -->
+  <!-- ========================================== -->
+  <div id="address-modal" class="profile-modal-overlay" style="display: none;">
+    <div class="profile-modal-dialog">
+      <div class="profile-modal-header">
+        <div class="modal-header-text">
+          <h3 id="addr-modal-title">Thêm địa chỉ mới</h3>
+          <p id="addr-modal-desc">Vui lòng điền thông tin người nhận và địa chỉ giao hàng</p>
+        </div>
+        <button type="button" id="btn-close-addr-modal" class="btn-modal-close" title="Đóng">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <form id="address-modal-form" novalidate>
+        <input type="hidden" id="addr-id-hidden" value="">
+        <div class="modal-form-body">
+          <div class="modal-form-row two-cols">
+            <div class="modal-field-item">
+              <label class="modal-label" for="addr-form-name">Họ và tên người nhận <span class="required-star">*</span></label>
+              <input type="text" id="addr-form-name" class="modal-input" placeholder="Ví dụ: Nguyễn Văn A">
+              <span id="addr-name-error" class="field-error-text"></span>
+            </div>
+            <div class="modal-field-item">
+              <label class="modal-label" for="addr-form-phone">Số điện thoại <span class="required-star">*</span></label>
+              <input type="tel" id="addr-form-phone" class="modal-input" placeholder="Ví dụ: 0987654321">
+              <span id="addr-phone-error" class="field-error-text"></span>
+            </div>
+          </div>
+
+          <div class="modal-form-row two-cols">
+            <div class="modal-field-item">
+              <label class="modal-label" for="addr-form-province">Tỉnh / Thành phố <span class="required-star">*</span></label>
+              <input type="text" id="addr-form-province" class="modal-input" placeholder="Ví dụ: Hà Nội, TP. Hồ Chí Minh">
+              <span id="addr-province-error" class="field-error-text"></span>
+            </div>
+            <div class="modal-field-item">
+              <label class="modal-label" for="addr-form-ward">Quận / Huyện / Phường xã <span class="required-star">*</span></label>
+              <input type="text" id="addr-form-ward" class="modal-input" placeholder="Ví dụ: Phường Quan Hoa, Quận Cầu Giấy">
+              <span id="addr-ward-error" class="field-error-text"></span>
+            </div>
+          </div>
+
+          <div class="modal-form-row">
+            <div class="modal-field-item">
+              <label class="modal-label" for="addr-form-street">Địa chỉ cụ thể (Số nhà, tên đường, tòa nhà...) <span class="required-star">*</span></label>
+              <input type="text" id="addr-form-street" class="modal-input" placeholder="Ví dụ: Số 123 Đường Cầu Giấy, Tòa nhà ShopEase">
+              <span id="addr-street-error" class="field-error-text"></span>
+            </div>
+          </div>
+
+          <div class="modal-checkbox-row">
+            <label class="modal-checkbox-label">
+              <input type="checkbox" id="addr-form-default">
+              <span>Đặt làm địa chỉ nhận hàng mặc định</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="profile-modal-footer">
+          <button type="button" id="btn-cancel-addr-modal" class="btn-profile-cancel">Hủy bỏ</button>
+          <button type="submit" id="btn-save-addr-modal" class="btn-profile-save">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <span id="btn-save-addr-text">Lưu địa chỉ</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL QUY ĐỔI ĐIỂM THƯỞNG LẤY MÃ GIẢM GIÁ -->
+  <!-- ========================================== -->
+  <div id="redeem-voucher-modal" class="profile-modal-overlay" style="display: none;">
+    <div class="profile-modal-dialog" style="max-width: 620px;">
+      <div class="profile-modal-header">
+        <div class="modal-header-text">
+          <h3>Quy đổi điểm thưởng lấy mã giảm giá</h3>
+          <p>Dùng điểm tích lũy của bạn để đổi các mã voucher ưu đãi khi thanh toán</p>
+        </div>
+        <button type="button" id="btn-close-redeem-modal" class="btn-modal-close" title="Đóng">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-form-body">
+        <!-- Khung số dư điểm hiện tại -->
+        <div class="redeem-balance-card">
+          <div class="balance-left">
+            <span class="balance-sub">Điểm thưởng hiện có</span>
+            <div class="balance-val-row">
+              <span class="balance-num" id="modal-reward-points-balance">340</span>
+              <span class="balance-unit">điểm</span>
+            </div>
+          </div>
+          <div class="balance-right-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+        </div>
+
+        <!-- Danh sách các gói đổi mã -->
+        <div class="redeem-section-title">
+          <h4>Chọn gói voucher muốn quy đổi:</h4>
+        </div>
+        <div id="redeem-tiers-container" class="redeem-tiers-grid">
+          <!-- Render động từ API /auth/me/reward-points -->
+        </div>
+
+        <!-- Danh sách mã đã đổi của bạn -->
+        <div class="redeem-section-title" style="margin-top: 18px;">
+          <h4>Mã giảm giá đã đổi của bạn:</h4>
+        </div>
+        <div id="my-vouchers-list" class="my-vouchers-list">
+          <!-- Render động từ API /auth/me/vouchers -->
+        </div>
+      </div>
+
+      <div class="profile-modal-footer">
+        <button type="button" id="btn-cancel-redeem-modal" class="btn-profile-cancel">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chân trang cửa hàng -->
+  <footer id="app-footer"></footer>
+
+  <!-- Scripts: Thứ tự nạp chuẩn -->
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/pages/profile.js"></script>
+</body>
+</html>

@@ -76,8 +76,9 @@ http.interceptors.response.use(
 );
 
 const api = {
-  get: (path, params) => http.get(path, { params }).then((res) => res.data),
-  post: (path, body) => http.post(path, body).then((res) => res.data),
-  put: (path, body) => http.put(path, body).then((res) => res.data),
-  delete: (path) => http.delete(path).then((res) => res.data),
+  get: (path, params, config) => http.get(path, { params, ...config }).then((res) => res.data),
+  post: (path, body, config) => http.post(path, body, config).then((res) => res.data),
+  put: (path, body, config) => http.put(path, body, config).then((res) => res.data),
+  patch: (path, body, config) => http.patch(path, body, config).then((res) => res.data),
+  delete: (path, config) => http.delete(path, config).then((res) => res.data),
 };
