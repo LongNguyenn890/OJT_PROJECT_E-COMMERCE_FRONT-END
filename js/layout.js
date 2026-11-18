@@ -113,6 +113,10 @@ function renderLayout() {
         ? capitalizeWords(user.full_name)
         : rawName;
       userSectionHtml = `
+        <span class="user-tool" id="shop-user-profile">
+          <img src="${root}assets/images/avt người dùng.svg" alt="Avatar">
+          <small>${escapeHtml(displayName)}<br><b id="shop-logout-btn" style="color: #ef4444; font-size: 12px; font-weight: 600; cursor: pointer;">Đăng xuất</b></small>
+        </span>
         <div class="user-tool-wrapper">
           <div class="user-tool" id="shop-user-profile" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false" title="Tài khoản cá nhân: ${escapeHtml(displayName)}">
             <img src="${escapeHtml(avatarSrc)}" alt="Avatar" onerror="this.src='${root}assets/images/avt người dùng.svg'">
@@ -176,6 +180,20 @@ function renderLayout() {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: -2px;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           Hồ sơ cá nhân
         </a>
+        <div class="header-search">
+          <input id="shop-search" type="search" placeholder="Tìm kiếm sản phẩm, thương hiệu... (Ctrl + K)">
+          <button type="button" id="search-submit">⌕ Tìm</button>
+        </div>
+        <div class="header-tools">
+          <span>
+            <img src="${root}assets/images/tổng đài.svg" alt="">
+            <small>Tổng đài CSKH<br><b>1900 6868</b></small>
+          </span>
+          ${userSectionHtml}
+          <a href="${root}pages/my_orders.html" class="cart-tool" aria-label="Đơn mua của tôi" title="Xem đơn mua của tôi" style="text-decoration: none; cursor: pointer;">
+            <img src="${root}assets/images/giỏ hàng.svg" alt="Đơn hàng">
+            <i id="cart-count">0</i>
+          </a>
         <a href="${root}pages/profile.html#addresses" class="${isAddressesActive ? "selected" : ""}" id="nav-link-addresses">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: -2px;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
           Sổ địa chỉ
@@ -301,14 +319,12 @@ function renderLayout() {
     const shopLogoutBtn = document.getElementById("shop-logout-btn");
     if (shopLogoutBtn) {
       shopLogoutBtn.addEventListener("click", (e) => {
+        e.preventDefault();
         e.stopPropagation();
-        if (typeof Auth !== "undefined" && Auth.confirmLogout) {
-          Auth.confirmLogout(root);
-        } else if (typeof Auth !== "undefined" && Auth.logout) {
-          Auth.logout(root);
-        } else {
+        if (confirm("Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?")) {
           localStorage.removeItem("token");
           localStorage.removeItem("user");
+          sessionStorage.setItem("auth_message", "Đã đăng xuất tài khoản thành công.");
           window.location.href = `${root}pages/login.html`;
         }
       });
@@ -584,17 +600,13 @@ function renderLayout() {
     const logoutBtn = document.getElementById("btn-logout");
     if (logoutBtn) {
       logoutBtn.addEventListener("click", () => {
-        if (typeof Auth !== "undefined" && Auth.confirmLogout) {
-          Auth.confirmLogout(root);
-        } else if (typeof Auth !== "undefined" && Auth.logout) {
-          Auth.logout(root);
-        } else {
+        if (confirm("Bạn có chắc chắn muốn đăng xuất không?")) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
           sessionStorage.setItem("pending_toast", JSON.stringify({
             message: "Bạn đã đăng xuất thành công.",
             type: "success"
           }));
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
           window.location.href = `${root}pages/login.html`;
         }
       });
