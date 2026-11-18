@@ -12,6 +12,7 @@ function checkRouteGuard() {
   const isAdminPage = document.body.dataset.auth === "admin" ||
                       currentPath.includes("/admin-") ||
                       currentPath.includes("/admin/");
+  const isAuthRequired = document.body.dataset.auth === "required";
 
   const token = typeof Auth !== "undefined" ? Auth.getToken() : localStorage.getItem("token");
   let user = typeof Auth !== "undefined" ? Auth.getUser() : null;
@@ -19,6 +20,14 @@ function checkRouteGuard() {
     try {
       user = JSON.parse(localStorage.getItem("user") || "null");
     } catch (_) {}
+  }
+
+  // Chặn trang yêu cầu đăng nhập
+  if (isAuthRequired && (!token || !user)) {
+    sessionStorage.setItem("auth_message", "Vui lòng đăng nhập để xem thông tin trang này.");
+    const currentUrl = window.location.pathname + window.location.search;
+    window.location.href = `${root}pages/login.html?redirect=${encodeURIComponent(currentUrl)}`;
+    return false;
   }
 
   if (isAdminPage) {
@@ -112,6 +121,14 @@ function renderLayout() {
         </div>
       </div>`;
 
+    // Gắn sự kiện chuyển trang Hồ sơ cá nhân khi click vào thông tin người dùng
+    const shopUserProfile = document.getElementById("shop-user-profile");
+    if (shopUserProfile) {
+      shopUserProfile.addEventListener("click", () => {
+        window.location.href = `${root}pages/profile.html`;
+      });
+    }
+
     // Gắn sự kiện đăng xuất nếu đã đăng nhập
     const shopLogoutBtn = document.getElementById("shop-logout-btn");
     if (shopLogoutBtn) {
@@ -145,13 +162,14 @@ function renderLayout() {
 
     // Danh sách menu điều hướng thay đổi theo vai trò
     const navItems = [
-      { href: "index.html", label: "Trang chủ" },
+      { href: "pages/customer-home.html", label: "Trang chủ" },
       { href: "pages/items.html", label: "Sản phẩm" },
     ];
 
     if (role === "CUSTOMER") {
-      // Khách hàng đã đăng nhập: hiển thị Giỏ hàng và Đơn mua
+      // Khách hàng đã đăng nhập: hiển thị Hồ sơ, Giỏ hàng và Đơn mua
       navItems.push(
+        { href: "pages/profile.html", label: "👤 Hồ sơ" },
         { href: "pages/cart.html", label: "🛒 Giỏ hàng" },
         { href: "pages/my-orders.html", label: "📦 Đơn của tôi" }
       );
@@ -190,12 +208,12 @@ function renderLayout() {
 
       userBlockHtml = `
         <div style="display: flex; align-items: center; gap: 12px; margin-left: 16px;">
-          <div style="display: flex; align-items: center;">
+          <a href="${root}pages/profile.html" style="display: flex; align-items: center; text-decoration: none; color: inherit; cursor: pointer;" title="Xem hồ sơ cá nhân">
             <span style="font-size: 13.5px; font-weight: 600; color: var(--color-text);">
               👋 ${escapeHtml(displayName)}
             </span>
             ${roleBadge}
-          </div>
+          </a>
           <button id="btn-logout" class="btn btn-sm btn-outline" style="padding: 5px 12px; font-size: 12.5px; border-radius: 6px; cursor: pointer;">
             Đăng xuất
           </button>
@@ -214,7 +232,7 @@ function renderLayout() {
 
     headerElem.innerHTML = `
       <div class="container header-inner">
-        <a href="${root}index.html" class="brand" style="display: flex; align-items: center; gap: 10px;">
+        <a href="${root}pages/customer-home.html" class="brand" style="display: flex; align-items: center; gap: 10px;">
           <img src="${root}assets/images/logo.svg" alt="ShopEase Logo" width="30" height="30">
           <span style="font-family: var(--se-font-heading, sans-serif); font-size: 20px; font-weight: 800; color: var(--color-primary);">${CONFIG.APP_NAME}</span>
         </a>
