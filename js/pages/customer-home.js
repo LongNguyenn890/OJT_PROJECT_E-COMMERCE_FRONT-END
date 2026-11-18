@@ -2,7 +2,7 @@
 const PAGE_SIZE = 8;
 const categoryIcons = ["công nghệ.svg", "thời trang.svg", "đồ gia dụng.svg", "balo và túi.svg", "quà tặng.svg", "dã ngoại.svg"];
 const fallbackCategoryIcons = "ngành hàng.svg";
-const state = { categories: [], products: [], categoryId: null, price: "all", page: 0, total: 0, requestId: 0, loadingMore: false };
+const state = { categories: [], products: [], categoryId: null, price: "all", page: 0, total: 0, requestId: 0, loadingMore: false, view: "grid" };
 const asset = name => `../assets/images/${encodeURIComponent(name)}`;
 const escapeHTML = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const formatPrice = value => `${Number(value || 0).toLocaleString("vi-VN")}₫`;
@@ -76,6 +76,7 @@ function productImage(product) {
 
 function renderProducts() {
   const grid = document.getElementById("product-grid");
+  grid.classList.toggle("is-list", state.view === "list");
   if (!state.products.length) {
     grid.innerHTML = `<div class="no-products">Không tìm thấy sản phẩm phù hợp.</div>`;
   } else {
@@ -277,11 +278,27 @@ document.getElementById("price-filters").addEventListener("click", event => {
   changeFilters();
 });
 document.getElementById("sort-select").addEventListener("change", changeFilters);
+document.querySelectorAll(".view-toggle[data-view]").forEach(button => {
+  button.addEventListener("click", () => {
+    state.view = button.dataset.view;
+    document.querySelectorAll(".view-toggle[data-view]").forEach(toggle => {
+      const active = toggle.dataset.view === state.view;
+      toggle.classList.toggle("active", active);
+      toggle.setAttribute("aria-pressed", String(active));
+    });
+    document.getElementById("product-grid").classList.toggle("is-list", state.view === "list");
+  });
+});
+function updateSearchMode() {
+  document.body.classList.toggle("search-results-only", Boolean(document.getElementById("shop-search").value.trim()));
+}
 document.getElementById("shop-search").addEventListener("input", () => {
+  updateSearchMode();
   window.clearTimeout(window.customerSearchTimer);
   window.customerSearchTimer = window.setTimeout(changeFilters, 300);
 });
 document.getElementById("search-submit").addEventListener("click", () => {
+  updateSearchMode();
   changeFilters();
   document.getElementById("products").scrollIntoView({ behavior: "smooth" });
 });
