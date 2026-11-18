@@ -77,7 +77,7 @@ function renderLayout() {
       userSectionHtml = `
         <span class="user-tool" style="cursor: pointer;" id="shop-user-profile" title="Tài khoản">
           <img src="${root}assets/images/avt người dùng.svg" alt="Avatar">
-          <small>${escapeHtml(displayName)}<br><b id="shop-logout-btn" style="color: #ef4444; font-size: 11px;">Đăng xuất</b></small>
+          <small>${escapeHtml(displayName)}<br><b id="shop-logout-btn" style="color: #ef4444; font-size: 12px; font-weight: 600; cursor: pointer;">Đăng xuất</b></small>
         </span>
       `;
     } else {
