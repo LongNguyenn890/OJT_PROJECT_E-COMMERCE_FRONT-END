@@ -75,7 +75,7 @@ function renderLayout() {
         ? capitalizeWords(user.full_name)
         : rawName;
       userSectionHtml = `
-        <span class="user-tool" style="cursor: pointer;" id="shop-user-profile" title="Tài khoản">
+        <span class="user-tool" id="shop-user-profile">
           <img src="${root}assets/images/avt người dùng.svg" alt="Avatar">
           <small>${escapeHtml(displayName)}<br><b id="shop-logout-btn" style="color: #ef4444; font-size: 12px; font-weight: 600; cursor: pointer;">Đăng xuất</b></small>
         </span>
@@ -105,10 +105,10 @@ function renderLayout() {
             <small>Tổng đài CSKH<br><b>1900 6868</b></small>
           </span>
           ${userSectionHtml}
-          <button class="cart-tool" aria-label="Giỏ hàng">
-            <img src="${root}assets/images/giỏ hàng.svg" alt="">
+          <a href="${root}pages/my_orders.html" class="cart-tool" aria-label="Đơn mua của tôi" title="Xem đơn mua của tôi" style="text-decoration: none; cursor: pointer;">
+            <img src="${root}assets/images/giỏ hàng.svg" alt="Đơn hàng">
             <i id="cart-count">0</i>
-          </button>
+          </a>
         </div>
       </div>`;
 
@@ -116,14 +116,12 @@ function renderLayout() {
     const shopLogoutBtn = document.getElementById("shop-logout-btn");
     if (shopLogoutBtn) {
       shopLogoutBtn.addEventListener("click", (e) => {
+        e.preventDefault();
         e.stopPropagation();
-        if (typeof Auth !== "undefined" && Auth.confirmLogout) {
-          Auth.confirmLogout(root);
-        } else if (typeof Auth !== "undefined" && Auth.logout) {
-          Auth.logout(root);
-        } else {
+        if (confirm("Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?")) {
           localStorage.removeItem("token");
           localStorage.removeItem("user");
+          sessionStorage.setItem("auth_message", "Đã đăng xuất tài khoản thành công.");
           window.location.href = `${root}pages/login.html`;
         }
       });
@@ -228,17 +226,13 @@ function renderLayout() {
     const logoutBtn = document.getElementById("btn-logout");
     if (logoutBtn) {
       logoutBtn.addEventListener("click", () => {
-        if (typeof Auth !== "undefined" && Auth.confirmLogout) {
-          Auth.confirmLogout(root);
-        } else if (typeof Auth !== "undefined" && Auth.logout) {
-          Auth.logout(root);
-        } else {
+        if (confirm("Bạn có chắc chắn muốn đăng xuất không?")) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
           sessionStorage.setItem("pending_toast", JSON.stringify({
             message: "Bạn đã đăng xuất thành công.",
             type: "success"
           }));
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
           window.location.href = `${root}pages/login.html`;
         }
       });

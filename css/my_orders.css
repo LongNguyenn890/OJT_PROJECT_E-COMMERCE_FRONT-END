@@ -1,0 +1,1502 @@
+/* ==========================================================
+   SHOPEASE - MY ORDERS & REAL-TIME ORDER TRACKING STYLES (my_orders.css)
+   Khớp chuẩn Figma Frame: ShopEase - Đơn mua của tôi & Theo dõi đơn hàng (My Orders) (Node 64:34042)
+   ========================================================== */
+
+/* 1. TOÀN CỤC & BIẾN MÀU THEO THIẾT KẾ FIGMA */
+:root {
+  --figma-bg-page: #faf8ff;
+  --figma-bg-card: #ffffff;
+  --figma-bg-soft: #f2f3ff;
+  --figma-bg-light-blue: #eaedff;
+  --figma-bg-accent-blue: #dde1ff;
+  
+  --figma-primary: #00288e;
+  --figma-primary-hover: #001f70;
+  
+  --figma-text-dark: #131b2e;
+  --figma-text-body: #444653;
+  --figma-text-muted: #757684;
+  
+  --figma-green-bg: #85f8c4;
+  --figma-green-text: #006c4a;
+  
+  --figma-yellow-bg: #fef3c7;
+  --figma-yellow-dot: #f59e0b;
+  --figma-yellow-text: #92400e;
+  
+  --figma-red-bg: #ffdad6;
+  --figma-red-text: #93000a;
+  --figma-red-primary: #ba1a1a;
+  
+  --figma-border: #e2e7ff;
+  --figma-shadow-sm: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
+  --figma-shadow-md: 0px 4px 6px -1px rgba(0, 0, 0, 0.05), 0px 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --figma-shadow-lg: 0px 10px 15px -3px rgba(0, 0, 0, 0.08);
+}
+
+body.shop-page {
+  background-color: var(--figma-bg-page);
+  color: var(--figma-text-body);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 2. SUB-CATEGORIES BAR (NGÀNH HÀNG PHỤ) */
+.shop-subcategories-bar {
+  background-color: var(--figma-bg-soft);
+  border-bottom: 1px solid var(--figma-border);
+  padding: 0 24px;
+}
+
+.subcategories-inner {
+  max-width: 1280px;
+  height: 44px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.subcat-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--figma-primary);
+}
+
+.subcat-label img {
+  width: 14px;
+  height: 14px;
+}
+
+.subcategories-inner a {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--figma-text-body);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.subcategories-inner a:hover {
+  color: var(--figma-primary);
+}
+
+/* 3. KHU VỰC CHÍNH (MAIN WRAPPER) */
+.orders-main-wrapper {
+  min-height: calc(100vh - 350px);
+  padding: 24px 0 60px;
+  background-color: var(--figma-bg-page);
+}
+
+.orders-container-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* SECTION 1: BREADCRUMB & CUSTOMER IDENTITY CARD */
+.customer-identity-card {
+  background: var(--figma-bg-card);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: var(--figma-shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.identity-left-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.orders-breadcrumb-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.breadcrumb-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--figma-text-muted);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.breadcrumb-item:hover {
+  color: var(--figma-primary);
+}
+
+.breadcrumb-arrow {
+  color: var(--figma-text-muted);
+  font-size: 14px;
+}
+
+.breadcrumb-current {
+  color: var(--figma-primary);
+  font-weight: 700;
+}
+
+.customer-info-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.customer-avatar-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background-color: var(--figma-bg-accent-blue);
+  color: var(--figma-primary);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.customer-text-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.customer-name-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.customer-display-name {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--figma-text-dark);
+  letter-spacing: -0.6px;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.customer-status-badge {
+  background-color: var(--figma-green-bg);
+  color: var(--figma-green-text);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.status-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background-color: var(--figma-green-text);
+}
+
+.customer-sub-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--figma-text-muted);
+  margin-top: 2px;
+}
+
+.customer-sub-meta strong {
+  color: var(--figma-text-dark);
+}
+
+.customer-sub-meta .text-blue {
+  color: var(--figma-primary);
+}
+
+.customer-sub-meta .text-green {
+  color: var(--figma-green-text);
+  font-weight: 600;
+}
+
+.meta-dot {
+  color: var(--figma-text-muted);
+}
+
+/* Quick Metrics Ribbon (Node 64:34079) */
+.quick-metrics-ribbon {
+  background-color: var(--figma-bg-soft);
+  border-radius: 12px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.metric-item {
+  padding: 6px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.metric-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--figma-text-muted);
+  line-height: 14px;
+}
+
+.metric-val {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 28px;
+}
+
+.metric-val.text-dark {
+  color: var(--figma-text-dark);
+}
+
+.metric-val.text-primary {
+  color: var(--figma-primary);
+}
+
+.metric-val.text-success {
+  color: var(--figma-green-text);
+}
+
+.metric-divider {
+  width: 1px;
+  height: 32px;
+  background-color: var(--figma-border);
+}
+
+/* SECTION 2: 5-STATE TABS CARD (Node 64:34116) */
+.orders-nav-tabs-card {
+  background: var(--figma-bg-card);
+  border-radius: 12px;
+  padding: 8px 12px;
+  box-shadow: var(--figma-shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  overflow-x: auto;
+  gap: 16px;
+}
+
+.nav-tabs-list {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.order-tab-btn {
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--figma-text-body);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.order-tab-btn:hover {
+  background-color: var(--figma-bg-soft);
+  color: var(--figma-primary);
+}
+
+.order-tab-btn .tab-badge {
+  background-color: var(--figma-bg-light-blue);
+  color: var(--figma-text-dark);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.order-tab-btn .tab-badge.badge-green {
+  background-color: var(--figma-green-bg);
+  color: var(--figma-green-text);
+}
+
+/* Active Tab Styling */
+.order-tab-btn.active {
+  background-color: var(--figma-primary);
+  color: #ffffff;
+  box-shadow: var(--figma-shadow-sm);
+}
+
+.order-tab-btn.active .tab-badge {
+  background-color: #ffffff;
+  color: var(--figma-primary);
+}
+
+.tabs-cycle-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--figma-text-muted);
+  white-space: nowrap;
+}
+
+.tabs-cycle-info svg {
+  color: var(--figma-text-muted);
+}
+
+/* Quick Search / Filter Bar */
+.orders-search-filter-card {
+  background: var(--figma-bg-card);
+  border-radius: 12px;
+  padding: 10px 16px;
+  box-shadow: var(--figma-shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.orders-search-input-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 520px;
+}
+
+.orders-search-input-wrap .search-svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--figma-text-muted);
+}
+
+.orders-search-input-wrap input {
+  width: 100%;
+  height: 38px;
+  padding: 8px 14px 8px 38px;
+  border-radius: 8px;
+  border: 1px solid var(--figma-border);
+  background-color: var(--figma-bg-soft);
+  font-size: 13.5px;
+  color: var(--figma-text-dark);
+  outline: none;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.orders-search-input-wrap input:focus {
+  border-color: var(--figma-primary);
+  background-color: #ffffff;
+}
+
+.orders-search-summary {
+  font-size: 12.5px;
+  color: var(--figma-text-muted);
+  font-weight: 500;
+}
+
+/* SECTION 3: ORDERS STACK (Node 64:34153) */
+.orders-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ORDER CARD CONTAINER */
+.order-card-frame {
+  background: var(--figma-bg-card);
+  border-radius: 12px;
+  box-shadow: var(--figma-shadow-sm);
+  overflow: hidden;
+  border: 1px solid rgba(0, 40, 142, 0.04);
+}
+
+/* TOP STATUS BAR */
+.order-top-bar {
+  background-color: var(--figma-bg-soft);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.order-top-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.order-code-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--figma-text-dark);
+  letter-spacing: -0.4px;
+}
+
+.order-date-text {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--figma-text-muted);
+}
+
+.order-tracking-badge {
+  background-color: rgba(55, 85, 195, 0.1);
+  color: var(--figma-primary);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* STATUS PILLS */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-pill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+}
+
+/* Trạng thái PENDING */
+.status-pill.status-pending {
+  background-color: var(--figma-yellow-bg);
+  color: var(--figma-yellow-text);
+}
+.status-pill.status-pending .status-pill-dot {
+  background-color: var(--figma-yellow-dot);
+}
+
+/* Trạng thái CONFIRMED */
+.status-pill.status-confirmed {
+  background-color: var(--figma-bg-accent-blue);
+  color: var(--figma-primary);
+}
+.status-pill.status-confirmed .status-pill-dot {
+  background-color: var(--figma-primary);
+}
+
+/* Trạng thái SHIPPING */
+.status-pill.status-shipping {
+  background-color: var(--figma-bg-accent-blue);
+  color: var(--figma-primary);
+}
+
+/* Trạng thái COMPLETED */
+.status-pill.status-completed {
+  background-color: var(--figma-green-bg);
+  color: var(--figma-green-text);
+}
+
+/* Trạng thái CANCELLED */
+.status-pill.status-cancelled {
+  background-color: var(--figma-red-bg);
+  color: var(--figma-red-text);
+}
+.status-pill.status-cancelled .status-pill-dot {
+  background-color: var(--figma-red-primary);
+}
+
+/* CARD BODY */
+.order-card-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* LIFECYCLE LINEAR TRACKER (BR-08) */
+.linear-tracker-box {
+  background-color: var(--figma-bg-soft);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.tracker-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.55px;
+  color: var(--figma-text-muted);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.tracker-stepper-track {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.tracker-line-bar {
+  position: absolute;
+  top: 16px;
+  left: 10%;
+  right: 10%;
+  height: 4px;
+  background-color: var(--figma-border);
+  z-index: 1;
+}
+
+.tracker-line-fill {
+  position: absolute;
+  top: 16px;
+  left: 10%;
+  height: 4px;
+  background-color: var(--figma-green-text);
+  z-index: 2;
+  transition: width 0.3s ease;
+}
+
+.stepper-step-col {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex: 1;
+}
+
+.step-node-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--figma-bg-light-blue);
+  color: var(--figma-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+/* Step node trạng thái hoàn thành */
+.stepper-step-col.done .step-node-circle {
+  background-color: var(--figma-green-text);
+  color: #ffffff;
+  box-shadow: var(--figma-shadow-sm);
+}
+
+/* Step node trạng thái hiện tại (active) */
+.stepper-step-col.active .step-node-circle {
+  background-color: var(--figma-primary);
+  color: #ffffff;
+  box-shadow: 0 0 0 4px var(--figma-bg-accent-blue), var(--figma-shadow-sm);
+}
+
+.step-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--figma-text-muted);
+  margin-top: 6px;
+  line-height: 16px;
+}
+
+.stepper-step-col.done .step-label {
+  color: var(--figma-green-text);
+  font-weight: 700;
+}
+
+.stepper-step-col.active .step-label {
+  color: var(--figma-primary);
+  font-weight: 700;
+}
+
+.step-subtext {
+  font-size: 11px;
+  color: var(--figma-text-muted);
+  margin-top: 2px;
+}
+
+.stepper-step-col.active .step-subtext {
+  color: var(--figma-primary);
+  font-weight: 600;
+}
+
+/* Thông báo đơn hàng bị hủy */
+.cancelled-banner {
+  background-color: #fef2f2;
+  border-left: 4px solid var(--figma-red-primary);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: #991b1b;
+}
+
+/* BENTO GRID (12 CỘT) */
+.order-bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 24px;
+}
+
+.bento-left-col {
+  grid-column: span 8;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bento-right-col {
+  grid-column: span 4;
+  background-color: var(--figma-bg-soft);
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: fit-content;
+}
+
+/* PRODUCT LINE ITEMS */
+.order-product-card {
+  background-color: var(--figma-bg-soft);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.product-img-box {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  background-color: #ffffff;
+  overflow: hidden;
+  box-shadow: var(--figma-shadow-sm);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-img-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-info-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.product-cat-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--figma-primary);
+  line-height: 14px;
+}
+
+.product-name-heading {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--figma-text-dark);
+  margin: 0;
+  line-height: 22px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-sku-meta {
+  font-size: 12px;
+  color: var(--figma-text-muted);
+  line-height: 16px;
+}
+
+.product-price-qty-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+
+.product-qty-text {
+  font-size: 12px;
+  color: var(--figma-text-body);
+}
+
+.product-qty-text strong {
+  color: var(--figma-text-dark);
+}
+
+.product-subtotal-price {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--figma-primary);
+}
+
+/* LIVE DELIVERY TRACK CARD (SHIPPING STATE) */
+.live-shipping-track-card {
+  background-color: var(--figma-bg-soft);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.shipping-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background-color: var(--figma-bg-accent-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--figma-primary);
+}
+
+.shipping-track-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.shipping-driver-info {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--figma-text-dark);
+}
+
+.shipping-status-desc {
+  font-size: 12px;
+  color: var(--figma-text-muted);
+  line-height: 16px;
+}
+
+/* LOGISTICS & BILLING SUMMARY (RIGHT COL) */
+.logistics-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.logistics-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--figma-text-dark);
+}
+
+.receiver-name-phone {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--figma-text-dark);
+}
+
+.receiver-address {
+  font-size: 12px;
+  color: var(--figma-text-body);
+  line-height: 16px;
+}
+
+.bill-section {
+  border-top: 1px solid var(--figma-border);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bill-line-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--figma-text-muted);
+}
+
+.bill-line-item .val-highlight {
+  font-weight: 700;
+  color: var(--figma-green-text);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.bill-line-item.total-line {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--figma-border);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--figma-text-dark);
+}
+
+.bill-line-item.total-line .grand-total-price {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--figma-primary);
+}
+
+/* ACTION BUTTONS GROUP */
+.order-actions-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* Nút hủy đơn (PENDING) */
+.btn-action-cancel {
+  width: 100%;
+  padding: 10px 16px;
+  background-color: var(--figma-red-bg);
+  color: var(--figma-red-text);
+  border: none;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color 0.2s;
+}
+
+.btn-action-cancel:hover {
+  background-color: #ffc9c2;
+}
+
+/* Nút xem chi tiết */
+.btn-action-detail {
+  width: 100%;
+  padding: 9px 16px;
+  background-color: #ffffff;
+  color: var(--figma-text-dark);
+  border: 1px solid var(--figma-border);
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: var(--figma-shadow-sm);
+  transition: all 0.2s;
+}
+
+.btn-action-detail:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+/* Nút bị khóa không thể hủy (SHIPPING) */
+.btn-action-locked {
+  width: 100%;
+  padding: 10px 16px;
+  background-color: var(--figma-border);
+  color: var(--figma-text-muted);
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: not-allowed;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* Nút liên hệ hỗ trợ */
+.btn-action-contact {
+  width: 100%;
+  padding: 9px 16px;
+  background-color: var(--figma-primary);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background-color 0.2s;
+}
+
+.btn-action-contact:hover {
+  background-color: var(--figma-primary-hover);
+}
+
+/* Nút mua lại (COMPLETED) */
+.btn-action-reorder {
+  width: 100%;
+  padding: 10px 16px;
+  background-color: var(--figma-green-text);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: var(--figma-shadow-sm);
+  transition: background-color 0.2s;
+}
+
+.btn-action-reorder:hover {
+  background-color: #00563b;
+}
+
+.reorder-sub-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-sub-action {
+  flex: 1;
+  padding: 8px;
+  background-color: #ffffff;
+  color: var(--figma-text-dark);
+  border: 1px solid var(--figma-border);
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: background-color 0.2s;
+}
+
+.btn-sub-action:hover {
+  background-color: #f8fafc;
+}
+
+/* EMPTY STATE CARD */
+.orders-empty-state-card {
+  background: var(--figma-bg-card);
+  border-radius: 12px;
+  padding: 60px 24px;
+  text-align: center;
+  box-shadow: var(--figma-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.empty-icon-box {
+  width: 64px;
+  height: 64px;
+  border-radius: 9999px;
+  background-color: var(--figma-bg-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.orders-empty-state-card h3 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--figma-text-dark);
+  margin: 0;
+}
+
+.orders-empty-state-card p {
+  font-size: 14px;
+  color: var(--figma-text-muted);
+  max-width: 480px;
+  margin: 0;
+  line-height: 20px;
+}
+
+.btn-empty-shop {
+  margin-top: 12px;
+  padding: 10px 24px;
+  background-color: var(--figma-primary);
+  color: #ffffff;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.btn-empty-shop:hover {
+  background-color: var(--figma-primary-hover);
+}
+
+/* MODAL STYLES (BR-09 & FR-025) */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.cancel-modal-card,
+.order-detail-modal-card {
+  background: #ffffff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 540px;
+  box-shadow: var(--figma-shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: translateY(20px);
+  transition: transform 0.25s ease;
+}
+
+.order-detail-modal-card {
+  max-width: 760px;
+  max-height: 90vh;
+}
+
+.modal-overlay.active .cancel-modal-card,
+.modal-overlay.active .order-detail-modal-card {
+  transform: translateY(0);
+}
+
+.modal-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--figma-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h3 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--figma-text-dark);
+  margin: 0;
+}
+
+.btn-close-modal {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  color: var(--figma-text-muted);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-footer {
+  padding: 14px 24px;
+  border-top: 1px solid var(--figma-border);
+  background-color: var(--figma-bg-soft);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* Cancel Form Elements */
+.cancel-alert-box {
+  background-color: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  gap: 10px;
+}
+
+.alert-icon {
+  font-size: 20px;
+}
+
+.alert-text {
+  font-size: 12.5px;
+  color: #9f1239;
+  line-height: 18px;
+}
+
+.alert-text p {
+  margin: 4px 0 0;
+}
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--figma-text-dark);
+  margin-bottom: 6px;
+}
+
+.form-label .required {
+  color: var(--figma-red-primary);
+}
+
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--figma-border);
+  background-color: var(--figma-bg-soft);
+  font-size: 13.5px;
+  color: var(--figma-text-dark);
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.form-select:focus,
+.form-textarea:focus {
+  border-color: var(--figma-primary);
+  background-color: #ffffff;
+}
+
+.form-hint {
+  display: block;
+  font-size: 11.5px;
+  color: var(--figma-text-muted);
+  text-align: right;
+  margin-top: 4px;
+}
+
+.form-error-msg {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.btn-modal {
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-modal-secondary {
+  background: #ffffff;
+  border: 1px solid var(--figma-border);
+  color: var(--figma-text-dark);
+}
+
+.btn-modal-primary {
+  background: var(--figma-primary);
+  color: #ffffff;
+}
+
+.btn-modal-danger {
+  background: var(--figma-red-primary);
+  color: #ffffff;
+}
+
+/* Modal Timeline & Stepper */
+.modal-stepper-section {
+  background-color: var(--figma-bg-soft);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--figma-text-dark);
+  margin-bottom: 16px;
+}
+
+.modal-stepper {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+}
+
+.modal-stepper .stepper-line-bg {
+  position: absolute;
+  top: 15px;
+  left: 5%;
+  right: 5%;
+  height: 3px;
+  background-color: var(--figma-border);
+}
+
+.modal-stepper .stepper-line-progress {
+  position: absolute;
+  top: 15px;
+  left: 5%;
+  height: 3px;
+  background-color: var(--figma-green-text);
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.step-node {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.step-circle {
+  width: 30px;
+  height: 30px;
+  border-radius: 9999px;
+  background-color: var(--figma-bg-light-blue);
+  color: var(--figma-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-node.done .step-circle {
+  background-color: var(--figma-green-text);
+  color: #ffffff;
+}
+
+.step-node.active .step-circle {
+  background-color: var(--figma-primary);
+  color: #ffffff;
+  box-shadow: 0 0 0 3px var(--figma-bg-accent-blue);
+}
+
+.step-title {
+  font-size: 11.5px;
+  color: var(--figma-text-dark);
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.modal-subheading {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--figma-text-dark);
+  margin: 0 0 10px;
+}
+
+.history-timeline-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-left: 2px solid var(--figma-border);
+  padding-left: 14px;
+  margin-left: 8px;
+}
+
+.history-entry {
+  position: relative;
+  font-size: 12.5px;
+}
+
+.history-entry::before {
+  content: '';
+  position: absolute;
+  left: -19px;
+  top: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background-color: var(--figma-primary);
+}
+
+.history-time {
+  font-size: 11px;
+  color: var(--figma-text-muted);
+}
+
+.history-desc {
+  color: var(--figma-text-dark);
+}
+
+.history-note {
+  font-size: 11.5px;
+  color: var(--figma-text-muted);
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.modal-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.info-card {
+  background-color: var(--figma-bg-soft);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 12.5px;
+  line-height: 18px;
+}
+
+.info-card h4 {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--figma-text-dark);
+  margin: 0 0 8px;
+}
+
+.info-card p {
+  margin: 0 0 4px;
+}
+
+.modal-products-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-product-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background-color: var(--figma-bg-soft);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.modal-bill-summary {
+  background-color: var(--figma-bg-soft);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.bill-row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--figma-text-muted);
+}
+
+.bill-row.total-row {
+  border-top: 1px dashed var(--figma-border);
+  padding-top: 8px;
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--figma-text-dark);
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 1024px) {
+  .order-bento-grid {
+    grid-template-columns: 1fr;
+  }
+  .bento-left-col,
+  .bento-right-col {
+    grid-column: span 12;
+  }
+  .modal-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .customer-identity-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .quick-metrics-ribbon {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .order-top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
