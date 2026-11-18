@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } else if (role === "ADMIN" || role === "STAFF") {
       window.location.href = "admin-dashboard.html";
     } else {
-      window.location.href = "../index.html";
+      window.location.href = "customer-home.html";
     }
     return;
   }
@@ -174,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (role === "ADMIN" || role === "STAFF") {
           window.location.href = "admin-dashboard.html";
         } else {
-          window.location.href = "../index.html";
+          window.location.href = "customer-home.html";
         }
       }, 900);
 

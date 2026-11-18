@@ -154,6 +154,223 @@ function showToast(message, type = "success") {
   }
 }
 
+// ==========================================================
+// 15. POP-UP XÁC NHẬN (CONFIRMATION MODAL / DIALOG)
+// ==========================================================
+function showConfirmModal({
+  title = "Xác nhận hành động",
+  message = "Bạn có chắc chắn muốn thực hiện thao tác này?",
+  confirmText = "Xác nhận",
+  cancelText = "Hủy bỏ",
+  type = "danger", // 'danger' | 'warning' | 'primary'
+  onConfirm = () => {},
+  onCancel = () => {}
+} = {}) {
+  // Đóng modal cũ nếu còn tồn tại
+  const oldModal = document.getElementById("se-confirm-modal");
+  if (oldModal) oldModal.remove();
+
+  const configs = {
+    danger: {
+      btnBg: "#dc2626",
+      btnHover: "#b91c1c",
+      iconBg: "#fee2e2",
+      iconColor: "#dc2626",
+      iconSvg: `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" x2="9" y1="12" y2="12"/>
+        </svg>
+      `
+    },
+    warning: {
+      btnBg: "#d97706",
+      btnHover: "#b45309",
+      iconBg: "#fef3c7",
+      iconColor: "#d97706",
+      iconSvg: `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      `
+    },
+    primary: {
+      btnBg: "#00288e",
+      btnHover: "#001f70",
+      iconBg: "#eaedff",
+      iconColor: "#00288e",
+      iconSvg: `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00288e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      `
+    }
+  };
+
+  const currentCfg = configs[type] || configs.danger;
+
+  const overlay = document.createElement("div");
+  overlay.id = "se-confirm-modal";
+  overlay.className = "modal-overlay";
+  overlay.style.cssText = `
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    opacity: 0;
+    transition: opacity 0.22s ease;
+  `;
+
+  overlay.innerHTML = `
+    <div class="modal se-confirm-card" style="
+      width: 100%;
+      max-width: 420px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      transform: scale(0.92) translateY(8px);
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1px solid #e2e8f0;
+      font-family: var(--se-font-body, system-ui, -apple-system, sans-serif);
+    ">
+      <div style="padding: 24px 24px 18px 24px; display: flex; gap: 16px; align-items: flex-start;">
+        <div style="
+          width: 48px;
+          height: 48px;
+          border-radius: 12px;
+          background: ${currentCfg.iconBg};
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        ">
+          ${currentCfg.iconSvg}
+        </div>
+        <div style="flex: 1;">
+          <h3 style="margin: 0 0 6px 0; font-size: 17.5px; font-weight: 700; color: #0f172a; font-family: var(--se-font-heading, system-ui, sans-serif); letter-spacing: -0.01em;">
+            ${escapeHtml(title)}
+          </h3>
+          <p style="margin: 0; font-size: 14px; color: #64748b; line-height: 1.55;">
+            ${escapeHtml(message)}
+          </p>
+        </div>
+      </div>
+      <div style="
+        padding: 14px 24px;
+        background: #f8fafc;
+        border-top: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 10px;
+      ">
+        <button id="modal-cancel-btn" type="button" style="
+          padding: 8px 18px;
+          font-size: 13.5px;
+          font-weight: 600;
+          border-radius: 8px;
+          border: 1px solid #cbd5e1;
+          background: #ffffff;
+          color: #475569;
+          cursor: pointer;
+          transition: background 0.15s ease, border-color 0.15s ease;
+        ">
+          ${escapeHtml(cancelText)}
+        </button>
+        <button id="modal-confirm-btn" type="button" style="
+          padding: 8px 20px;
+          font-size: 13.5px;
+          font-weight: 600;
+          border-radius: 8px;
+          background: ${currentCfg.btnBg};
+          color: #ffffff;
+          border: none;
+          cursor: pointer;
+          transition: background 0.15s ease, transform 0.1s ease;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        ">
+          ${escapeHtml(confirmText)}
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  // Animation xuất hiện mượt mà
+  requestAnimationFrame(() => {
+    overlay.style.opacity = "1";
+    const card = overlay.querySelector(".se-confirm-card");
+    if (card) {
+      card.style.transform = "scale(1) translateY(0)";
+    }
+  });
+
+  const cancelBtn = overlay.querySelector("#modal-cancel-btn");
+  const confirmBtn = overlay.querySelector("#modal-confirm-btn");
+
+  // Hiệu ứng hover
+  cancelBtn.addEventListener("mouseenter", () => cancelBtn.style.background = "#f1f5f9");
+  cancelBtn.addEventListener("mouseleave", () => cancelBtn.style.background = "#ffffff");
+  confirmBtn.addEventListener("mouseenter", () => confirmBtn.style.background = currentCfg.btnHover);
+  confirmBtn.addEventListener("mouseleave", () => confirmBtn.style.background = currentCfg.btnBg);
+
+  function destroyModal() {
+    overlay.style.opacity = "0";
+    const card = overlay.querySelector(".se-confirm-card");
+    if (card) {
+      card.style.transform = "scale(0.92) translateY(8px)";
+    }
+    document.removeEventListener("keydown", onKeyDown);
+    setTimeout(() => {
+      overlay.remove();
+    }, 220);
+  }
+
+  function handleCancel() {
+    destroyModal();
+    if (typeof onCancel === "function") onCancel();
+  }
+
+  function handleConfirm() {
+    confirmBtn.disabled = true;
+    confirmBtn.style.opacity = "0.75";
+    confirmBtn.style.cursor = "not-allowed";
+    confirmBtn.textContent = "Đang xử lý...";
+    destroyModal();
+    if (typeof onConfirm === "function") onConfirm();
+  }
+
+  function onKeyDown(e) {
+    if (e.key === "Escape") {
+      handleCancel();
+    }
+  }
+
+  cancelBtn.addEventListener("click", handleCancel);
+  confirmBtn.addEventListener("click", handleConfirm);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) {
+      handleCancel();
+    }
+  });
+  document.addEventListener("keydown", onKeyDown);
+}
+
 // Tiện ích xác thực và phân quyền người dùng (Authentication & RBAC Helper)
 const Auth = {
   getToken: () => localStorage.getItem("token"),
@@ -181,12 +398,19 @@ const Auth = {
     const role = Auth.getRole();
     return role === "ADMIN" || role === "STAFF";
   },
+  confirmLogout: (redirectRoot = "./") => {
+    showConfirmModal({
+      title: "Xác nhận đăng xuất",
+      message: "Bạn có chắc chắn muốn đăng xuất khỏi tài khoản ShopEase không?",
+      confirmText: "Đăng xuất",
+      cancelText: "Hủy",
+      type: "danger",
+      onConfirm: () => {
+        Auth.logout(redirectRoot);
+      }
+    });
+  },
   logout: async (redirectRoot = "./") => {
-    // 1. Hiển thị thông báo Toast đăng xuất
-    if (typeof showToast === "function") {
-      showToast("Đăng xuất thành công! Đang chuyển hướng sau 2 giây...", "info");
-    }
-
     try {
       if (typeof api !== "undefined") {
         await api.post("/auth/logout");
@@ -202,10 +426,8 @@ const Auth = {
         type: "success"
       }));
 
-      // 2. Tạo độ delay khoảng 2 giây (2000ms) trước khi chuyển hướng
-      setTimeout(() => {
-        window.location.href = `${redirectRoot}pages/login.html`;
-      }, 2000);
+      // Chuyển hướng ngay lập tức đến trang đăng nhập (không có độ trễ)
+      window.location.href = `${redirectRoot}pages/login.html`;
     }
   }
 };

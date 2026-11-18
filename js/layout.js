@@ -34,7 +34,7 @@ function checkRouteGuard() {
     const role = (user.role || "").toUpperCase();
     if (role !== "ADMIN" && role !== "STAFF") {
       alert("Truy cập bị từ chối! Tài khoản của bạn không có quyền quản trị hệ thống.");
-      window.location.href = `${root}index.html`;
+      window.location.href = `${root}pages/customer-home.html`;
       return false;
     }
   }
@@ -60,31 +60,78 @@ function renderLayout() {
   const currentPath = window.location.pathname;
 
   if (document.body.classList.contains("shop-page")) {
+    const token = typeof Auth !== "undefined" ? Auth.getToken() : localStorage.getItem("token");
+    let user = typeof Auth !== "undefined" ? Auth.getUser() : null;
+    if (!user) {
+      try {
+        user = JSON.parse(localStorage.getItem("user") || "null");
+      } catch (_) {}
+    }
+
+    let userSectionHtml = "";
+    if (token && user) {
+      const rawName = user.full_name || user.email || "";
+      const displayName = typeof capitalizeWords === "function" && user.full_name
+        ? capitalizeWords(user.full_name)
+        : rawName;
+      userSectionHtml = `
+        <span class="user-tool" style="cursor: pointer;" id="shop-user-profile" title="Tài khoản">
+          <img src="${root}assets/images/avt người dùng.svg" alt="Avatar">
+          <small>${escapeHtml(displayName)}<br><b id="shop-logout-btn" style="color: #ef4444; font-size: 11px;">Đăng xuất</b></small>
+        </span>
+      `;
+    } else {
+      userSectionHtml = `
+        <a href="${root}pages/login.html" class="user-tool" style="text-decoration: none; color: inherit;">
+          <img src="${root}assets/images/avt người dùng.svg" alt="Avatar">
+          <small>Đăng nhập<br><b>Tài khoản</b></small>
+        </a>
+      `;
+    }
+
     document.getElementById("app-header").innerHTML = `
-      <div class="shop-header-inner"><a href="${root}index.html" class="shop-brand"><img src="${root}assets/images/logo_shop.svg" alt="ShopEase"><span>ShopEase<small>Mua sắm dễ dàng mỗi ngày</small></span></a>
-      <div class="header-search"><input id="shop-search" type="search" placeholder="Tìm kiếm sản phẩm, thương hiệu... (Ctrl + K)"><button type="button" id="search-submit">⌕ Tìm</button></div>
-      <div class="header-tools"><span><img src="${root}assets/images/tổng đài.svg" alt=""><small>Tổng đài CSKH<br><b>1900 6868</b></small></span><span class="user-tool"><img src="${root}assets/images/avt người dùng.svg" alt="Ảnh Nguyễn Văn An"><small>Nguyễn Văn An<br><b>Tài khoản</b></small></span><button class="cart-tool" aria-label="Giỏ hàng"><img src="${root}assets/images/giỏ hàng.svg" alt=""><i id="cart-count">0</i></button></div></div>`;
+      <div class="shop-header-inner">
+        <a href="${root}pages/customer-home.html" class="shop-brand">
+          <img src="${root}assets/images/logo_shop.svg" alt="ShopEase">
+          <span>ShopEase<small>Mua sắm dễ dàng mỗi ngày</small></span>
+        </a>
+        <div class="header-search">
+          <input id="shop-search" type="search" placeholder="Tìm kiếm sản phẩm, thương hiệu... (Ctrl + K)">
+          <button type="button" id="search-submit">⌕ Tìm</button>
+        </div>
+        <div class="header-tools">
+          <span>
+            <img src="${root}assets/images/tổng đài.svg" alt="">
+            <small>Tổng đài CSKH<br><b>1900 6868</b></small>
+          </span>
+          ${userSectionHtml}
+          <button class="cart-tool" aria-label="Giỏ hàng">
+            <img src="${root}assets/images/giỏ hàng.svg" alt="">
+            <i id="cart-count">0</i>
+          </button>
+        </div>
+      </div>`;
+
+    // Gắn sự kiện đăng xuất nếu đã đăng nhập
+    const shopLogoutBtn = document.getElementById("shop-logout-btn");
+    if (shopLogoutBtn) {
+      shopLogoutBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (typeof Auth !== "undefined" && Auth.confirmLogout) {
+          Auth.confirmLogout(root);
+        } else if (typeof Auth !== "undefined" && Auth.logout) {
+          Auth.logout(root);
+        } else {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          window.location.href = `${root}pages/login.html`;
+        }
+      });
+    }
+
     document.getElementById("app-footer").innerHTML = `<div class="shop-footer"><div class="footer-columns"><div><a class="shop-brand footer-brand" href="#"><img src="${root}assets/images/logo_shop.svg" alt="ShopEase"><span>ShopEase</span></a><p>Nền tảng mua sắm trực tuyến tiện lợi, giao hàng nhanh và thanh toán khi nhận hàng.</p><p>☎ Hotline: 1900 6868 (8:00 – 21:00)<br>✉ support@shopease.vn<br><img class="address-icon" src="${root}assets/images/địa chỉ.svg" alt=""> Tòa nhà Innovation, Cầu Giấy, Hà Nội</p></div><div><b>Chính sách khách hàng</b><a href="#">Chính sách giao hàng COD</a><a href="#">Đổi trả, đổi hàng 7 ngày</a><a href="#">Quy định bảo mật thông tin</a><a href="#">Chính sách bảo mật</a></div><div><b>Hỗ trợ mua sắm</b><a href="#">Hướng dẫn đặt hàng & thanh toán</a><a href="#">Chính sách đổi trả</a><a href="#">Chính sách đồng kiểm khi nhận hàng</a><a href="#">Trung tâm trợ giúp FAQ</a></div><div><b>Phương thức thanh toán & chứng nhận</b><span class="payment-badges"><img src="${root}assets/images/COD.svg" alt=""> Thanh toán khi nhận hàng</span><span class="payment-badges"><img src="${root}assets/images/chuyển khoản.svg" alt=""> Chuyển khoản</span></div></div><div class="footer-legal">© 2026 ShopEase Việt Nam. Bản quyền thuộc về Công ty TNHH Thương mại ShopEase.<span>Điều khoản sử dụng　　Chính sách bảo mật　　Liên hệ pháp nhân</span></div></div>`;
     return;
   }
-
-  const links = MENU.map((item) => {
-    const isActive = currentPath.endsWith("/" + item.href) ||
-      (item.href === "index.html" && currentPath.endsWith("/"));
-    return `<a href="${root}${item.href}" class="${isActive ? "active" : ""}">${item.label}</a>`;
-  }).join("");
-
-  document.getElementById("app-header").innerHTML = `
-    <div class="container header-inner">
-      <a href="${root}index.html" class="brand">
-        <img src="${root}assets/images/logo_shop.svg" alt="logo" width="28" height="28">
-        <span>${CONFIG.APP_NAME}</span>
-      </a>
-      <nav class="nav">${links}</nav>
-    </div>`;
-
-  document.getElementById("app-footer").innerHTML = `
-    <div class="container">© ${new Date().getFullYear()} HN-KS25-CNTT2 · Base code thực tập doanh nghiệp</div>`;
   if (headerElem) {
     const token = typeof Auth !== "undefined" ? Auth.getToken() : localStorage.getItem("token");
     let user = typeof Auth !== "undefined" ? Auth.getUser() : null;
@@ -181,22 +228,18 @@ function renderLayout() {
     const logoutBtn = document.getElementById("btn-logout");
     if (logoutBtn) {
       logoutBtn.addEventListener("click", () => {
-        logoutBtn.disabled = true;
-        logoutBtn.style.opacity = "0.6";
-        logoutBtn.style.cursor = "not-allowed";
-        logoutBtn.textContent = "Đang đăng xuất...";
-
-        if (typeof Auth !== "undefined" && Auth.logout) {
+        if (typeof Auth !== "undefined" && Auth.confirmLogout) {
+          Auth.confirmLogout(root);
+        } else if (typeof Auth !== "undefined" && Auth.logout) {
           Auth.logout(root);
         } else {
-          if (typeof showToast === "function") {
-            showToast("Đăng xuất thành công! Đang chuyển hướng sau 2 giây...", "info");
-          }
+          sessionStorage.setItem("pending_toast", JSON.stringify({
+            message: "Bạn đã đăng xuất thành công.",
+            type: "success"
+          }));
           localStorage.removeItem("token");
           localStorage.removeItem("user");
-          setTimeout(() => {
-            window.location.href = `${root}pages/login.html`;
-          }, 2000);
+          window.location.href = `${root}pages/login.html`;
         }
       });
     }

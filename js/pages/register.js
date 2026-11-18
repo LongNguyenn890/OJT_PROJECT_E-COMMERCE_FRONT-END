@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const token = typeof Auth !== "undefined" ? Auth.getToken() : localStorage.getItem("token");
   if (token) {
     const root = document.body.dataset.root || "../";
-    window.location.href = `${root}index.html`;
+    window.location.href = `${root}pages/customer-home.html`;
     return;
   }
 
