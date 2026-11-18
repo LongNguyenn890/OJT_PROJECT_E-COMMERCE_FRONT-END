@@ -154,6 +154,16 @@ function showToast(message, type = "success") {
   }
 }
 
+// Đăng ký toàn cục và thay thế hàm alert() mặc định của trình duyệt sang toast thông báo
+window.showToast = showToast;
+window.alert = function (message) {
+  if (typeof showToast === "function") {
+    showToast(String(message ?? ""), "info");
+  } else {
+    console.info("Toast alert:", message);
+  }
+};
+
 // ==========================================================
 // 15. POP-UP XÁC NHẬN (CONFIRMATION MODAL / DIALOG)
 // ==========================================================

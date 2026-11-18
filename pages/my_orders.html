@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="../css/items.css">
   <link rel="stylesheet" href="../css/my_orders.css">
 </head>
-<body class="shop-page" data-root="../">
+<body class="shop-page" data-root="../" data-auth="required">
   <!-- Topline thông báo đầu trang -->
   <div class="shop-topline">
     <span><img src="../assets/images/giao hàng.svg" alt=""> Miễn phí giao hàng đơn hàng từ 500.000₫ · Thanh toán khi nhận hàng (COD) miễn phí</span>
@@ -22,57 +22,45 @@
   <!-- Header chung của ShopEase (do layout.js tự render) -->
   <header id="app-header"></header>
 
-  <!-- Thanh điều hướng phụ của khách hàng -->
-  <nav class="shop-nav">
-    <a href="customer-home.html">Trang chủ</a>
-    <a href="customer-home.html#products">Sản phẩm</a>
-    <a href="customer-home.html#categories">Danh mục</a>
-    <a class="selected" href="my_orders.html">Đơn mua của tôi</a>
-    <span class="nav-spacer"></span>
-    <a href="#"><img src="../assets/images/COD.svg" alt=""> COD toàn quốc</a>
-    <a href="#"><img src="../assets/images/đổi trả.svg" alt=""> Đổi trả 7 ngày</a>
-  </nav>
-
-  <!-- Thanh phân loại ngành hàng phụ (Sub-header categories bar) -->
-  <div class="shop-subcategories-bar">
-    <div class="subcategories-inner">
-      <span class="subcat-label">
-        <img src="../assets/images/danh mục ngành hàng.svg" alt=""> Ngành hàng:
-      </span>
-      <a href="customer-home.html#products">Thời trang & May mặc</a>
-      <a href="customer-home.html#products">Thiết bị & Phụ kiện Công nghệ</a>
-      <a href="customer-home.html#products">Đồ gia dụng & Đời sống</a>
-      <a href="customer-home.html#products">Balo & Túi xách</a>
-      <a href="customer-home.html#products">Quà tặng & Văn phòng phẩm</a>
-      <a href="customer-home.html#products">Dụng cụ Dã ngoại</a>
-    </div>
-  </div>
-
   <!-- KHU VỰC NỘI DUNG CHÍNH (Theo Figma Node 64:34042) -->
   <main class="orders-main-wrapper">
     <div class="orders-container-inner">
 
-      <!-- SECTION 1: Breadcrumb & Customer Identity Canvas (Node 64:34045) -->
+      <!-- Thanh điều hướng phân cấp (Breadcrumb) -->
+      <nav class="se-breadcrumb" aria-label="Đường dẫn điều hướng">
+        <ol class="se-breadcrumb-list">
+          <li class="se-breadcrumb-item">
+            <a href="customer-home.html" class="se-breadcrumb-link">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              <span>Trang chủ</span>
+            </a>
+          </li>
+          <li class="se-breadcrumb-separator" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </li>
+          <li class="se-breadcrumb-item">
+            <a href="profile.html" class="se-breadcrumb-link">Tài khoản</a>
+          </li>
+          <li class="se-breadcrumb-separator" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </li>
+          <li class="se-breadcrumb-item se-breadcrumb-current" aria-current="page">
+            <span>Đơn hàng của tôi</span>
+          </li>
+        </ol>
+      </nav>
+
+      <!-- SECTION 1: Customer Identity Canvas -->
       <section class="customer-identity-card" id="customer-identity-canvas">
         <div class="identity-left-col">
-          <!-- Breadcrumb Navigation -->
-          <div class="orders-breadcrumb-bar">
-            <a href="customer-home.html" class="breadcrumb-item">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-              <span>Tài khoản của tôi</span>
-            </a>
-            <span class="breadcrumb-arrow">›</span>
-            <span class="breadcrumb-current">Lịch sử đơn hàng của tôi (FR-028)</span>
-          </div>
-
           <!-- Customer Identity Row -->
           <div class="customer-info-row">
             <div class="customer-avatar-box" id="user-avatar-initials">
-              NA
+              KH
             </div>
             <div class="customer-text-meta">
               <div class="customer-name-wrapper">
-                <h1 class="customer-display-name" id="user-display-name">Nguyễn Văn An</h1>
+                <h1 class="customer-display-name" id="user-display-name">Khách hàng ShopEase</h1>
                 <span class="customer-status-badge">
                   <span class="status-pulse-dot"></span>
                   Đang hoạt động
@@ -179,15 +167,7 @@
       </div>
 
       <div class="modal-body">
-        <div class="cancel-alert-box">
-          <div class="alert-icon">⚠️</div>
-          <div class="alert-text">
-            <strong>Quy định hủy đơn (BR-09):</strong>
-            <p>Khách hàng chỉ có thể hủy đơn khi đơn hàng đang ở trạng thái <strong>Chờ xác nhận (PENDING)</strong>. Toàn bộ số lượng sản phẩm sẽ được tự động hoàn lại vào kho hàng sau khi xác nhận.</p>
-          </div>
-        </div>
-
-        <div class="form-group" style="margin-top: 16px;">
+        <div class="form-group">
           <label class="form-label" for="cancel-reason-preset">
             Chọn lý do hủy đơn hàng <span class="required">*</span>
           </label>
@@ -241,7 +221,7 @@
         <!-- Status Stepper inside modal -->
         <div class="modal-stepper-section">
           <div class="section-title-row">
-            <span>Tiến trình trạng thái (BR-08)</span>
+            <span>Tiến trình trạng thái</span>
             <span id="modal-status-badge"></span>
           </div>
           <div class="modal-stepper" id="modal-timeline-stepper">
@@ -324,6 +304,60 @@
         </button>
         <button type="button" class="btn-modal btn-modal-primary" id="btn-close-detail-modal-footer">
           Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- MODAL: MUA LẠI SẢN PHẨM (RE-ORDER MODAL)                    -->
+  <!-- ========================================================== -->
+  <div class="modal-overlay" id="reorder-modal">
+    <div class="reorder-modal-card">
+      <div class="modal-header">
+        <div>
+          <h3>Mua lại sản phẩm</h3>
+          <small id="reorder-modal-subtitle" class="text-muted">Chọn các sản phẩm trong đơn để thêm vào giỏ hàng</small>
+        </div>
+        <button type="button" class="btn-close-modal" id="btn-close-reorder-modal">&times;</button>
+      </div>
+
+      <div class="modal-body reorder-modal-body">
+        <!-- Thanh chọn tất cả & thông tin -->
+        <div class="reorder-select-bar">
+          <label class="reorder-check-all-label">
+            <input type="checkbox" id="reorder-check-all" checked>
+            <span><strong>Chọn tất cả</strong> (<span id="reorder-selected-count">0</span>/<span id="reorder-total-count">0</span> sản phẩm)</span>
+          </label>
+        </div>
+
+        <!-- Danh sách sản phẩm mua lại -->
+        <div class="reorder-items-list" id="reorder-items-list">
+          <!-- Render danh sách sản phẩm động -->
+        </div>
+
+        <!-- Tóm tắt số tiền -->
+        <div class="reorder-summary-box">
+          <div class="reorder-summary-left">
+            <span>Đã chọn: <strong id="reorder-summary-qty">0</strong> sản phẩm</span>
+          </div>
+          <div class="reorder-summary-right">
+            <span>Tạm tính:</span>
+            <strong class="reorder-summary-total" id="reorder-summary-total">0 ₫</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer reorder-modal-footer">
+        <button type="button" class="btn-modal btn-modal-secondary" id="btn-cancel-reorder">
+          Đóng
+        </button>
+        <button type="button" class="btn-modal btn-modal-outline" id="btn-reorder-all">
+          Mua lại tất cả
+        </button>
+        <button type="button" class="btn-modal btn-modal-primary" id="btn-submit-reorder">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+          <span id="btn-submit-reorder-text">Thêm vào giỏ hàng (0)</span>
         </button>
       </div>
     </div>

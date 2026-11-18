@@ -14,7 +14,6 @@
 <body class="shop-page" data-root="../">
   <div class="shop-topline"><span><img src="../assets/images/giao hàng.svg" alt=""> Miễn phí giao hàng đơn hàng từ 500.000₫ · Thanh toán khi nhận hàng (COD) miễn phí</span><span><img src="../assets/images/tổng đài.svg" alt=""> CSKH toàn quốc: 1900 6868</span></div>
   <header id="app-header"></header>
-  <nav class="shop-nav"><a class="selected" href="#">Trang chủ</a><a href="#products">Sản phẩm</a><a href="#categories">Danh mục</a><a href="my_orders.html">Đơn mua của tôi</a><a href="#">Về chúng tôi</a><a href="#">Khuyến mãi</a><span class="nav-spacer"></span><a href="#"><img src="../assets/images/COD.svg" alt=""> COD toàn quốc</a><a href="#"><img src="../assets/images/đổi trả.svg" alt=""> Đổi trả 7 ngày</a></nav>
 
   <main class="shop-main">
     <div class="shop-promises"><div><b class="promise-icon mint"><img src="../assets/images/giao hàng.svg" alt=""></b><span><strong>Giao Hàng Toàn Quốc</strong><small>Giao nhanh tận nơi, kiểm tra sản phẩm</small></span></div><div><b class="promise-icon lavender"><img src="../assets/images/đổi trả.svg" alt=""></b><span><strong>Đổi Trả Dễ Dàng</strong><small>Đổi trả miễn phí trong vòng 7 ngày</small></span></div><div><b class="promise-icon green"><img src="../assets/images/hotline.svg" alt=""></b><span><strong>Hotline Hỗ Trợ 24/7</strong><small>Tổng đài tư vấn miễn phí 1900 6868</small></span></div></div>
@@ -22,10 +21,10 @@
     <section id="categories" class="category-section">
       <div class="category-section-header">
         <h2><span class="section-icon"><img src="../assets/images/danh mục ngành hàng.svg" alt=""></span> Danh Mục Ngành Hàng</h2>
-        <p class="category-section-subtitle">Top ngành hàng phổ biến nhất hệ thống</p>
       </div>
       <div class="category-list" id="category-list"></div>
     </section>
+
     <section id="products" class="products-container">
       <div class="products-header-bar">
         <div>
@@ -65,17 +64,16 @@
       </div>
 
       <div class="catalog-layout">
-        <!-- 1. SIDEBAR BỘ LỌC -->
+        <!-- BỘ LỌC SIDEBAR BÊN TRÁI -->
         <aside class="catalog-sidebar" id="filter-sidebar" aria-label="Bộ lọc sản phẩm">
           <div class="sidebar-header">
             <div class="sidebar-title">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
               <span>Bộ lọc tìm kiếm</span>
             </div>
-            <button type="button" class="sidebar-reset-btn" id="filter-reset-top" title="Xóa tất cả bộ lọc">Xóa lọc</button>
           </div>
 
-          <!-- 2. DANH MỤC DROPDOWN LIST (CHỌN NHIỀU + TÌM KIẾM) -->
+          <!-- 1. DANH MỤC DROPDOWN / ACCORDION (CHỌN NHIỀU + TÌM KIẾM) -->
           <div class="sidebar-group" id="category-group">
             <button type="button" class="group-header-btn" id="category-accordion-toggle" aria-expanded="true">
               <span class="group-title">
@@ -87,21 +85,21 @@
             </button>
 
             <div class="group-body" id="category-dropdown-body">
-              <!-- 3. THANH TÌM KIẾM DANH MỤC -->
+              <!-- THANH TÌM KIẾM DANH MỤC -->
               <div class="cat-search-box">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input type="text" id="category-search-input" placeholder="Tìm kiếm ngành hàng..." autocomplete="off">
                 <button type="button" id="clear-cat-search" class="clear-cat-search-btn" hidden title="Xóa tìm kiếm">×</button>
               </div>
 
-              <!-- 4. DANH SÁCH CHỌN NHIỀU DANH MỤC -->
+              <!-- DANH SÁCH CHỌN NHIỀU DANH MỤC -->
               <div class="cat-checkbox-list" id="category-checkbox-list">
-                <!-- Sẽ được render động qua JS -->
+                <!-- Được render động qua JS -->
               </div>
             </div>
           </div>
 
-          <!-- 5. LỌC GIÁ THEO THANH KÉO (DUAL RANGE SLIDER) -->
+          <!-- 2. LỌC GIÁ THEO THANH KÉO (DUAL RANGE SLIDER) -->
           <div class="sidebar-group" id="price-group">
             <div class="group-header-static">
               <span class="group-title">
@@ -140,7 +138,7 @@
             </div>
           </div>
 
-          <!-- 6. NÚT ĐỂ LỌC SẢN PHẨM -->
+          <!-- 3. NÚT ĐỂ LỌC SẢN PHẨM -->
           <div class="sidebar-actions">
             <button type="button" class="filter-apply-btn" id="filter-apply-btn">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
@@ -152,7 +150,7 @@
           </div>
         </aside>
 
-        <!-- MAIN CATALOG CONTENT -->
+        <!-- MAIN CATALOG CONTENT (BÊN PHẢI) -->
         <div class="catalog-content">
           <div class="active-filter-bar" id="active-filter-bar" hidden>
             <span class="active-filter-title">Đang lọc:</span>

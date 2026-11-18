@@ -32,26 +32,31 @@
   <main class="profile-page-main">
     <div style="max-width: var(--shop-container-max, 1280px); margin: 0 auto;">
 
-      <!-- 1. Breadcrumb -->
-      <nav class="breadcrumb-nav" aria-label="Breadcrumb">
-        <a href="customer-home.html" class="breadcrumb-item">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-            <polyline points="9 22 9 12 15 12 15 22"/>
-          </svg>
-          Trang chủ
-        </a>
-        <span class="breadcrumb-separator">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-        </span>
-        <a href="profile.html" class="breadcrumb-item">Tài khoản</a>
-        <span class="breadcrumb-separator">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-        </span>
-        <span class="breadcrumb-item active" id="breadcrumb-current-text">Thông tin cá nhân</span>
+      <!-- Thanh điều hướng phân cấp (Breadcrumb) -->
+      <nav class="se-breadcrumb" aria-label="Đường dẫn điều hướng">
+        <ol class="se-breadcrumb-list">
+          <li class="se-breadcrumb-item">
+            <a href="customer-home.html" class="se-breadcrumb-link">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              <span>Trang chủ</span>
+            </a>
+          </li>
+          <li class="se-breadcrumb-separator" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </li>
+          <li class="se-breadcrumb-item">
+            <a href="profile.html" class="se-breadcrumb-link">Tài khoản</a>
+          </li>
+          <li class="se-breadcrumb-separator" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </li>
+          <li class="se-breadcrumb-item se-breadcrumb-current" aria-current="page">
+            <span id="breadcrumb-current-text">Hồ sơ cá nhân</span>
+          </li>
+        </ol>
       </nav>
 
-      <!-- 2. Khối tiêu đề trang -->
+      <!-- Khối tiêu đề trang -->
       <div class="profile-header-block">
         <div class="profile-title-area">
           <h1 id="page-main-heading">Hồ sơ cá nhân</h1>

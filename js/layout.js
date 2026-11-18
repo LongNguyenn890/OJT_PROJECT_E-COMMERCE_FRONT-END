@@ -42,7 +42,10 @@ function checkRouteGuard() {
     // 2. Đã đăng nhập nhưng không có vai trò ADMIN hoặc STAFF: Chặn và đá về trang chủ
     const role = (user.role || "").toUpperCase();
     if (role !== "ADMIN" && role !== "STAFF") {
-      alert("Truy cập bị từ chối! Tài khoản của bạn không có quyền quản trị hệ thống.");
+      sessionStorage.setItem("pending_toast", JSON.stringify({
+        message: "Truy cập bị từ chối! Tài khoản của bạn không có quyền quản trị hệ thống.",
+        type: "error"
+      }));
       window.location.href = `${root}pages/customer-home.html`;
       return false;
     }
@@ -83,12 +86,14 @@ function renderLayout() {
     // Phân tích đường dẫn và hash hiện tại để highlight tab tương ứng
     const isCustomerHome = currentPath.endsWith("/customer-home.html") || currentPath.endsWith("/") || currentPath.endsWith("/index.html");
     const isProfile = currentPath.endsWith("/profile.html");
+    const isOrders = currentPath.endsWith("/my_orders.html") || currentPath.endsWith("/my-orders.html");
     const isAdmin = currentPath.endsWith("/admin-dashboard.html");
     const currentHash = window.location.hash || "";
 
     const isHomeActive = isCustomerHome && !currentHash.includes("products") && !currentHash.includes("categories");
     const isProductsActive = isCustomerHome && currentHash.includes("products");
     const isCategoriesActive = isCustomerHome && currentHash.includes("categories");
+    const isOrdersActive = isOrders;
     const isAddressesActive = isProfile && currentHash.includes("address");
     const isProfileActive = isProfile && !isAddressesActive;
     const isAdminActive = isAdmin;
@@ -113,10 +118,6 @@ function renderLayout() {
         ? capitalizeWords(user.full_name)
         : rawName;
       userSectionHtml = `
-        <span class="user-tool" id="shop-user-profile">
-          <img src="${root}assets/images/avt người dùng.svg" alt="Avatar">
-          <small>${escapeHtml(displayName)}<br><b id="shop-logout-btn" style="color: #ef4444; font-size: 12px; font-weight: 600; cursor: pointer;">Đăng xuất</b></small>
-        </span>
         <div class="user-tool-wrapper">
           <div class="user-tool" id="shop-user-profile" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false" title="Tài khoản cá nhân: ${escapeHtml(displayName)}">
             <img src="${escapeHtml(avatarSrc)}" alt="Avatar" onerror="this.src='${root}assets/images/avt người dùng.svg'">
@@ -134,6 +135,10 @@ function renderLayout() {
             <a href="${root}pages/profile.html#addresses" class="user-dropdown-item">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
               <span>Sổ địa chỉ</span>
+            </a>
+            <a href="${root}pages/my_orders.html" class="user-dropdown-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3.75h8.5L20 8.2v11.05A1.75 1.75 0 0 1 18.25 21h-11A1.75 1.75 0 0 1 5.5 19.25v-13A2.5 2.5 0 0 1 8 3.75Z"/><path d="M15 4v4.5h4.5M8.5 12h7M8.5 15.5h7"/></svg>
+              <span>Đơn mua của tôi</span>
             </a>
             ${isAdminOrStaff ? `
               <a href="${root}pages/admin-dashboard.html" class="user-dropdown-item user-dropdown-admin">
@@ -176,24 +181,14 @@ function renderLayout() {
 
     if (token && user) {
       navLinksHtml += `
+        <a href="${root}pages/my_orders.html" class="${isOrdersActive ? "selected" : ""}" id="nav-link-orders">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: -2px;"><path d="M7 3.75h8.5L20 8.2v11.05A1.75 1.75 0 0 1 18.25 21h-11A1.75 1.75 0 0 1 5.5 19.25v-13A2.5 2.5 0 0 1 8 3.75Z"/><path d="M15 4v4.5h4.5M8.5 12h7M8.5 15.5h7"/></svg>
+          Đơn mua của tôi
+        </a>
         <a href="${root}pages/profile.html" class="${isProfileActive ? "selected" : ""}" id="nav-link-profile">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: -2px;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           Hồ sơ cá nhân
         </a>
-        <div class="header-search">
-          <input id="shop-search" type="search" placeholder="Tìm kiếm sản phẩm, thương hiệu... (Ctrl + K)">
-          <button type="button" id="search-submit">⌕ Tìm</button>
-        </div>
-        <div class="header-tools">
-          <span>
-            <img src="${root}assets/images/tổng đài.svg" alt="">
-            <small>Tổng đài CSKH<br><b>1900 6868</b></small>
-          </span>
-          ${userSectionHtml}
-          <a href="${root}pages/my_orders.html" class="cart-tool" aria-label="Đơn mua của tôi" title="Xem đơn mua của tôi" style="text-decoration: none; cursor: pointer;">
-            <img src="${root}assets/images/giỏ hàng.svg" alt="Đơn hàng">
-            <i id="cart-count">0</i>
-          </a>
         <a href="${root}pages/profile.html#addresses" class="${isAddressesActive ? "selected" : ""}" id="nav-link-addresses">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: -2px;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
           Sổ địa chỉ
@@ -269,9 +264,20 @@ function renderLayout() {
               </div>
             </button>
           </div>
-          <section class="orders-panel" id="shop-orders-panel" hidden aria-label="Đơn mua gần đây">
-            <div class="orders-panel-heading"><strong>Đơn mua gần đây</strong><button type="button" data-close-orders aria-label="Đóng">×</button></div>
-            <div class="orders-panel-content" id="shop-orders-content">Đang tải đơn mua…</div>
+          <section class="orders-panel order-notify-panel" id="shop-orders-panel" hidden aria-label="Thông báo đơn hàng">
+            <div class="orders-panel-heading">
+              <div class="notify-heading-title">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                <span>Cập nhật đơn hàng</span>
+              </div>
+              <a href="${root}pages/my_orders.html" class="notify-view-all-link">Xem tất cả ›</a>
+            </div>
+            <div class="orders-panel-content" id="shop-orders-content">
+              <!-- Render động danh sách thông báo đơn hàng -->
+            </div>
+            <div class="orders-panel-footer">
+              <a href="${root}pages/my_orders.html" class="btn-all-orders">Xem tất cả đơn mua của tôi</a>
+            </div>
           </section>
         </div>
       </div>
@@ -315,16 +321,38 @@ function renderLayout() {
       }
     });
 
-    // 2. Gắn sự kiện đăng xuất
+    // 2. Gắn sự kiện đăng xuất (hiện pop-up xác nhận modal)
     const shopLogoutBtn = document.getElementById("shop-logout-btn");
     if (shopLogoutBtn) {
       shopLogoutBtn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (confirm("Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?")) {
+        if (userToolWrapper) {
+          userToolWrapper.classList.remove("active");
+          if (shopUserProfile) shopUserProfile.setAttribute("aria-expanded", "false");
+        }
+        if (typeof Auth !== "undefined" && typeof Auth.confirmLogout === "function") {
+          Auth.confirmLogout(root);
+        } else if (typeof showConfirmModal === "function") {
+          showConfirmModal({
+            title: "Xác nhận đăng xuất",
+            message: "Bạn có chắc chắn muốn đăng xuất khỏi tài khoản ShopEase không?",
+            confirmText: "Đăng xuất",
+            cancelText: "Hủy bỏ",
+            type: "danger",
+            onConfirm: () => {
+              localStorage.removeItem("token");
+              localStorage.removeItem("user");
+              sessionStorage.setItem("pending_toast", JSON.stringify({
+                message: "Bạn đã đăng xuất thành công.",
+                type: "success"
+              }));
+              window.location.href = `${root}pages/login.html`;
+            }
+          });
+        } else if (confirm("Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?")) {
           localStorage.removeItem("token");
           localStorage.removeItem("user");
-          sessionStorage.setItem("auth_message", "Đã đăng xuất tài khoản thành công.");
           window.location.href = `${root}pages/login.html`;
         }
       });
@@ -473,29 +501,232 @@ function renderLayout() {
     }
 
     // 5. Đồng bộ số lượng giỏ hàng trên tất cả các trang
+    window.refreshCartCount = async function () {
+      const currentToken = localStorage.getItem("token");
+      const countElem = document.getElementById("cart-count");
+      const countLabelElem = document.getElementById("cart-count-label");
+      if (!currentToken) {
+        if (countElem) countElem.textContent = "0";
+        if (countLabelElem) countLabelElem.textContent = "0 món";
+        return 0;
+      }
+      try {
+        if (typeof api !== "undefined" && api.get) {
+          const cart = await api.get("/cart");
+          const count = (cart?.cart_items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+          if (countElem) countElem.textContent = count;
+          if (countLabelElem) countLabelElem.textContent = `${count} món`;
+          return count;
+        }
+      } catch (_) {}
+      return 0;
+    };
+
     if (token) {
-      (async () => {
-        try {
-          if (typeof api !== "undefined" && api.get) {
-            const cart = await api.get("/cart");
-            const count = (cart?.cart_items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
-            const countElem = document.getElementById("cart-count");
-            if (countElem) countElem.textContent = count;
-            const countLabelElem = document.getElementById("cart-count-label");
-            if (countLabelElem) countLabelElem.textContent = `${count} món`;
-          }
-        } catch (_) {}
-      })();
+      window.refreshCartCount();
     }
 
-    // 6. Xử lý nút đơn mua nếu không ở trang chủ (chuyển về trang chủ mở xem đơn)
+    // 6. Xử lý Tra cứu đơn mua hiển thị dạng dropdown Thông báo đơn hàng (Order Notification Dropdown)
+    function getNotificationItemImg(path, rootPath) {
+      if (!path) return `${rootPath}assets/images/logo_shop.svg`;
+      if (/^(https?:)?\/\//i.test(path) || path.startsWith("data:")) return path;
+      const apiBase = (typeof CONFIG !== "undefined" && CONFIG.API_BASE_URL) ? CONFIG.API_BASE_URL.replace(/\/api\/?$/, "") : "";
+      return `${apiBase}${path.startsWith("/") ? "" : "/"}${path}`;
+    }
+
+    function getOrderStatusNotifyInfo(statusStr, orderCode) {
+      const s = String(statusStr || "").toLowerCase();
+      if (s.includes("chờ") || s.includes("pending")) {
+        return {
+          type: "pending",
+          badge: "Chờ xác nhận",
+          title: `Đơn hàng #${orderCode} đã đặt`,
+          message: "Đơn hàng đã được tạo thành công và đang chờ người bán xác nhận.",
+          icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`
+        };
+      }
+      if (s.includes("đã xác nhận") || s.includes("confirmed")) {
+        return {
+          type: "confirmed",
+          badge: "Đã xác nhận",
+          title: `Đơn hàng #${orderCode} đã xác nhận`,
+          message: "Người bán đã duyệt đơn và đang đóng gói sản phẩm gửi đi.",
+          icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>`
+        };
+      }
+      if (s.includes("giao") || s.includes("shipping")) {
+        return {
+          type: "shipping",
+          badge: "Đang giao",
+          title: `Đơn hàng #${orderCode} đang giao`,
+          message: "Đơn hàng đang trên đường vận chuyển và sẽ sớm được giao tận nơi đến bạn.",
+          icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>`
+        };
+      }
+      if (s.includes("hoàn thành") || s.includes("completed") || s.includes("delivered") || s.includes("thành công")) {
+        return {
+          type: "completed",
+          badge: "Giao thành công",
+          title: `Giao thành công đơn #${orderCode}`,
+          message: "Đơn hàng đã được giao thành công. Cảm ơn bạn đã tin tưởng mua sắm tại ShopEase!",
+          icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`
+        };
+      }
+      if (s.includes("hủy") || s.includes("cancel")) {
+        return {
+          type: "cancelled",
+          badge: "Đã hủy",
+          title: `Đơn hàng #${orderCode} đã hủy`,
+          message: "Đơn hàng đã được hủy thành công và hoàn trả số lượng vào kho hàng.",
+          icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`
+        };
+      }
+      return {
+        type: "confirmed",
+        badge: statusStr || "Cập nhật",
+        title: `Đơn hàng #${orderCode}`,
+        message: "Thông tin cập nhật mới nhất cho đơn hàng của bạn.",
+        icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`
+      };
+    }
+
+    function renderOrdersNotificationDropdown(orders, contentElem, rootPath) {
+      if (!orders || orders.length === 0) {
+        contentElem.innerHTML = `
+          <div class="notify-empty-state">
+            <div class="notify-empty-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            </div>
+            <p class="notify-empty-title">Chưa có thông báo đơn hàng</p>
+            <p class="notify-empty-desc">Các cập nhật trạng thái đơn hàng của bạn sẽ được hiển thị tại đây.</p>
+            <a href="${rootPath}pages/customer-home.html#products" class="notify-empty-btn">Khám phá sản phẩm</a>
+          </div>
+        `;
+        return;
+      }
+
+      contentElem.innerHTML = orders.map(order => {
+        const notifyInfo = getOrderStatusNotifyInfo(order.status, order.order_code);
+        const timeStr = typeof formatDateTime === "function" ? formatDateTime(order.created_at) : (order.created_at ? new Date(order.created_at).toLocaleString("vi-VN") : "");
+        const priceStr = typeof formatMoney === "function" ? formatMoney(order.total_amount) : `${Number(order.total_amount || 0).toLocaleString("vi-VN")} ₫`;
+        
+        let productPreviewHtml = "";
+        if (order.items && order.items.length > 0) {
+          const firstItem = order.items[0];
+          const itemImg = getNotificationItemImg(firstItem.image_url, rootPath);
+          const remainingCount = order.items.length - 1;
+          const countText = remainingCount > 0 ? `<span class="notify-product-count">+${remainingCount} sản phẩm khác</span>` : "";
+          const safeName = typeof escapeHtml === "function" ? escapeHtml(firstItem.product_name) : (firstItem.product_name || "");
+          productPreviewHtml = `
+            <div class="notify-product-preview">
+              <img src="${itemImg}" alt="${safeName}" class="notify-product-img" onerror="this.src='${rootPath}assets/images/logo_shop.svg';">
+              <span class="notify-product-name">${safeName}</span>
+              ${countText}
+            </div>
+          `;
+        }
+
+        return `
+          <a href="${rootPath}pages/my_orders.html" class="order-notify-card" data-order-id="${order.id}">
+            <div class="notify-icon-box ${notifyInfo.type}">
+              ${notifyInfo.icon}
+            </div>
+            <div class="notify-body">
+              <div class="notify-title-row">
+                <span class="notify-title">${notifyInfo.title}</span>
+                <span class="notify-status-badge ${notifyInfo.type}">${notifyInfo.badge}</span>
+              </div>
+              <p class="notify-message">${notifyInfo.message}</p>
+              ${productPreviewHtml}
+              <div class="notify-meta-row">
+                <span class="notify-time">${timeStr}</span>
+                <span class="notify-amount">${priceStr}</span>
+              </div>
+            </div>
+          </a>
+        `;
+      }).join("");
+    }
+
     const shopOrdersBtn = document.getElementById("shop-orders-btn");
-    if (shopOrdersBtn && !document.querySelector(".product-grid")) {
-      shopOrdersBtn.addEventListener("click", () => {
-        if (!token) {
-          window.location.href = `${root}pages/login.html?redirect=customer-home.html`;
-        } else {
-          window.location.href = `${root}pages/customer-home.html`;
+    const shopOrdersPanel = document.getElementById("shop-orders-panel");
+    const shopOrdersContent = document.getElementById("shop-orders-content");
+
+    if (shopOrdersBtn && shopOrdersPanel) {
+      shopOrdersBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const isHidden = shopOrdersPanel.hasAttribute("hidden") || shopOrdersPanel.hidden;
+        
+        if (!isHidden) {
+          shopOrdersPanel.hidden = true;
+          shopOrdersBtn.setAttribute("aria-expanded", "false");
+          return;
+        }
+
+        // Đóng menu tài khoản nếu đang mở
+        const userDropdown = document.getElementById("user-dropdown-menu");
+        if (userDropdown) userDropdown.style.display = "none";
+
+        // Mở panel
+        shopOrdersPanel.hidden = false;
+        shopOrdersBtn.setAttribute("aria-expanded", "true");
+
+        const currentToken = localStorage.getItem("token");
+        if (!currentToken) {
+          if (shopOrdersContent) {
+            shopOrdersContent.innerHTML = `
+              <div class="notify-empty-state">
+                <div class="notify-empty-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </div>
+                <p class="notify-empty-title">Đăng nhập tài khoản</p>
+                <p class="notify-empty-desc">Vui lòng đăng nhập để xem thông báo cập nhật đơn mua của bạn.</p>
+                <a href="${root}pages/login.html?redirect=my_orders.html" class="notify-empty-btn">Đăng nhập ngay</a>
+              </div>
+            `;
+          }
+          return;
+        }
+
+        if (shopOrdersContent) {
+          shopOrdersContent.innerHTML = `
+            <div style="padding: 28px 20px; text-align: center; color: #64748b; font-size: 13px;">
+              <div style="width: 24px; height: 24px; margin: 0 auto 10px; border: 2.5px solid #e2e8f0; border-top-color: #00288e; border-radius: 50%; animation: spin 0.7s linear infinite;"></div>
+              Đang tải thông báo đơn hàng...
+            </div>
+          `;
+        }
+
+        try {
+          if (typeof api !== "undefined" && api.get) {
+            const res = await api.get("/orders/my", { page: 1, page_size: 5 });
+            const orders = (res && res.items) ? res.items : (Array.isArray(res) ? res : []);
+            renderOrdersNotificationDropdown(orders, shopOrdersContent, root);
+          }
+        } catch (err) {
+          console.error("Lỗi tải thông báo đơn hàng:", err);
+          if (shopOrdersContent) {
+            shopOrdersContent.innerHTML = `
+              <div class="notify-empty-state">
+                <p class="notify-empty-title" style="color: #ef4444;">Không thể tải đơn hàng</p>
+                <p class="notify-empty-desc">${err.message || "Vui lòng thử lại sau"}</p>
+              </div>
+            `;
+          }
+        }
+      });
+
+      // Đóng panel khi bấm nút close
+      shopOrdersPanel.querySelector("[data-close-orders]")?.addEventListener("click", () => {
+        shopOrdersPanel.hidden = true;
+        shopOrdersBtn.setAttribute("aria-expanded", "false");
+      });
+
+      // Đóng panel khi click ra ngoài
+      document.addEventListener("click", (e) => {
+        if (!shopOrdersPanel.contains(e.target) && !shopOrdersBtn.contains(e.target)) {
+          shopOrdersPanel.hidden = true;
+          shopOrdersBtn.setAttribute("aria-expanded", "false");
         }
       });
     }
@@ -596,17 +827,29 @@ function renderLayout() {
         </div>
       </div>`;
 
-    // Gắn sự kiện cho nút Đăng xuất
+    // Gắn sự kiện cho nút Đăng xuất (hiện pop-up xác nhận modal)
     const logoutBtn = document.getElementById("btn-logout");
     if (logoutBtn) {
-      logoutBtn.addEventListener("click", () => {
-        if (confirm("Bạn có chắc chắn muốn đăng xuất không?")) {
+      logoutBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (typeof Auth !== "undefined" && typeof Auth.confirmLogout === "function") {
+          Auth.confirmLogout(root);
+        } else if (typeof showConfirmModal === "function") {
+          showConfirmModal({
+            title: "Xác nhận đăng xuất",
+            message: "Bạn có chắc chắn muốn đăng xuất không?",
+            confirmText: "Đăng xuất",
+            cancelText: "Hủy bỏ",
+            type: "danger",
+            onConfirm: () => {
+              localStorage.removeItem("token");
+              localStorage.removeItem("user");
+              window.location.href = `${root}pages/login.html`;
+            }
+          });
+        } else if (confirm("Bạn có chắc chắn muốn đăng xuất không?")) {
           localStorage.removeItem("token");
           localStorage.removeItem("user");
-          sessionStorage.setItem("pending_toast", JSON.stringify({
-            message: "Bạn đã đăng xuất thành công.",
-            type: "success"
-          }));
           window.location.href = `${root}pages/login.html`;
         }
       });

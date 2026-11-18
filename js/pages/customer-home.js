@@ -1,6 +1,9 @@
 // Customer catalog backed by the public product/category APIs and the signed-in cart API.
 const PAGE_SIZE = 12;
 const MAX_PRICE_LIMIT = 30000000;
+const categoryIcons = ["công nghệ.svg", "thời trang.svg", "đồ gia dụng.svg", "balo và túi.svg", "quà tặng.svg", "dã ngoại.svg"];
+const fallbackCategoryIcons = "ngành hàng.svg";
+
 const state = {
   categories: [],
   products: [],
@@ -14,6 +17,7 @@ const state = {
   loadingMore: false,
   view: "grid"
 };
+
 const asset = name => `../assets/images/${encodeURIComponent(name)}`;
 const escapeHTML = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const formatPrice = value => `${Number(value || 0).toLocaleString("vi-VN")}₫`;
@@ -30,15 +34,16 @@ function normalizedCategoryName(value) {
 }
 
 function formatCategoryDisplayName(category) {
-  const name = String(category?.name || "").trim();
+  const raw = typeof category === "object" ? category?.name : category;
+  const name = String(raw || "").trim();
   const norm = normalizedCategoryName(name);
-  if (!name || norm === "adadadadadad" || norm.includes("adadad")) {
+  if (!name || norm === "adadadadad" || norm === "adadadadadad" || norm.includes("adadad") || norm.includes("adad") || norm === "test" || norm === "abc") {
     return "Điện thoại & Tablet";
   }
   return name;
 }
 
-function getCategoryIcon(category) {
+function getCategoryIcon(category, index = 0) {
   const norm = normalizedCategoryName(category?.name);
   if (norm.includes("dien thoai") || norm.includes("tablet") || norm.includes("smartphone") || norm.includes("phone") || norm.includes("adadad")) {
     return asset("dien-thoai.svg");
@@ -82,73 +87,52 @@ function getCategoryIcon(category) {
   if (norm.includes("qua tang") || norm.includes("gift")) {
     return asset("quà tặng.svg");
   }
-  return asset("công nghệ.svg");
+  return asset(categoryIcons[index % categoryIcons.length] || fallbackCategoryIcons);
 }
 
-function getCategoryBuyerCount(category) {
-  const actualBuyers = Number(category?.buyer_count || 0);
-  const actualSold = Number(category?.sold_count || 0);
-  if (actualBuyers > 0 || actualSold > 0) {
-    return Math.max(actualBuyers * 150 + actualSold * 60, actualSold);
+function featuredCategories() {
+  const groups = [
+    ["dien thoai", "tablet", "cong nghe", "dien tu", "technology", "adadad"],
+    ["laptop", "may tinh"],
+    ["thoi trang", "fashion"],
+    ["do gia dung", "gia dung", "home"],
+    ["tai nghe", "am thanh"],
+    ["da ngoai", "outdoor", "the thao"],
+  ];
+  const picked = [];
+  for (const terms of groups) {
+    const match = state.categories.find(category => !picked.includes(category) && terms.some(term => normalizedCategoryName(category.name).includes(term)));
+    if (match) picked.push(match);
   }
-  const norm = normalizedCategoryName(category?.name);
-  const prodBonus = Number(category?.product_count || 5) * 45;
-  if (norm.includes("dien thoai") || norm.includes("tablet") || norm.includes("adadad")) return 1850 + prodBonus;
-  if (norm.includes("tai nghe") || norm.includes("am thanh")) return 1420 + prodBonus;
-  if (norm.includes("laptop") || norm.includes("may tinh")) return 1160 + prodBonus;
-  if (norm.includes("phu kien")) return 980 + prodBonus;
-  if (norm.includes("dong ho")) return 890 + prodBonus;
-  if (norm.includes("thong minh") || norm.includes("smarthome")) return 760 + prodBonus;
-  if (norm.includes("thoi trang")) return 640 + prodBonus;
-  if (norm.includes("gia dung")) return 580 + prodBonus;
-  if (norm.includes("my pham")) return 520 + prodBonus;
-  if (norm.includes("the thao") || norm.includes("da ngoai")) return 450 + prodBonus;
-  if (norm.includes("man hinh")) return 390 + prodBonus;
-  if (norm.includes("sach")) return 320 + prodBonus;
-  return 280 + prodBonus;
-}
-
-function formatBuyerCount(count) {
-  if (count >= 1000) {
-    return `${(count / 1000).toFixed(1).replace(".0", "")}k+ người mua`;
+  for (const category of state.categories) {
+    if (picked.length >= 6) break;
+    if (!picked.includes(category)) picked.push(category);
   }
-  return `${count}+ người mua`;
+  return picked.slice(0, 6);
 }
 
-function getSortedCategoriesByBuyers() {
-  return [...state.categories].sort((a, b) => getCategoryBuyerCount(b) - getCategoryBuyerCount(a));
-}
-
-// 1. Render danh sách danh mục nổi bật phía trên (Top 6 phổ biến)
+// 1. Render phần "Danh Mục Ngành Hàng" giao diện ban đầu (Icon + Tên danh mục, KHÔNG số người mua / nhãn thừa)
 function renderTopFeaturedCategories() {
-  const sortedCategories = getSortedCategoriesByBuyers();
-  const featured = sortedCategories.slice(0, 6);
+  const featured = featuredCategories();
   const categoryList = document.getElementById("category-list");
   if (!categoryList) return;
 
   categoryList.innerHTML = featured.length
     ? featured.map((category, index) => {
         const displayName = formatCategoryDisplayName(category);
-        const buyers = getCategoryBuyerCount(category);
-        const isHot = index < 3; // Top 3 phổ biến nhất
         return `
-          <button class="category-card ${isHot ? "is-hot" : ""}" data-category-id="${category.id}" title="${escapeHTML(displayName)} - ${formatBuyerCount(buyers)}">
-            ${isHot ? `<span class="category-badge-hot">🔥 Phổ biến</span>` : ""}
+          <button class="category-card" data-category-id="${category.id}" title="${escapeHTML(displayName)}">
             <span class="category-icon tone-${index % 6}">
-              <img src="${getCategoryIcon(category)}" alt="${escapeHTML(displayName)}">
+              <img src="${getCategoryIcon(category, index)}" alt="${escapeHTML(displayName)}">
             </span>
-            <strong class="category-name">${escapeHTML(displayName)}</strong>
-            <span class="category-buyers">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              ${formatBuyerCount(buyers)}
-            </span>
+            <strong>${escapeHTML(displayName)}</strong>
           </button>
         `;
       }).join("")
     : `<p class="catalog-empty">Chưa có danh mục sản phẩm.</p>`;
 }
 
-// 2. Render danh sách checkbox danh mục trong Sidebar (hỗ trợ tìm kiếm & chọn nhiều)
+// 2. Render danh sách checkbox danh mục trong Sidebar (có tìm kiếm & chọn nhiều)
 function renderSidebarCategories() {
   const container = document.getElementById("category-checkbox-list");
   if (!container) return;
@@ -201,14 +185,16 @@ function productShortDesc(product) {
     const text = product.description.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
     if (text) return text;
   }
-  if (product.category?.name) {
-    return `${product.category.name} · Bảo hành chính hãng · Giao nhanh COD`;
+  const catName = formatCategoryDisplayName(product.category);
+  if (catName) {
+    return `${catName} · Bảo hành chính hãng · Giao nhanh COD`;
   }
   return "Sản phẩm chính hãng chất lượng cao · Giao hàng toàn quốc";
 }
 
 function renderProducts() {
   const grid = document.getElementById("product-grid");
+  if (!grid) return;
   grid.classList.toggle("is-list", state.view === "list");
   if (!state.products.length) {
     grid.innerHTML = `<div class="no-products">Không tìm thấy sản phẩm phù hợp với bộ lọc hiện tại.</div>`;
@@ -216,7 +202,8 @@ function renderProducts() {
     grid.innerHTML = state.products.map(product => {
       const shortDesc = productShortDesc(product);
       const hasPromo = product.promotional_price && Number(product.promotional_price) < Number(product.price);
-      const categoryTag = product.category?.name ? `<span class="product-tag">${escapeHTML(product.category.name)}</span>` : "";
+      const catName = formatCategoryDisplayName(product.category);
+      const categoryTag = catName ? `<span class="product-tag">${escapeHTML(catName)}</span>` : "";
       return `
         <article class="product-card">
           <div class="product-photo">
@@ -238,19 +225,30 @@ function renderProducts() {
         </article>`;
     }).join("");
   }
-  document.getElementById("page-summary").textContent = state.total
-    ? `Đang hiển thị ${state.products.length} / ${state.total} sản phẩm`
-    : "0 sản phẩm";
+
+  const pageSummary = document.getElementById("page-summary");
+  if (pageSummary) {
+    pageSummary.textContent = state.total
+      ? `Đang hiển thị ${state.products.length} / ${state.total} sản phẩm`
+      : "0 sản phẩm";
+  }
+
   const pagination = document.getElementById("pagination");
-  const hasMore = state.products.length < state.total;
-  pagination.innerHTML = hasMore
-    ? `<button class="load-more-button" type="button" data-load-more ${state.loadingMore ? "disabled" : ""}>${state.loadingMore ? "Đang tải…" : "Xem thêm sản phẩm"}</button>`
-    : "";
+  if (pagination) {
+    const hasMore = state.products.length < state.total;
+    pagination.innerHTML = hasMore
+      ? `<button class="load-more-button" type="button" data-load-more ${state.loadingMore ? "disabled" : ""}>${state.loadingMore ? "Đang tải…" : "Xem thêm sản phẩm"}</button>`
+      : "";
+  }
 }
 
 async function loadCategories() {
   try {
-    state.categories = await api.get("/categories");
+    const rawCategories = await api.get("/categories");
+    state.categories = (rawCategories || []).map(cat => ({
+      ...cat,
+      name: formatCategoryDisplayName(cat)
+    }));
     renderCategories();
   } catch (error) {
     state.categories = [];
@@ -276,7 +274,7 @@ async function loadProducts({ append = false } = {}) {
   const keyword = document.getElementById("shop-search")?.value.trim() || "";
   if (keyword) params.search = keyword;
 
-  // Lọc nhiều danh mục cùng một lúc
+  // Lọc nhiều danh mục
   if (state.categoryIds && state.categoryIds.length === 1) {
     params.category_id = state.categoryIds[0];
   } else if (state.categoryIds && state.categoryIds.length > 1) {
@@ -292,10 +290,12 @@ async function loadProducts({ append = false } = {}) {
     state.products = [];
     state.total = 0;
     state.page = 0;
-    document.getElementById("product-grid").innerHTML = `<div class="catalog-loading">Đang tải sản phẩm…</div>`;
+    const grid = document.getElementById("product-grid");
+    if (grid) grid.innerHTML = `<div class="catalog-loading">Đang tải sản phẩm…</div>`;
   } else {
     renderProducts();
   }
+
   try {
     const result = await api.get("/products", params);
     if (requestId !== state.requestId) return;
@@ -370,7 +370,7 @@ function updateActiveFilterBar() {
   }
 }
 
-// 5. Khởi tạo & xử lý thanh kéo khoảng giá (Dual Range Slider)
+// Khởi tạo thanh kéo khoảng giá (Dual Range Slider)
 function initPriceSlider() {
   const rangeMin = document.getElementById("price-range-min");
   const rangeMax = document.getElementById("price-range-max");
@@ -396,12 +396,13 @@ function initPriceSlider() {
       }
     }
 
-    const minPercent = (min / MAX_PRICE_LIMIT) * 100;
-    const maxPercent = (max / MAX_PRICE_LIMIT) * 100;
+    const minRatio = min / MAX_PRICE_LIMIT;
+    const maxRatio = max / MAX_PRICE_LIMIT;
 
     if (fill) {
-      fill.style.left = `${minPercent}%`;
-      fill.style.width = `${maxPercent - minPercent}%`;
+      // Kết nối thanh xanh chính xác giữa tâm của 2 núm kéo (không bị trồi ra ngoài)
+      fill.style.left = `calc(9px + (100% - 18px) * ${minRatio})`;
+      fill.style.width = `calc((100% - 18px) * ${maxRatio - minRatio})`;
     }
 
     if (minVal) minVal.textContent = formatPrice(min);
@@ -415,8 +416,16 @@ function initPriceSlider() {
     });
   }
 
-  rangeMin.addEventListener("input", () => updateSliderUI(true));
-  rangeMax.addEventListener("input", () => updateSliderUI(false));
+  rangeMin.addEventListener("input", () => {
+    rangeMin.style.zIndex = "4";
+    rangeMax.style.zIndex = "3";
+    updateSliderUI(true);
+  });
+  rangeMax.addEventListener("input", () => {
+    rangeMax.style.zIndex = "4";
+    rangeMin.style.zIndex = "3";
+    updateSliderUI(false);
+  });
 
   // Sự kiện khi bấm các chip khoảng giá định sẵn
   document.querySelectorAll(".preset-chip").forEach(chip => {
@@ -432,19 +441,16 @@ function initPriceSlider() {
   updateSliderUI();
 }
 
-// 6. Áp dụng bộ lọc từ sidebar khi bấm nút "Lọc sản phẩm"
+// Áp dụng bộ lọc từ sidebar khi bấm nút "Lọc sản phẩm"
 function applyFiltersFromSidebar() {
-  // Lấy các danh mục được tích chọn
   const checkedBoxes = Array.from(document.querySelectorAll(".cat-checkbox-input:checked"));
   state.categoryIds = checkedBoxes.map(cb => Number(cb.value));
 
-  // Lấy giá trị thanh kéo giá
   const rangeMin = document.getElementById("price-range-min");
   const rangeMax = document.getElementById("price-range-max");
   state.minPrice = rangeMin ? Number(rangeMin.value) : 0;
   state.maxPrice = rangeMax ? Number(rangeMax.value) : MAX_PRICE_LIMIT;
 
-  // Cập nhật badge số danh mục đã chọn
   const badge = document.getElementById("category-selected-count");
   if (badge) {
     badge.textContent = state.categoryIds.length;
@@ -567,36 +573,9 @@ async function showProductDetails(productId) {
   }
 }
 
-function renderRecentOrders(orders) {
-  const content = document.getElementById("shop-orders-content");
-  if (!orders.length) {
-    content.innerHTML = `<p class="orders-empty">Bạn chưa có đơn mua nào gần đây.</p>`;
-    return;
-  }
-  content.innerHTML = orders.map(order => `
-    <div class="orders-entry">
-      <div><strong>#${escapeHTML(order.order_code)}</strong><span>${formatPrice(order.total_amount)}</span></div>
-      <div><small>${order.items?.length || 0} sản phẩm · ${escapeHTML(order.status)}</small></div>
-    </div>`).join("");
-}
 
-async function openRecentOrders() {
-  const panel = document.getElementById("shop-orders-panel");
-  const button = document.getElementById("shop-orders-btn");
-  const content = document.getElementById("shop-orders-content");
-  if (!panel || !button || !content) return;
-  panel.hidden = false;
-  button.setAttribute("aria-expanded", "true");
-  content.textContent = "Đang tải đơn mua…";
-  try {
-    const result = await api.get("/orders/my", { page: 1, page_size: 5 });
-    renderRecentOrders(result.items || []);
-  } catch (error) {
-    content.innerHTML = `<p class="orders-empty">${escapeHTML(error.message)}</p>`;
-  }
-}
 
-// Click vào card ở mục "Danh Mục Ngành Hàng" nổi bật phía trên: lọc nhanh theo danh mục đó
+// Click vào card ở mục "Danh Mục Ngành Hàng" nổi bật phía trên: lọc nhanh theo danh mục đó trong sidebar
 document.getElementById("category-list")?.addEventListener("click", event => {
   const button = event.target.closest("[data-category-id]");
   if (!button) return;
@@ -609,14 +588,14 @@ document.getElementById("category-list")?.addEventListener("click", event => {
   document.getElementById("products")?.scrollIntoView({ behavior: "smooth" });
 });
 
-// 2. Accordion đóng mở danh mục trong sidebar
+// Accordion đóng mở danh mục trong sidebar
 document.getElementById("category-accordion-toggle")?.addEventListener("click", () => {
   const btn = document.getElementById("category-accordion-toggle");
   const isExpanded = btn.getAttribute("aria-expanded") === "true";
   btn.setAttribute("aria-expanded", String(!isExpanded));
 });
 
-// 3. Thanh tìm kiếm danh mục trong sidebar
+// Thanh tìm kiếm danh mục trong sidebar
 const catSearchInput = document.getElementById("category-search-input");
 const clearCatSearchBtn = document.getElementById("clear-cat-search");
 if (catSearchInput) {
@@ -636,7 +615,7 @@ if (clearCatSearchBtn) {
   });
 }
 
-// 4. Bắt sự kiện thay đổi checkbox trong sidebar
+// Bắt sự kiện thay đổi checkbox trong sidebar (cập nhật badge số lượng)
 document.getElementById("category-checkbox-list")?.addEventListener("change", (e) => {
   if (e.target.classList.contains("cat-checkbox-input")) {
     const checkedBoxes = Array.from(document.querySelectorAll(".cat-checkbox-input:checked"));
@@ -649,7 +628,7 @@ document.getElementById("category-checkbox-list")?.addEventListener("change", (e
   }
 });
 
-// 6. Nút Lọc sản phẩm
+// Nút "Lọc sản phẩm" trong sidebar
 document.getElementById("filter-apply-btn")?.addEventListener("click", () => {
   applyFiltersFromSidebar();
   document.getElementById("products")?.scrollIntoView({ behavior: "smooth" });
@@ -716,7 +695,7 @@ document.querySelectorAll(".view-toggle[data-view]").forEach(button => {
       toggle.classList.toggle("active", active);
       toggle.setAttribute("aria-pressed", String(active));
     });
-    document.getElementById("product-grid").classList.toggle("is-list", state.view === "list");
+    document.getElementById("product-grid")?.classList.toggle("is-list", state.view === "list");
   });
 });
 
@@ -760,29 +739,6 @@ document.getElementById("product-grid")?.addEventListener("click", event => {
   if (!button) return;
   if (button.dataset.action === "details") showProductDetails(Number(button.dataset.id));
   if (button.dataset.action === "cart") addToCart(Number(button.dataset.id), button);
-});
-
-document.getElementById("shop-orders-btn")?.addEventListener("click", () => {
-  const panel = document.getElementById("shop-orders-panel");
-  if (!panel) return;
-  if (panel.hidden) openRecentOrders();
-  else {
-    panel.hidden = true;
-    document.getElementById("shop-orders-btn").setAttribute("aria-expanded", "false");
-  }
-});
-
-document.getElementById("shop-orders-panel")?.addEventListener("click", event => {
-  if (!event.target.closest("[data-close-orders]")) return;
-  document.getElementById("shop-orders-panel").hidden = true;
-  document.getElementById("shop-orders-btn")?.setAttribute("aria-expanded", "false");
-});
-
-document.addEventListener("click", event => {
-  const panel = document.getElementById("shop-orders-panel");
-  if (!panel || panel.hidden || panel.contains(event.target) || event.target.closest("#shop-orders-btn")) return;
-  panel.hidden = true;
-  document.getElementById("shop-orders-btn")?.setAttribute("aria-expanded", "false");
 });
 
 async function initCustomerHome() {
