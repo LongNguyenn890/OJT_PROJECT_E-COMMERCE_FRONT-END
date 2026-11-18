@@ -7,7 +7,7 @@
 .profile-page-main {
   flex: 1;
   background: var(--shop-wash, #faf8ff);
-  padding: 24px max(calc((100% - var(--shop-container-max, 1280px)) / 2), 24px) 60px;
+  padding: 18px max(calc((100% - var(--shop-container-max, 1440px)) / 2), 16px) 48px;
   font-family: "Inter", system-ui, -apple-system, sans-serif;
   color: #131b2e;
 }

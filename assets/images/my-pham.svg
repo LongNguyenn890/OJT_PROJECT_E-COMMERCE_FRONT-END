@@ -1,0 +1,11 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Perfume / Skincare Bottle Body -->
+  <rect x="5" y="8" width="14" height="13" rx="3.5" stroke="#9333EA" stroke-width="1.8" fill="#ffffff"/>
+  <!-- Cap & Spray Nozzle -->
+  <rect x="9.5" y="4" width="5" height="4" rx="1" fill="#9333EA"/>
+  <line x1="8.5" y1="4" x2="15.5" y2="4" stroke="#9333EA" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- Sparkles -->
+  <path d="M12 11V15M10 13H14" stroke="#D946EF" stroke-width="1.6" stroke-linecap="round"/>
+  <circle cx="17" cy="18" r="0.75" fill="#D946EF"/>
+  <circle cx="7" cy="11" r="0.75" fill="#D946EF"/>
+</svg>

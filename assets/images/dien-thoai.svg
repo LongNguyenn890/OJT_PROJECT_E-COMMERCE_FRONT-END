@@ -1,0 +1,10 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Smartphone -->
+  <rect x="2" y="2" width="11" height="20" rx="2.5" stroke="#00288E" stroke-width="1.8"/>
+  <line x1="6" y1="5" x2="9" y2="5" stroke="#00288E" stroke-width="1.6" stroke-linecap="round"/>
+  <circle cx="7.5" cy="18.5" r="1" fill="#00288E"/>
+  <!-- Tablet behind/beside -->
+  <rect x="11.5" y="6" width="10.5" height="16" rx="2" stroke="#006C4A" stroke-width="1.8" fill="#ffffff"/>
+  <circle cx="16.75" cy="18.5" r="0.8" fill="#006C4A"/>
+  <line x1="14.5" y1="8.5" x2="19" y2="8.5" stroke="#006C4A" stroke-width="1.4" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,9 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Power Adapter / Charger Plug -->
+  <rect x="3" y="9" width="11" height="12" rx="2.5" stroke="#00288E" stroke-width="1.8" fill="#ffffff"/>
+  <line x1="5.5" y1="5" x2="5.5" y2="9" stroke="#00288E" stroke-width="2" stroke-linecap="round"/>
+  <line x1="11.5" y1="5" x2="11.5" y2="9" stroke="#00288E" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="8.5" cy="15" r="1.5" fill="#00288E"/>
+  <!-- Fast Charge Lightning Bolt -->
+  <path d="M18 3L14 9H18L16 16L22 8H18L20 3H18Z" fill="#F59E0B"/>
+</svg>

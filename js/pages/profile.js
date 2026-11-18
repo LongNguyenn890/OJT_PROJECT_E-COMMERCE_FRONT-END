@@ -133,6 +133,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     showPasswordMode();
   }
 
+  // Lắng nghe thay đổi hash trên URL từ thanh Navbar
+  window.addEventListener("hashchange", () => {
+    if (window.location.hash === "#addresses" || window.location.hash === "#address") {
+      showAddressesMode();
+    } else if (window.location.hash === "#password") {
+      showPasswordMode();
+    } else {
+      showViewMode();
+    }
+  });
+
   // ==========================================================
   // ĐIỀU HƯỚNG CÁC CHẾ ĐỘ XEM / SỬA / ĐỔI MẬT KHẨU / SỔ ĐỊA CHỈ
   // ==========================================================
