@@ -105,11 +105,19 @@ function renderLayout() {
             <small>Tổng đài CSKH<br><b>1900 6868</b></small>
           </span>
           ${userSectionHtml}
+          <button class="orders-tool" id="shop-orders-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="shop-orders-panel">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.75h8.5L20 8.2v11.05A1.75 1.75 0 0 1 18.25 21h-11A1.75 1.75 0 0 1 5.5 19.25v-13A2.5 2.5 0 0 1 8 3.75Z"/><path d="M15 4v4.5h4.5M8.5 12h7M8.5 15.5h7"/></svg>
+            <span>Đơn mua</span>
+          </button>
           <button class="cart-tool" aria-label="Giỏ hàng">
             <img src="${root}assets/images/giỏ hàng.svg" alt="">
             <i id="cart-count">0</i>
           </button>
         </div>
+        <section class="orders-panel" id="shop-orders-panel" hidden aria-label="Đơn mua gần đây">
+          <div class="orders-panel-heading"><strong>Đơn mua gần đây</strong><button type="button" data-close-orders aria-label="Đóng">×</button></div>
+          <div class="orders-panel-content" id="shop-orders-content">Đang tải đơn mua…</div>
+        </section>
       </div>`;
 
     // Gắn sự kiện đăng xuất nếu đã đăng nhập

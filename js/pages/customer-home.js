@@ -201,6 +201,37 @@ async function addToCart(productId, button) {
   }
 }
 
+function renderRecentOrders(orders) {
+  const content = document.getElementById("shop-orders-content");
+  if (!orders.length) {
+    content.innerHTML = `<p class="orders-empty">Bạn chưa có đơn mua nào.</p>`;
+    return;
+  }
+  content.innerHTML = orders.map(order => `<article class="orders-entry">
+    <div><strong>${escapeHTML(order.order_code)}</strong><span class="order-status">${escapeHTML(order.status)}</span></div>
+    <div><span>${new Date(order.created_at).toLocaleDateString("vi-VN")}</span><b>${formatPrice(order.total_amount)}</b></div>
+  </article>`).join("");
+}
+
+async function openRecentOrders() {
+  const button = document.getElementById("shop-orders-btn");
+  const panel = document.getElementById("shop-orders-panel");
+  const content = document.getElementById("shop-orders-content");
+  if (!localStorage.getItem("token")) {
+    window.location.href = "login.html?redirect=customer-home.html";
+    return;
+  }
+  panel.hidden = false;
+  button.setAttribute("aria-expanded", "true");
+  content.textContent = "Đang tải đơn mua…";
+  try {
+    const result = await api.get("/orders/my", { page: 1, page_size: 5 });
+    renderRecentOrders(result.items || []);
+  } catch (error) {
+    content.innerHTML = `<p class="orders-empty">${escapeHTML(error.message)}</p>`;
+  }
+}
+
 function changeFilters() {
   state.page = 1;
   renderCategories();
@@ -270,6 +301,25 @@ document.getElementById("product-grid").addEventListener("click", event => {
   if (!button) return;
   if (button.dataset.action === "details") showProductDetails(Number(button.dataset.id));
   if (button.dataset.action === "cart") addToCart(Number(button.dataset.id), button);
+});
+document.getElementById("shop-orders-btn")?.addEventListener("click", () => {
+  const panel = document.getElementById("shop-orders-panel");
+  if (panel.hidden) openRecentOrders();
+  else {
+    panel.hidden = true;
+    document.getElementById("shop-orders-btn").setAttribute("aria-expanded", "false");
+  }
+});
+document.getElementById("shop-orders-panel")?.addEventListener("click", event => {
+  if (!event.target.closest("[data-close-orders]")) return;
+  document.getElementById("shop-orders-panel").hidden = true;
+  document.getElementById("shop-orders-btn").setAttribute("aria-expanded", "false");
+});
+document.addEventListener("click", event => {
+  const panel = document.getElementById("shop-orders-panel");
+  if (!panel || panel.hidden || panel.contains(event.target) || event.target.closest("#shop-orders-btn")) return;
+  panel.hidden = true;
+  document.getElementById("shop-orders-btn")?.setAttribute("aria-expanded", "false");
 });
 
 async function initCustomerHome() {
