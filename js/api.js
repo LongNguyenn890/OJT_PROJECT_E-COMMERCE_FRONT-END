@@ -26,12 +26,12 @@ const http = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Muốn gửi token đăng nhập cho mọi request (khi nhóm làm chức năng login), bỏ comment đoạn dưới:
-// http.interceptors.request.use((config) => {
-//   const token = localStorage.getItem("token");
-//   if (token) config.headers.Authorization = `Bearer ${token}`;
-//   return config;
-// });
+// Tự động gắn token JWT nếu đã đăng nhập
+http.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
 // Lấy câu thông báo lỗi dễ đọc từ response của FastAPI
 function getErrorMessage(data, status) {
@@ -50,6 +50,22 @@ http.interceptors.response.use(
     if (error.response) {
       // Server có trả lời nhưng là lỗi (4xx, 5xx)
       const { status, data } = error.response;
+
+      // Tự động đăng xuất và chuyển về trang đăng nhập khi nhận lỗi 401 Unauthorized
+      if (status === 401) {
+        const isAuthPage = window.location.pathname.endsWith("/login.html") ||
+                           window.location.pathname.endsWith("/register.html");
+        if (!isAuthPage) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          sessionStorage.setItem("auth_message", "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+
+          const root = document.body?.dataset?.root || "./";
+          const currentUrl = window.location.pathname + window.location.search;
+          window.location.href = `${root}pages/login.html?redirect=${encodeURIComponent(currentUrl)}`;
+        }
+      }
+
       return Promise.reject(new ApiError(getErrorMessage(data, status), status, data));
     }
     // Không có response: server tắt, sai URL, bị chặn CORS, hoặc quá thời gian chờ
