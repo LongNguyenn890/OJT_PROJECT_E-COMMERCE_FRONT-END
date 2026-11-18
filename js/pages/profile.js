@@ -6,8 +6,24 @@
 document.addEventListener("DOMContentLoaded", async () => {
   // 1. Kiểm tra xác thực qua Auth Helper
   const token = typeof Auth !== "undefined" ? Auth.getToken() : localStorage.getItem("token");
-  if (!token) {
-    sessionStorage.setItem("auth_message", "Vui lòng đăng nhập để xem và quản lý hồ sơ cá nhân.");
+  let user = typeof Auth !== "undefined" ? Auth.getUser() : null;
+  if (!user) {
+    try {
+      user = JSON.parse(localStorage.getItem("user") || "null");
+    } catch (_) {}
+  }
+
+  if (!token || !user || !user.id) {
+    if (typeof Auth !== "undefined" && Auth.clearSession) {
+      Auth.clearSession();
+    } else {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+    }
+    sessionStorage.setItem(
+      "auth_message",
+      !token ? "Vui lòng đăng nhập để xem và quản lý hồ sơ cá nhân." : "Không tìm thấy thông tin tài khoản. Vui lòng đăng nhập lại."
+    );
     const currentUrl = window.location.pathname + window.location.search;
     window.location.href = `login.html?redirect=${encodeURIComponent(currentUrl)}`;
     return;
@@ -275,6 +291,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       const res = await api.get("/auth/me");
       currentUserData = res?.data || res;
 
+      if (!currentUserData || !currentUserData.id) {
+        throw new Error("Không tìm thấy thông tin tài khoản");
+      }
+
       if (typeof Auth !== "undefined" && Auth.setSession) {
         Auth.setSession(token, currentUserData);
       } else {
@@ -284,12 +304,29 @@ document.addEventListener("DOMContentLoaded", async () => {
       renderUserData(currentUserData);
     } catch (err) {
       console.warn("Không thể tải thông tin từ /auth/me, sử dụng dữ liệu offline:", err);
+      // Nếu API 401 hoặc 404, api interceptor đã xử lý chuyển hướng về login
+      if (err && (err.status === 401 || err.status === 404)) {
+        return;
+      }
       try {
         currentUserData = JSON.parse(localStorage.getItem("user") || "null");
-        if (currentUserData) {
-          renderUserData(currentUserData);
+      } catch (_) {
+        currentUserData = null;
+      }
+
+      if (currentUserData && currentUserData.id) {
+        renderUserData(currentUserData);
+      } else {
+        if (typeof Auth !== "undefined" && Auth.clearSession) {
+          Auth.clearSession();
+        } else {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
         }
-      } catch (_) {}
+        sessionStorage.setItem("auth_message", "Không tìm thấy thông tin tài khoản. Vui lòng đăng nhập lại.");
+        const currentUrl = window.location.pathname + window.location.search;
+        window.location.href = `login.html?redirect=${encodeURIComponent(currentUrl)}`;
+      }
     }
   }
 

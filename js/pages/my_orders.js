@@ -7,8 +7,24 @@
 document.addEventListener("DOMContentLoaded", () => {
   // 1. KIỂM TRA ĐĂNG NHẬP
   const token = localStorage.getItem("token");
-  if (!token) {
-    sessionStorage.setItem("auth_message", "Vui lòng đăng nhập để xem đơn mua của bạn.");
+  let user = typeof Auth !== "undefined" ? Auth.getUser() : null;
+  if (!user) {
+    try {
+      user = JSON.parse(localStorage.getItem("user") || "null");
+    } catch (_) {}
+  }
+
+  if (!token || !user || !user.id) {
+    if (typeof Auth !== "undefined" && Auth.clearSession) {
+      Auth.clearSession();
+    } else {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+    }
+    sessionStorage.setItem(
+      "auth_message",
+      !token ? "Vui lòng đăng nhập để xem đơn mua của bạn." : "Không tìm thấy thông tin tài khoản. Vui lòng đăng nhập lại."
+    );
     const redirectUrl = window.location.pathname + window.location.search;
     window.location.href = `../pages/login.html?redirect=${encodeURIComponent(redirectUrl)}`;
     return;
@@ -142,11 +158,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Đồng bộ lại thông tin tài khoản mới nhất từ backend
   api.get("/auth/me").then(freshUser => {
-    if (freshUser) {
+    if (freshUser && freshUser.id) {
       localStorage.setItem("user", JSON.stringify(freshUser));
       setupCustomerProfile();
+    } else {
+      if (typeof Auth !== "undefined" && Auth.clearSession) {
+        Auth.clearSession();
+      } else {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
+      sessionStorage.setItem("auth_message", "Không tìm thấy thông tin tài khoản. Vui lòng đăng nhập lại.");
+      const redirectUrl = window.location.pathname + window.location.search;
+      window.location.href = `../pages/login.html?redirect=${encodeURIComponent(redirectUrl)}`;
     }
-  }).catch(() => {});
+  }).catch((err) => {
+    if (err && (err.status === 401 || err.status === 404)) {
+      return; // api.js interceptor đã xử lý chuyển hướng
+    }
+    const localUser = typeof Auth !== "undefined" ? Auth.getUser() : null;
+    if (!localUser || !localUser.id) {
+      if (typeof Auth !== "undefined" && Auth.clearSession) {
+        Auth.clearSession();
+      } else {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
+      sessionStorage.setItem("auth_message", "Không tìm thấy thông tin tài khoản. Vui lòng đăng nhập lại.");
+      window.location.href = `../pages/login.html?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+    }
+  });
 
   let allUserOrdersForCounts = [];
 
@@ -285,8 +326,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const stepIndex = stInfo.step; // 1: PENDING, 2: CONFIRMED, 3: SHIPPING, 4: COMPLETED
       let fillWidthPercent = "0%";
       if (stepIndex === 1) fillWidthPercent = "0%";
-      else if (stepIndex === 2) fillWidthPercent = "33.33%";
-      else if (stepIndex === 3) fillWidthPercent = "66.66%";
+      else if (stepIndex === 2) fillWidthPercent = "33.333%";
+      else if (stepIndex === 3) fillWidthPercent = "66.667%";
       else if (stepIndex >= 4) fillWidthPercent = "100%";
 
       const step1Class = stepIndex > 1 ? "done" : (stepIndex === 1 ? "active" : "");
@@ -417,8 +458,9 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="linear-tracker-box">
           <div class="tracker-title">TIẾN TRÌNH XỬ LÝ ĐƠN HÀNG</div>
           <div class="tracker-stepper-track">
-            <div class="tracker-line-bar"></div>
-            <div class="tracker-line-fill" style="width: ${fillWidthPercent};"></div>
+            <div class="tracker-line-bar">
+              <div class="tracker-line-fill" style="width: ${fillWidthPercent};"></div>
+            </div>
 
             <div class="stepper-step-col ${step1Class}">
               <div class="step-node-circle">

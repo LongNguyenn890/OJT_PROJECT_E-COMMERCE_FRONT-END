@@ -23,17 +23,43 @@ function checkRouteGuard() {
   }
 
   // Chặn trang yêu cầu đăng nhập
-  if (isAuthRequired && (!token || !user)) {
-    sessionStorage.setItem("auth_message", "Vui lòng đăng nhập để xem thông tin trang này.");
-    const currentUrl = window.location.pathname + window.location.search;
-    window.location.href = `${root}pages/login.html?redirect=${encodeURIComponent(currentUrl)}`;
-    return false;
+  if (isAuthRequired) {
+    if (!token) {
+      sessionStorage.setItem("auth_message", "Vui lòng đăng nhập để xem thông tin trang này.");
+      const currentUrl = window.location.pathname + window.location.search;
+      window.location.href = `${root}pages/login.html?redirect=${encodeURIComponent(currentUrl)}`;
+      return false;
+    }
+    if (!user || !user.id) {
+      if (typeof Auth !== "undefined" && Auth.clearSession) {
+        Auth.clearSession();
+      } else {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
+      sessionStorage.setItem("auth_message", "Không tìm thấy thông tin tài khoản. Vui lòng đăng nhập lại.");
+      const currentUrl = window.location.pathname + window.location.search;
+      window.location.href = `${root}pages/login.html?redirect=${encodeURIComponent(currentUrl)}`;
+      return false;
+    }
   }
 
   if (isAdminPage) {
     // 1. Chưa đăng nhập: Chuyển hướng về trang login kèm redirect URL
-    if (!token || !user) {
+    if (!token) {
       sessionStorage.setItem("auth_message", "Vui lòng đăng nhập với tài khoản Quản trị viên để tiếp tục.");
+      const currentUrl = window.location.pathname + window.location.search;
+      window.location.href = `${root}pages/login.html?redirect=${encodeURIComponent(currentUrl)}`;
+      return false;
+    }
+    if (!user || !user.id) {
+      if (typeof Auth !== "undefined" && Auth.clearSession) {
+        Auth.clearSession();
+      } else {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
+      sessionStorage.setItem("auth_message", "Không tìm thấy thông tin tài khoản. Vui lòng đăng nhập lại.");
       const currentUrl = window.location.pathname + window.location.search;
       window.location.href = `${root}pages/login.html?redirect=${encodeURIComponent(currentUrl)}`;
       return false;

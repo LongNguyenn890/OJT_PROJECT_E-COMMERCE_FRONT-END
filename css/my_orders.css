@@ -519,17 +519,19 @@ body.shop-page {
 /* LIFECYCLE LINEAR TRACKER (BR-08) */
 .linear-tracker-box {
   background-color: var(--figma-bg-soft);
+  border: 1px solid rgba(226, 232, 240, 0.8);
   border-radius: 12px;
-  padding: 16px 20px;
+  padding: 18px 20px;
+  overflow: hidden;
 }
 
 .tracker-title {
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.55px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
   color: var(--figma-text-muted);
   text-transform: uppercase;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .tracker-stepper-track {
@@ -541,22 +543,22 @@ body.shop-page {
 
 .tracker-line-bar {
   position: absolute;
-  top: 16px;
-  left: 10%;
-  right: 10%;
+  top: 14px;
+  left: 12.5%;
+  right: 12.5%;
   height: 4px;
-  background-color: var(--figma-border);
+  background-color: #e2e8f0;
+  border-radius: 9999px;
   z-index: 1;
+  overflow: hidden;
 }
 
 .tracker-line-fill {
-  position: absolute;
-  top: 16px;
-  left: 10%;
-  height: 4px;
+  height: 100%;
+  width: 0%;
   background-color: var(--figma-green-text);
-  z-index: 2;
-  transition: width 0.3s ease;
+  border-radius: 9999px;
+  transition: width 0.4s ease;
 }
 
 .stepper-step-col {
@@ -576,33 +578,37 @@ body.shop-page {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--figma-bg-light-blue);
+  background-color: #ffffff;
+  border: 2px solid #e2e8f0;
   color: var(--figma-text-muted);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
+  box-sizing: border-box;
 }
 
 /* Step node trạng thái hoàn thành */
 .stepper-step-col.done .step-node-circle {
   background-color: var(--figma-green-text);
+  border-color: var(--figma-green-text);
   color: #ffffff;
-  box-shadow: var(--figma-shadow-sm);
+  box-shadow: 0 2px 6px rgba(22, 101, 52, 0.25);
 }
 
 /* Step node trạng thái hiện tại (active) */
 .stepper-step-col.active .step-node-circle {
   background-color: var(--figma-primary);
+  border-color: var(--figma-primary);
   color: #ffffff;
-  box-shadow: 0 0 0 4px var(--figma-bg-accent-blue), var(--figma-shadow-sm);
+  box-shadow: 0 0 0 4px var(--figma-bg-accent-blue), 0 2px 6px rgba(55, 85, 195, 0.25);
 }
 
 .step-label {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--figma-text-muted);
-  margin-top: 6px;
-  line-height: 16px;
+  color: var(--figma-text-dark);
+  margin-top: 8px;
+  line-height: 18px;
 }
 
 .stepper-step-col.done .step-label {
@@ -616,9 +622,14 @@ body.shop-page {
 }
 
 .step-subtext {
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--figma-text-muted);
-  margin-top: 2px;
+  margin-top: 3px;
+  line-height: 15px;
+}
+
+.stepper-step-col.done .step-subtext {
+  color: #4b5563;
 }
 
 .stepper-step-col.active .step-subtext {
@@ -1485,26 +1496,28 @@ body.shop-page {
 .modal-stepper {
   position: relative;
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
 }
 
 .modal-stepper .stepper-line-bg {
   position: absolute;
-  top: 15px;
-  left: 5%;
-  right: 5%;
-  height: 3px;
+  top: 13px;
+  left: 12.5%;
+  right: 12.5%;
+  height: 4px;
   background-color: var(--figma-border);
+  border-radius: 9999px;
+  overflow: hidden;
+  z-index: 1;
 }
 
 .modal-stepper .stepper-line-progress {
-  position: absolute;
-  top: 15px;
-  left: 5%;
-  height: 3px;
+  height: 100%;
   background-color: var(--figma-green-text);
   width: 0%;
-  transition: width 0.3s ease;
+  border-radius: 9999px;
+  transition: width 0.35s ease;
 }
 
 .step-node {
@@ -1514,37 +1527,45 @@ body.shop-page {
   flex-direction: column;
   align-items: center;
   text-align: center;
+  flex: 1;
 }
 
 .step-circle {
   width: 30px;
   height: 30px;
   border-radius: 9999px;
-  background-color: var(--figma-bg-light-blue);
+  background-color: #ffffff;
+  border: 2px solid var(--figma-border);
   color: var(--figma-text-muted);
   font-size: 12px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.25s ease;
+  box-sizing: border-box;
 }
 
 .step-node.done .step-circle {
   background-color: var(--figma-green-text);
+  border-color: var(--figma-green-text);
   color: #ffffff;
+  box-shadow: 0 2px 6px rgba(22, 101, 52, 0.25);
 }
 
 .step-node.active .step-circle {
   background-color: var(--figma-primary);
+  border-color: var(--figma-primary);
   color: #ffffff;
   box-shadow: 0 0 0 3px var(--figma-bg-accent-blue);
 }
 
 .step-title {
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--figma-text-dark);
   font-weight: 600;
   margin-top: 6px;
+  line-height: 16px;
 }
 
 .modal-subheading {

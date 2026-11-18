@@ -21,6 +21,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (authMessage) {
     const isSuccess = authMessage.includes("thành công");
     showAlert(authMessage, isSuccess ? "success" : "error");
+    if (typeof showToast === "function") {
+      showToast(authMessage, isSuccess ? "success" : "error");
+    }
     sessionStorage.removeItem("auth_message");
   }
 
@@ -33,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (_) {}
   }
 
-  if (token && user && !urlParams.has("force")) {
+  if (token && user && user.id && !urlParams.has("force")) {
     const role = (user.role || "").toUpperCase();
     if (redirectUrl) {
       window.location.href = redirectUrl;

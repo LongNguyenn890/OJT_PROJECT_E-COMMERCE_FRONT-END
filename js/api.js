@@ -52,13 +52,27 @@ http.interceptors.response.use(
       const { status, data } = error.response;
 
       // Tự động đăng xuất và chuyển về trang đăng nhập khi nhận lỗi 401 Unauthorized
-      if (status === 401) {
+      // hoặc lỗi 404 không tìm thấy thông tin tài khoản
+      const detailStr = (data && typeof data.detail === "string") ? data.detail : "";
+      const isAccountNotFound = (
+        status === 401 ||
+        (status === 404 && (
+          detailStr.toLowerCase().includes("không tìm thấy thông tin tài khoản") ||
+          detailStr.toLowerCase().includes("tài khoản") ||
+          (error.config?.url && error.config.url.includes("/auth/me"))
+        ))
+      );
+
+      if (isAccountNotFound) {
         const isAuthPage = window.location.pathname.endsWith("/login.html") ||
                            window.location.pathname.endsWith("/register.html");
         if (!isAuthPage) {
           localStorage.removeItem("token");
           localStorage.removeItem("user");
-          sessionStorage.setItem("auth_message", "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+          const msg = (status === 404 || detailStr.toLowerCase().includes("không tìm thấy"))
+            ? "Không tìm thấy thông tin tài khoản. Vui lòng đăng nhập lại."
+            : "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+          sessionStorage.setItem("auth_message", msg);
 
           const root = document.body?.dataset?.root || "./";
           const currentUrl = window.location.pathname + window.location.search;
