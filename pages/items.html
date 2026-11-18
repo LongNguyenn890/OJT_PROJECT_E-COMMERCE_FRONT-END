@@ -3,64 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Items | KS25 Base</title>
-  <link rel="icon" href="../assets/images/logo.svg">
+  <title>Sản phẩm | ShopEase</title>
+  <link rel="icon" href="../assets/images/logo_shop.svg">
   <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/items.css">
 </head>
-<body data-root="../">
+<body class="shop-page" data-root="../">
+  <div class="shop-topline"><span><img src="../assets/images/giao hàng.svg" alt=""> Miễn phí giao hàng đơn hàng từ 500.000₫ · Thanh toán khi nhận hàng (COD) miễn phí</span><span><img src="../assets/images/tổng đài.svg" alt=""> CSKH toàn quốc: 1900 6868</span></div>
   <header id="app-header"></header>
+  <nav class="shop-nav"><a class="selected" href="#">Trang chủ</a><a href="#products">Sản phẩm</a><a href="#categories">Danh mục</a><a href="#">Về chúng tôi</a><a href="#">Khuyến mãi</a><span class="nav-spacer"></span><a href="#"><img src="../assets/images/COD.svg" alt=""> COD toàn quốc</a><a href="#"><img src="../assets/images/đổi trả.svg" alt=""> Đổi trả 7 ngày</a></nav>
 
-  <main class="container layout-2col">
-    <!-- Form thêm / sửa -->
-    <section class="card">
-      <h2 id="form-title">Thêm item mới</h2>
-      <form id="item-form">
-        <label for="name">Tên *</label>
-        <input id="name" name="name" type="text" required maxlength="255" placeholder="VD: Cơm rang">
-
-        <label for="price">Giá (VNĐ)</label>
-        <input id="price" name="price" type="number" min="0" step="1000" placeholder="0">
-
-        <label for="description">Mô tả</label>
-        <textarea id="description" name="description" rows="3" placeholder="Không bắt buộc"></textarea>
-
-        <div class="form-actions">
-          <button id="btn-submit" type="submit" class="btn btn-primary">Thêm</button>
-          <button id="btn-cancel" type="button" class="btn" hidden>Huỷ</button>
-        </div>
-      </form>
-    </section>
-
-    <!-- Danh sách -->
-    <section class="card">
-      <div class="list-header">
-        <h2>Danh sách items</h2>
-        <input id="search-input" type="search" placeholder="Tìm theo tên...">
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Tên</th>
-              <th class="text-right">Giá</th>
-              <th>Ngày tạo</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="item-table-body"></tbody>
-        </table>
-      </div>
-    </section>
+  <main class="shop-main">
+    <div class="shop-promises"><div><b class="promise-icon mint"><img src="../assets/images/giao hàng.svg" alt=""></b><span><strong>Giao Hàng Toàn Quốc</strong><small>Giao nhanh tận nơi, kiểm tra sản phẩm</small></span></div><div><b class="promise-icon lavender"><img src="../assets/images/đổi trả.svg" alt=""></b><span><strong>Đổi Trả Dễ Dàng</strong><small>Đổi trả miễn phí trong vòng 7 ngày</small></span></div><div><b class="promise-icon green"><img src="../assets/images/hotline.svg" alt=""></b><span><strong>Hotline Hỗ Trợ 24/7</strong><small>Tổng đài tư vấn miễn phí 1900 6868</small></span></div></div>
+    <section class="shop-hero"><span class="hero-badge">Mua sắm an tâm & tiện lợi</span><h1>Mua Sắm Đơn Giản – Nhận Hàng Trả Tiền</h1><p>Khám phá hàng ngàn sản phẩm chất lượng với chính sách thanh toán khi<br class="desktop-break"> nhận hàng và hỗ trợ đổi trả nhanh chóng.</p><div><a class="hero-button" href="#products"><img src="../assets/images/Khám phá sản phẩm.svg" alt=""> Khám phá sản phẩm</a><a class="hero-button ghost" href="#products"><img src="../assets/images/Hướng dẫn mua hàng.svg" alt=""> Hướng dẫn mua hàng</a></div></section>
+    <section id="categories" class="category-section"><h2><span class="section-icon"><img src="../assets/images/danh mục ngành hàng.svg" alt=""></span> Danh Mục Ngành Hàng</h2><div class="category-list" id="category-list"></div></section>
+    <section id="products" class="products-heading"><h2>Tất cả sản phẩm</h2><p>Khám phá các sản phẩm mới nhất, sắp xếp theo sở thích của bạn</p></section>
+    <section class="filter-panel"><div class="filter-row"><span class="filter-label"><img src="../assets/images/ngành hàng.svg" alt=""> Ngành hàng</span><div class="chips" id="category-filters"></div></div><div class="filter-row"><span>⇅ Mức giá</span><div class="chips" id="price-filters"><button class="chip active" data-price="all">Mọi khoảng giá</button><button class="chip" data-price="under1">Dưới 500K</button><button class="chip" data-price="500to1">500K – 1Tr</button><button class="chip" data-price="1to2">1 – 2Tr</button><button class="chip" data-price="over2">Trên 2Tr</button></div><label class="sort-control">Sắp xếp: <select id="sort-select"><option value="featured">Mới nhất (Mặc định)</option><option value="price-asc">Giá thấp đến cao</option><option value="price-desc">Giá cao đến thấp</option><option value="name">Tên A–Z</option></select></label><button class="view-toggle active" aria-label="Lưới">▦</button><button class="view-toggle" aria-label="Danh sách">☷</button></div></section>
+    <div class="product-grid" id="product-grid"></div>
+    <div class="pagination-bar"><span id="page-summary">Trang 1 / 1</span><div id="pagination"></div></div>
   </main>
-
   <footer id="app-footer"></footer>
-
-  <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
-  <script src="../js/config.js"></script>
-  <script src="../js/api.js"></script>
-  <script src="../js/utils.js"></script>
-  <script src="../js/layout.js"></script>
-  <script src="../js/pages/items.js"></script>
+  <script src="../js/config.js"></script><script src="../js/layout.js"></script><script src="../js/pages/items.js"></script>
 </body>
 </html>
