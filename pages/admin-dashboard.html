@@ -9,18 +9,19 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/items.css">
   <style>
     .admin-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
-      margin-bottom: 24px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
     }
     .kpi-card {
       background: #ffffff;
       border: 1px solid var(--color-border);
       border-radius: 12px;
-      padding: 20px;
+      padding: 16px 18px;
       box-shadow: var(--shadow-sm);
     }
     .kpi-title {
@@ -44,7 +45,11 @@
   </style>
 </head>
 <!-- data-auth="admin": Kích hoạt Route Guard tự động chặn nếu không phải ADMIN / STAFF -->
-<body data-root="../" data-auth="admin">
+<body class="shop-page" data-root="../" data-auth="admin">
+  <div class="shop-topline">
+    <span><img src="../assets/images/giao hàng.svg" alt=""> Hệ thống quản trị bán hàng đa kênh ShopEase · Dành riêng cho Quản trị viên &amp; Nhân viên</span>
+    <span><img src="../assets/images/tổng đài.svg" alt=""> Hotline kỹ thuật nội bộ: 1900 6868</span>
+  </div>
   <header id="app-header"></header>
 
   <main class="container page-container">

@@ -19,11 +19,151 @@
   <main class="shop-main">
     <div class="shop-promises"><div><b class="promise-icon mint"><img src="../assets/images/giao hàng.svg" alt=""></b><span><strong>Giao Hàng Toàn Quốc</strong><small>Giao nhanh tận nơi, kiểm tra sản phẩm</small></span></div><div><b class="promise-icon lavender"><img src="../assets/images/đổi trả.svg" alt=""></b><span><strong>Đổi Trả Dễ Dàng</strong><small>Đổi trả miễn phí trong vòng 7 ngày</small></span></div><div><b class="promise-icon green"><img src="../assets/images/hotline.svg" alt=""></b><span><strong>Hotline Hỗ Trợ 24/7</strong><small>Tổng đài tư vấn miễn phí 1900 6868</small></span></div></div>
     <section class="shop-hero"><span class="hero-badge">Mua sắm an tâm & tiện lợi</span><h1>Mua Sắm Đơn Giản – Nhận Hàng Trả Tiền</h1><p>Khám phá hàng ngàn sản phẩm chất lượng với chính sách thanh toán khi<br class="desktop-break"> nhận hàng và hỗ trợ đổi trả nhanh chóng.</p><div><a class="hero-button" href="#products"><img src="../assets/images/Khám phá sản phẩm.svg" alt=""> Khám phá sản phẩm</a><a class="hero-button ghost" href="#products"><img src="../assets/images/Hướng dẫn mua hàng.svg" alt=""> Hướng dẫn mua hàng</a></div></section>
-    <section id="categories" class="category-section"><h2><span class="section-icon"><img src="../assets/images/danh mục ngành hàng.svg" alt=""></span> Danh Mục Ngành Hàng</h2><div class="category-list" id="category-list"></div></section>
-    <section id="products" class="products-heading"><h2>Tất cả sản phẩm</h2><p>Khám phá các sản phẩm mới nhất, sắp xếp theo sở thích của bạn</p></section>
-    <section class="filter-panel"><div class="filter-row"><span class="filter-label"><img src="../assets/images/ngành hàng.svg" alt=""> Ngành hàng</span><div class="chips" id="category-filters"></div></div><div class="filter-row"><span>⇅ Mức giá</span><div class="chips" id="price-filters"><button class="chip active" data-price="all">Mọi khoảng giá</button><button class="chip" data-price="under1">Dưới 500K</button><button class="chip" data-price="500to1">500K – 1Tr</button><button class="chip" data-price="1to2">1 – 2Tr</button><button class="chip" data-price="over2">Trên 2Tr</button></div><label class="sort-control">Sắp xếp: <select id="sort-select"><option value="featured">Mới nhất (Mặc định)</option><option value="price-asc">Giá thấp đến cao</option><option value="price-desc">Giá cao đến thấp</option><option value="name">Tên A–Z</option></select></label><button class="view-toggle active" aria-label="Lưới">▦</button><button class="view-toggle" aria-label="Danh sách">☷</button></div></section>
-    <div class="product-grid" id="product-grid"></div>
-    <div class="pagination-bar"><span id="page-summary">Trang 1 / 1</span><div id="pagination"></div></div>
+    <section id="categories" class="category-section">
+      <div class="category-section-header">
+        <h2><span class="section-icon"><img src="../assets/images/danh mục ngành hàng.svg" alt=""></span> Danh Mục Ngành Hàng</h2>
+        <p class="category-section-subtitle">Top ngành hàng phổ biến nhất hệ thống</p>
+      </div>
+      <div class="category-list" id="category-list"></div>
+    </section>
+    <section id="products" class="products-container">
+      <div class="products-header-bar">
+        <div>
+          <h2>Tất cả sản phẩm</h2>
+          <p>Khám phá các sản phẩm chất lượng cao, chọn lọc theo nhu cầu của bạn</p>
+        </div>
+        <div class="catalog-toolbar">
+          <label class="sort-control" for="sort-select">
+            <span class="sort-label">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="4" y1="6" x2="16" y2="6"></line>
+                <line x1="4" y1="12" x2="12" y2="12"></line>
+                <line x1="4" y1="18" x2="8" y2="18"></line>
+                <polyline points="15 15 18 18 21 15"></polyline>
+                <line x1="18" y1="9" x2="18" y2="18"></line>
+              </svg>
+              <span>Sắp xếp:</span>
+            </span>
+            <div class="sort-select-wrap">
+              <select id="sort-select" class="sort-dropdown" aria-label="Sắp xếp sản phẩm">
+                <option value="featured">Mới nhất (Mặc định)</option>
+                <option value="best_selling">Bán chạy nhất</option>
+                <option value="price-asc">Giá: Thấp đến Cao</option>
+                <option value="price-desc">Giá: Cao đến Thấp</option>
+                <option value="name">Tên A–Z</option>
+              </select>
+              <svg class="sort-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+          </label>
+          <div class="view-toggles">
+            <button class="view-toggle active" type="button" data-view="grid" aria-label="Hiển thị dạng lưới" aria-pressed="true">▦</button>
+            <button class="view-toggle" type="button" data-view="list" aria-label="Hiển thị dạng dòng" aria-pressed="false">☷</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="catalog-layout">
+        <!-- 1. SIDEBAR BỘ LỌC -->
+        <aside class="catalog-sidebar" id="filter-sidebar" aria-label="Bộ lọc sản phẩm">
+          <div class="sidebar-header">
+            <div class="sidebar-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              <span>Bộ lọc tìm kiếm</span>
+            </div>
+            <button type="button" class="sidebar-reset-btn" id="filter-reset-top" title="Xóa tất cả bộ lọc">Xóa lọc</button>
+          </div>
+
+          <!-- 2. DANH MỤC DROPDOWN LIST (CHỌN NHIỀU + TÌM KIẾM) -->
+          <div class="sidebar-group" id="category-group">
+            <button type="button" class="group-header-btn" id="category-accordion-toggle" aria-expanded="true">
+              <span class="group-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+                Danh mục ngành hàng
+              </span>
+              <span class="category-selected-badge" id="category-selected-count" hidden>0</span>
+              <svg class="group-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+
+            <div class="group-body" id="category-dropdown-body">
+              <!-- 3. THANH TÌM KIẾM DANH MỤC -->
+              <div class="cat-search-box">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="category-search-input" placeholder="Tìm kiếm ngành hàng..." autocomplete="off">
+                <button type="button" id="clear-cat-search" class="clear-cat-search-btn" hidden title="Xóa tìm kiếm">×</button>
+              </div>
+
+              <!-- 4. DANH SÁCH CHỌN NHIỀU DANH MỤC -->
+              <div class="cat-checkbox-list" id="category-checkbox-list">
+                <!-- Sẽ được render động qua JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. LỌC GIÁ THEO THANH KÉO (DUAL RANGE SLIDER) -->
+          <div class="sidebar-group" id="price-group">
+            <div class="group-header-static">
+              <span class="group-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                Khoảng giá (VNĐ)
+              </span>
+            </div>
+
+            <div class="price-slider-panel">
+              <div class="price-inputs-row">
+                <div class="price-input-box">
+                  <small>Thấp nhất</small>
+                  <b id="price-min-val">0₫</b>
+                </div>
+                <span class="price-arrow">→</span>
+                <div class="price-input-box">
+                  <small>Cao nhất</small>
+                  <b id="price-max-val">30.000.000₫</b>
+                </div>
+              </div>
+
+              <div class="dual-range-wrap">
+                <div class="range-slider-track"></div>
+                <div class="range-slider-fill" id="range-slider-fill"></div>
+                <input type="range" id="price-range-min" min="0" max="30000000" step="500000" value="0" aria-label="Giá tối thiểu">
+                <input type="range" id="price-range-max" min="0" max="30000000" step="500000" value="30000000" aria-label="Giá tối đa">
+              </div>
+
+              <div class="price-presets">
+                <button type="button" class="preset-chip active" data-min="0" data-max="30000000">Tất cả</button>
+                <button type="button" class="preset-chip" data-min="0" data-max="1000000">Dưới 1Tr</button>
+                <button type="button" class="preset-chip" data-min="1000000" data-max="5000000">1Tr - 5Tr</button>
+                <button type="button" class="preset-chip" data-min="5000000" data-max="15000000">5Tr - 15Tr</button>
+                <button type="button" class="preset-chip" data-min="15000000" data-max="30000000">Trên 15Tr</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. NÚT ĐỂ LỌC SẢN PHẨM -->
+          <div class="sidebar-actions">
+            <button type="button" class="filter-apply-btn" id="filter-apply-btn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              Lọc sản phẩm
+            </button>
+            <button type="button" class="filter-clear-btn" id="filter-clear-btn">
+              Đặt lại
+            </button>
+          </div>
+        </aside>
+
+        <!-- MAIN CATALOG CONTENT -->
+        <div class="catalog-content">
+          <div class="active-filter-bar" id="active-filter-bar" hidden>
+            <span class="active-filter-title">Đang lọc:</span>
+            <div class="active-filter-chips" id="active-filter-chips"></div>
+            <button type="button" class="clear-all-chips-btn" id="clear-all-chips">Xóa tất cả</button>
+          </div>
+          <div class="product-grid" id="product-grid"></div>
+          <div class="pagination-bar"><span id="page-summary">Trang 1 / 1</span><div id="pagination"></div></div>
+        </div>
+      </div>
+    </section>
   </main>
   <footer id="app-footer"></footer>
   <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
@@ -31,6 +171,6 @@
   <script src="../js/api.js"></script>
   <script src="../js/utils.js"></script>
   <script src="../js/layout.js"></script>
-  <script src="../js/pages/items.js"></script>
+  <script src="../js/pages/customer-home.js"></script>
 </body>
 </html>
