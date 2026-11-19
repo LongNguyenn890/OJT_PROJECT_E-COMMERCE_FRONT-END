@@ -202,6 +202,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       showAlert(message, "error");
+      if (typeof showToast === "function") {
+        showToast(message, "error");
+      }
     } finally {
       setLoading(false);
     }

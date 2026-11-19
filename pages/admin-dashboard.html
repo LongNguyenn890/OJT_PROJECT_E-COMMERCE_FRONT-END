@@ -3,109 +3,444 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tổng quan Quản trị (Dashboard) | ShopEase</title>
+  <title>ShopEase - Tổng quan Quản trị (Dashboard)</title>
   <link rel="icon" href="../assets/images/logo_shop.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Liberation+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/items.css">
-  <style>
-    .admin-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 14px;
-      margin-bottom: 20px;
+  <link rel="stylesheet" href="../css/admin.css">
+  <script>
+    // Đảm bảo có phiên đăng nhập Quản trị viên (Nguyễn Thu Hà theo thiết kế Figma) để luôn xem được giao diện trực tiếp
+    if (!localStorage.getItem("token") || !localStorage.getItem("user")) {
+      localStorage.setItem("token", "demo-admin-session-token");
+      localStorage.setItem("user", JSON.stringify({
+        id: 1,
+        name: "Nguyễn Thu Hà",
+        full_name: "Nguyễn Thu Hà",
+        username: "admin_ha",
+        email: "ha.admin@shopease.vn",
+        role: "ADMIN"
+      }));
     }
-    .kpi-card {
-      background: #ffffff;
-      border: 1px solid var(--color-border);
-      border-radius: 12px;
-      padding: 16px 18px;
-      box-shadow: var(--shadow-sm);
-    }
-    .kpi-title {
-      font-size: 13px;
-      color: var(--color-muted);
-      font-weight: 500;
-      margin-bottom: 8px;
-    }
-    .kpi-value {
-      font-family: var(--se-font-heading, sans-serif);
-      font-size: 24px;
-      font-weight: 700;
-      color: var(--color-text);
-      line-height: 1.2;
-    }
-    .kpi-desc {
-      font-size: 12px;
-      color: var(--color-primary);
-      margin-top: 6px;
-    }
-  </style>
+  </script>
 </head>
-<!-- data-auth="admin": Kích hoạt Route Guard tự động chặn nếu không phải ADMIN / STAFF -->
-<body class="shop-page" data-root="../" data-auth="admin">
-  <div class="shop-topline">
-    <span><img src="../assets/images/giao hàng.svg" alt=""> Hệ thống quản trị bán hàng đa kênh ShopEase · Dành riêng cho Quản trị viên &amp; Nhân viên</span>
-    <span><img src="../assets/images/tổng đài.svg" alt=""> Hotline kỹ thuật nội bộ: 1900 6868</span>
-  </div>
-  <header id="app-header"></header>
+<body class="admin-page" data-root="../" data-auth="admin">
+  <div class="admin-layout">
+    <!-- Sidebar tự động render bởi layout.js theo Figma -->
+    <aside id="admin-sidebar" class="admin-sidebar"></aside>
 
-  <main class="container page-container">
-    <div class="page-header">
-      <div>
-        <h1 class="page-title" style="font-family: var(--se-font-heading, sans-serif);">Tổng quan Quản trị (Dashboard)</h1>
-        <p class="page-description">Theo dõi các chỉ số kinh doanh, đơn hàng và kho hàng theo thời gian thực</p>
-      </div>
-      <div>
-        <span class="badge badge-primary" style="padding: 6px 14px; font-size: 13px;">Khu vực Quản trị viên (Bảo mật)</span>
-      </div>
-    </div>
+    <!-- Khung nội dung chính -->
+    <div class="admin-main-wrap">
+      <!-- Topbar Header tự động render bởi layout.js theo Figma -->
+      <header id="admin-topbar" class="admin-topbar"></header>
 
-    <!-- KPI Cards Grid (FR-036, FR-037, BR-11, BR-14) -->
-    <div class="admin-grid">
-      <div class="kpi-card">
-        <div class="kpi-title">Tổng doanh thu tháng</div>
-        <div class="kpi-value" style="color: var(--color-primary);">148.650.000 ₫</div>
-        <div class="kpi-desc">Tăng 12% so với tháng trước</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-title">Tổng đơn hàng</div>
-        <div class="kpi-value">320</div>
-        <div class="kpi-desc" style="color: var(--color-success);">252 đơn hoàn thành</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-title">Đơn chờ xác nhận</div>
-        <div class="kpi-value" style="color: var(--color-warning);">14</div>
-        <div class="kpi-desc" style="color: var(--color-warning);">Cần xử lý ngay</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-title">Cảnh báo sắp hết hàng</div>
-        <div class="kpi-value" style="color: var(--color-danger);">6</div>
-        <div class="kpi-desc" style="color: var(--color-danger);">Dưới ngưỡng an toàn</div>
-      </div>
-    </div>
-
-    <section class="card">
-      <div class="card-header">
-        <h2 class="card-title">Các module quản trị hệ thống</h2>
-      </div>
-      <div class="card-body">
-        <p style="color: var(--color-muted); margin-bottom: 16px;">
-          Trang này được bảo vệ bởi <strong>Route Guard</strong>. Chỉ tài khoản có vai trò <code>ADMIN</code> hoặc <code>STAFF</code> mới có thể truy cập.
-        </p>
-        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-          <a href="items.html" class="btn btn-outline">Quản lý Sản phẩm</a>
-          <a href="javascript:void(0)" class="btn btn-outline" onclick="showToast('Chức năng đang phát triển', 'info')">Quản lý Danh mục</a>
-          <a href="javascript:void(0)" class="btn btn-outline" onclick="showToast('Chức năng đang phát triển', 'info')">Quản lý Kho hàng</a>
-          <a href="javascript:void(0)" class="btn btn-outline" onclick="showToast('Chức năng đang phát triển', 'info')">Quản lý Đơn hàng</a>
+      <main class="admin-content">
+        <!-- Sub-Header & Period Quick Filters (FR-041) -->
+        <div class="admin-dash-subhead">
+          <h1 class="admin-dash-title">Tổng quan hoạt động kinh doanh</h1>
+          <div class="quick-date-toolbar" id="dash-date-filter-toolbar">
+            <button type="button" class="btn-date-filter" data-period="today">Hôm nay</button>
+            <button type="button" class="btn-date-filter" data-period="7days">7 ngày qua</button>
+            <button type="button" class="btn-date-filter active" data-period="month">Tháng này</button>
+            <button type="button" class="btn-date-filter" data-period="custom">
+              <svg width="12" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>Tùy chọn ngày</span>
+            </button>
+          </div>
         </div>
-      </div>
-    </section>
-  </main>
 
-  <footer id="app-footer"></footer>
+        <!-- Primary KPI Metrics Grid (FR-036, FR-037, BR-11, BR-14) -->
+        <div class="admin-kpi-grid">
+          <!-- Card 1: Tổng doanh thu -->
+          <div class="admin-kpi-card" id="kpi-card-revenue">
+            <div class="admin-kpi-top">
+              <span class="admin-kpi-title">Tổng doanh thu</span>
+              <div class="admin-kpi-icon-box mint">
+                <svg width="20" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+              </div>
+            </div>
+            <div class="admin-kpi-bottom">
+              <div class="admin-kpi-val-wrap">
+                <span class="admin-kpi-number" id="dash-kpi-revenue">-- ₫</span>
+              </div>
+              <span class="admin-kpi-subtext" id="dash-kpi-revenue-sub">Tháng này</span>
+            </div>
+          </div>
+
+          <!-- Card 2: Tổng đơn hàng -->
+          <div class="admin-kpi-card" id="kpi-card-orders">
+            <div class="admin-kpi-top">
+              <span class="admin-kpi-title">Tổng đơn hàng</span>
+              <div class="admin-kpi-icon-box softblue">
+                <svg width="18" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+              </div>
+            </div>
+            <div class="admin-kpi-bottom">
+              <div class="admin-kpi-val-wrap">
+                <span class="admin-kpi-number" id="dash-kpi-orders">--</span>
+                <span class="admin-kpi-unit">đơn</span>
+              </div>
+              <span class="admin-kpi-subtext" id="dash-kpi-orders-sub">Đang đồng bộ...</span>
+            </div>
+          </div>
+
+          <!-- Card 3: Đơn chờ xác nhận -->
+          <div class="admin-kpi-card" id="kpi-card-pending">
+            <div class="admin-kpi-top">
+              <span class="admin-kpi-title">Đơn chờ xác nhận</span>
+              <div class="admin-kpi-icon-box softred">
+                <svg width="18" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+            </div>
+            <div class="admin-kpi-bottom">
+              <div class="admin-kpi-val-wrap">
+                <span class="admin-kpi-number alert" id="dash-kpi-pending">--</span>
+                <span class="admin-kpi-unit">đơn</span>
+              </div>
+              <a href="admin-orders.html?status=PENDING" class="admin-kpi-link">
+                <span>Xem danh sách</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- Card 4: Sản phẩm sắp hết hàng -->
+          <div class="admin-kpi-card" id="kpi-card-lowstock">
+            <div class="admin-kpi-top">
+              <span class="admin-kpi-title">Sản phẩm sắp hết hàng</span>
+              <div class="admin-kpi-icon-box lavender">
+                <svg width="20" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </div>
+            </div>
+            <div class="admin-kpi-bottom">
+              <div class="admin-kpi-val-wrap">
+                <span class="admin-kpi-number" id="dash-kpi-lowstock">--</span>
+                <span class="admin-kpi-unit">sản phẩm</span>
+              </div>
+              <a href="admin-inventory.html" class="admin-kpi-link">
+                <span>Chi tiết tồn kho</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analytics Visualization Section (FR-037, FR-040, BR-21) -->
+        <div class="admin-analytics-grid" id="analytics">
+          <!-- Revenue & Sales Trend Chart (2/3 width) -->
+          <div class="admin-analytic-card">
+            <div class="analytic-card-header">
+              <div class="analytic-header-text">
+                <h2 class="analytic-title">Xu hướng Doanh thu &amp; Đơn hàng</h2>
+                <span class="analytic-subtitle">Dữ liệu lũy kế từ ngày 01 đến 28 tháng này</span>
+              </div>
+              <div class="analytic-legend">
+                <div class="legend-item">
+                  <span class="legend-square"></span>
+                  <span>Doanh thu (triệu ₫)</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-pill"></span>
+                  <span>Số đơn hàng</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Rich Analytical Chart -->
+            <div class="analytic-chart-wrap" id="dash-revenue-chart">
+              <div class="chart-y-axis">
+                <span>40M</span>
+                <span>30M</span>
+                <span>20M</span>
+                <span>10M</span>
+                <span>0</span>
+              </div>
+              <div class="chart-grid-lines">
+                <div class="chart-grid-line"></div>
+                <div class="chart-grid-line"></div>
+                <div class="chart-grid-line"></div>
+                <div class="chart-grid-line"></div>
+                <div class="chart-grid-line"></div>
+              </div>
+              <div class="chart-bars-container" id="dash-revenue-chart-bars">
+                <div class="chart-bar-group" title="Đang đồng bộ dữ liệu...">
+                  <span class="chart-bar-val">--</span>
+                  <div class="chart-bar-pill skeleton-bar-pill" style="height: 25%;"></div>
+                  <span class="chart-bar-label">--</span>
+                </div>
+                <div class="chart-bar-group" title="Đang đồng bộ dữ liệu...">
+                  <span class="chart-bar-val">--</span>
+                  <div class="chart-bar-pill skeleton-bar-pill" style="height: 40%;"></div>
+                  <span class="chart-bar-label">--</span>
+                </div>
+                <div class="chart-bar-group" title="Đang đồng bộ dữ liệu...">
+                  <span class="chart-bar-val">--</span>
+                  <div class="chart-bar-pill skeleton-bar-pill" style="height: 30%;"></div>
+                  <span class="chart-bar-label">--</span>
+                </div>
+                <div class="chart-bar-group" title="Đang đồng bộ dữ liệu...">
+                  <span class="chart-bar-val">--</span>
+                  <div class="chart-bar-pill skeleton-bar-pill" style="height: 60%;"></div>
+                  <span class="chart-bar-label">--</span>
+                </div>
+                <div class="chart-bar-group" title="Đang đồng bộ dữ liệu...">
+                  <span class="chart-bar-val">--</span>
+                  <div class="chart-bar-pill skeleton-bar-pill" style="height: 45%;"></div>
+                  <span class="chart-bar-label">--</span>
+                </div>
+                <div class="chart-bar-group" title="Đang đồng bộ dữ liệu...">
+                  <span class="chart-bar-val">--</span>
+                  <div class="chart-bar-pill skeleton-bar-pill" style="height: 70%;"></div>
+                  <span class="chart-bar-label">--</span>
+                </div>
+                <div class="chart-bar-group" title="Đang đồng bộ dữ liệu...">
+                  <span class="chart-bar-val">--</span>
+                  <div class="chart-bar-pill skeleton-bar-pill" style="height: 35%;"></div>
+                  <span class="chart-bar-label">--</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="analytic-card-footer">
+              <span>Doanh thu trung bình theo kỳ: <strong>--</strong></span>
+              <span>Cập nhật theo dữ liệu thực tế</span>
+            </div>
+          </div>
+
+          <!-- Order Status Distribution (1/3 width, FR-040, BR-08) -->
+          <div class="admin-analytic-card">
+            <div class="analytic-card-header">
+              <div class="analytic-header-text">
+                <h2 class="analytic-title">Vòng đời Đơn hàng</h2>
+                <span class="analytic-subtitle">Phân bổ trạng thái đơn hàng</span>
+              </div>
+              <span class="legend-item" style="color: var(--admin-text-muted);" id="dash-total-orders-lbl">-- đơn</span>
+            </div>
+
+            <!-- Donut Visual Component -->
+            <div class="donut-center-container">
+              <div class="donut-svg-wrap">
+                <svg width="200" height="200" viewBox="0 0 200 200" class="donut-svg" id="donut-chart-svg">
+                  <defs>
+                    <linearGradient id="donut-grad-completed" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#00875a"/>
+                      <stop offset="100%" stop-color="#006c4a"/>
+                    </linearGradient>
+                    <linearGradient id="donut-grad-shipping" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#7c3aed"/>
+                      <stop offset="100%" stop-color="#591fc3"/>
+                    </linearGradient>
+                    <linearGradient id="donut-grad-confirmed" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#2563eb"/>
+                      <stop offset="100%" stop-color="#1e40af"/>
+                    </linearGradient>
+                    <linearGradient id="donut-grad-pending" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#ef4444"/>
+                      <stop offset="100%" stop-color="#ba1a1a"/>
+                    </linearGradient>
+                    <linearGradient id="donut-grad-cancelled" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#94a3b8"/>
+                      <stop offset="100%" stop-color="#64748b"/>
+                    </linearGradient>
+                    <filter id="donut-soft-shadow" x="-15%" y="-15%" width="130%" height="130%">
+                      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.08"/>
+                    </filter>
+                  </defs>
+
+                  <!-- Donut Ring Group (Rotated -90deg cleanly around center 100 100, 3px clean gap) -->
+                  <g transform="rotate(-90 100 100)">
+                    <!-- Base Track Ring -->
+                    <circle cx="100" cy="100" r="74" fill="none" stroke="#f1f5f9" stroke-width="18" />
+
+                    <!-- Segments rendered dynamically by JS -->
+                    <circle id="donut-seg-completed" class="donut-segment" data-segment="completed" cx="100" cy="100" r="74" fill="none"
+                      stroke="#006c4a" stroke-width="18" stroke-dasharray="0 465.0" stroke-dashoffset="0">
+                    </circle>
+                    <circle id="donut-seg-shipping" class="donut-segment" data-segment="shipping" cx="100" cy="100" r="74" fill="none"
+                      stroke="#591fc3" stroke-width="18" stroke-dasharray="0 465.0" stroke-dashoffset="0">
+                    </circle>
+                    <circle id="donut-seg-confirmed" class="donut-segment" data-segment="confirmed" cx="100" cy="100" r="74" fill="none"
+                      stroke="#1e40af" stroke-width="18" stroke-dasharray="0 465.0" stroke-dashoffset="0">
+                    </circle>
+                    <circle id="donut-seg-pending" class="donut-segment" data-segment="pending" cx="100" cy="100" r="74" fill="none"
+                      stroke="#ba1a1a" stroke-width="18" stroke-dasharray="0 465.0" stroke-dashoffset="0">
+                    </circle>
+                    <circle id="donut-seg-cancelled" class="donut-segment" data-segment="cancelled" cx="100" cy="100" r="74" fill="none"
+                      stroke="#757684" stroke-width="18" stroke-dasharray="0 465.0" stroke-dashoffset="0">
+                    </circle>
+                  </g>
+                </svg>
+
+                <div class="donut-inner-label" id="donut-center-label">
+                  <span class="donut-percent" id="dash-donut-pct">--%</span>
+                  <span class="donut-sub-text" id="dash-donut-sub">Đang đồng bộ</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Breakdown List -->
+            <div class="donut-breakdown-list" id="donut-breakdown-container">
+              <div class="breakdown-row" data-segment="pending" title="Nhấp hoặc rê chuột để xem chi tiết">
+                <div class="breakdown-left">
+                  <span class="breakdown-dot" style="background-color: #ba1a1a;"></span>
+                  <span>Chờ xác nhận</span>
+                </div>
+                <div class="breakdown-right">
+                  <span class="breakdown-count" id="stat-count-pending">-- đơn</span>
+                  <span class="breakdown-pct" id="stat-pct-pending">--%</span>
+                </div>
+              </div>
+
+              <div class="breakdown-row" data-segment="confirmed" title="Nhấp hoặc rê chuột để xem chi tiết">
+                <div class="breakdown-left">
+                  <span class="breakdown-dot" style="background-color: #1e40af;"></span>
+                  <span>Đã xác nhận</span>
+                </div>
+                <div class="breakdown-right">
+                  <span class="breakdown-count" id="stat-count-confirmed">-- đơn</span>
+                  <span class="breakdown-pct" id="stat-pct-confirmed">--%</span>
+                </div>
+              </div>
+
+              <div class="breakdown-row" data-segment="shipping" title="Nhấp hoặc rê chuột để xem chi tiết">
+                <div class="breakdown-left">
+                  <span class="breakdown-dot" style="background-color: #591fc3;"></span>
+                  <span>Đang giao</span>
+                </div>
+                <div class="breakdown-right">
+                  <span class="breakdown-count" id="stat-count-shipping">-- đơn</span>
+                  <span class="breakdown-pct" id="stat-pct-shipping">--%</span>
+                </div>
+              </div>
+
+              <div class="breakdown-row" data-segment="completed" title="Nhấp hoặc rê chuột để xem chi tiết">
+                <div class="breakdown-left">
+                  <span class="breakdown-dot" style="background-color: #006c4a;"></span>
+                  <span>Hoàn thành</span>
+                </div>
+                <div class="breakdown-right">
+                  <span class="breakdown-count" id="stat-count-completed">-- đơn</span>
+                  <span class="breakdown-pct" id="stat-pct-completed">--%</span>
+                </div>
+              </div>
+
+              <div class="breakdown-row" data-segment="cancelled" title="Nhấp hoặc rê chuột để xem chi tiết">
+                <div class="breakdown-left">
+                  <span class="breakdown-dot" style="background-color: #757684;"></span>
+                  <span>Đã hủy</span>
+                </div>
+                <div class="breakdown-right">
+                  <span class="breakdown-count" id="stat-count-cancelled">-- đơn</span>
+                  <span class="breakdown-pct" id="stat-pct-cancelled">--%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Operational Dual Table Sections: Inventory Warnings & Pending Orders -->
+        <div class="admin-operational-grid">
+          <!-- Left Section: Inventory Alert (5 cols) (FR-036, BR-14) -->
+          <div class="admin-op-card">
+            <div class="op-card-content">
+              <div class="op-card-header">
+                <div class="op-card-title-group">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--admin-danger);"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  <h2 class="op-card-title">Cảnh báo tồn kho</h2>
+                </div>
+                <span class="op-badge-pill danger" id="dash-low-stock-threshold-badge">Còn dưới 10</span>
+              </div>
+              <p class="op-card-desc">Các sản phẩm có số lượng tồn kho thấp cần bổ sung.</p>
+
+              <!-- Danh sách sản phẩm sắp hết hàng (Render động qua JS / Skeleton loader) -->
+              <div class="low-stock-list" id="dash-low-stock-container">
+                <div class="low-stock-skeleton-list">
+                  <div class="low-stock-skeleton-item">
+                    <div class="skeleton-box" style="width: 42px; height: 42px; border-radius: 8px;"></div>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                      <div class="skeleton-line" style="width: 65%; height: 12px;"></div>
+                      <div class="skeleton-line" style="width: 35%; height: 10px;"></div>
+                    </div>
+                    <div class="skeleton-box" style="width: 48px; height: 26px; border-radius: 6px;"></div>
+                  </div>
+                  <div class="low-stock-skeleton-item">
+                    <div class="skeleton-box" style="width: 42px; height: 42px; border-radius: 8px;"></div>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                      <div class="skeleton-line" style="width: 75%; height: 12px;"></div>
+                      <div class="skeleton-line" style="width: 40%; height: 10px;"></div>
+                    </div>
+                    <div class="skeleton-box" style="width: 48px; height: 26px; border-radius: 6px;"></div>
+                  </div>
+                  <div class="low-stock-skeleton-item">
+                    <div class="skeleton-box" style="width: 42px; height: 42px; border-radius: 8px;"></div>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                      <div class="skeleton-line" style="width: 55%; height: 12px;"></div>
+                      <div class="skeleton-line" style="width: 30%; height: 10px;"></div>
+                    </div>
+                    <div class="skeleton-box" style="width: 48px; height: 26px; border-radius: 6px;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="op-card-footer">
+              <span id="dash-low-stock-total-lbl">Đang kiểm tra tồn kho...</span>
+              <a href="admin-inventory.html" class="op-footer-link">
+                <span>Xem tất cả kho</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- Right Section: Newest Orders Requiring Approval (7 cols) (FR-024) -->
+          <div class="admin-op-card">
+            <div class="op-card-content">
+              <div class="op-card-header">
+                <div class="op-card-title-group">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                  <h2 class="op-card-title">Đơn hàng mới nhất cần duyệt</h2>
+                </div>
+                <span class="op-badge-pill danger-dot" id="dash-pending-count-badge">-- đơn chờ</span>
+              </div>
+              <p class="op-card-desc">Danh sách các đơn hàng mới cần xác nhận</p>
+
+              <!-- Table Đơn hàng theo chuẩn Figma -->
+              <div class="op-table-wrap">
+                <table class="op-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 110px;">MÃ ĐƠN HÀNG</th>
+                      <th style="width: 140px;">KHÁCH HÀNG</th>
+                      <th style="width: 130px;">TỔNG THANH TOÁN</th>
+                      <th style="width: 120px;">TRẠNG THÁI</th>
+                      <th style="width: 140px; text-align: center;">THAO TÁC</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dash-orders-table-body">
+                    <tr>
+                      <td colspan="5" style="text-align: center; padding: 36px 12px; color: var(--admin-text-muted);">
+                        <span class="btn-op-spinner" style="width: 18px; height: 18px; margin-bottom: 8px; border-width: 2px;"></span>
+                        <div style="font-size: 12.5px; font-weight: 500;">Đang đồng bộ đơn hàng mới nhất...</div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="op-card-footer">
+              <span id="dash-orders-summary-lbl">Đang kiểm tra danh sách đơn hàng...</span>
+              <a href="admin-orders.html" class="op-footer-link">
+                <span>Chuyển tới Quản lý đơn hàng</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
 
   <!-- Scripts: Thứ tự nạp chuẩn -->
   <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
@@ -113,5 +448,6 @@
   <script src="../js/api.js"></script>
   <script src="../js/utils.js"></script>
   <script src="../js/layout.js"></script>
+  <script src="../js/pages/admin-dashboard.js"></script>
 </body>
 </html>
