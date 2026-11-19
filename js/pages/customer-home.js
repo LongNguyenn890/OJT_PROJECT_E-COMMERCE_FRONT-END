@@ -8,6 +8,7 @@ const state = {
   categories: [],
   products: [],
   categoryIds: [],
+  searchKeyword: "",
   minPrice: 0,
   maxPrice: MAX_PRICE_LIMIT,
   categorySearchQuery: "",
@@ -271,8 +272,8 @@ async function loadProducts({ append = false } = {}) {
     ) : "newest",
   };
 
-  const keyword = document.getElementById("shop-search")?.value.trim() || "";
-  if (keyword) params.search = keyword;
+  // Chỉ tìm kiếm theo từ khóa khi người dùng đã xác nhận tìm kiếm (Enter / Bấm Tìm / Chọn kết quả)
+  if (state.searchKeyword) params.search = state.searchKeyword;
 
   // Lọc nhiều danh mục
   if (state.categoryIds && state.categoryIds.length === 1) {
@@ -349,13 +350,11 @@ function updateActiveFilterBar() {
     `);
   }
 
-  // 3. Từ khóa tìm kiếm
-  const searchInput = document.getElementById("shop-search");
-  const query = searchInput ? searchInput.value.trim() : "";
-  if (query) {
+  // 3. Từ khóa tìm kiếm đã xác nhận
+  if (state.searchKeyword) {
     chips.push(`
       <span class="active-chip">
-        🔍 "${escapeHTML(query)}"
+        🔍 "${escapeHTML(state.searchKeyword)}"
         <button type="button" class="active-chip-remove" data-remove-search="true" title="Xóa tìm kiếm">×</button>
       </span>
     `);
@@ -670,6 +669,7 @@ document.getElementById("active-filter-bar")?.addEventListener("click", (e) => {
   }
   const removeSearchBtn = e.target.closest("[data-remove-search]");
   if (removeSearchBtn) {
+    state.searchKeyword = "";
     const searchInput = document.getElementById("shop-search");
     if (searchInput) searchInput.value = "";
     document.body.classList.remove("search-results-only");
@@ -700,25 +700,24 @@ document.querySelectorAll(".view-toggle[data-view]").forEach(button => {
 });
 
 function updateSearchMode() {
-  document.body.classList.toggle("search-results-only", Boolean(document.getElementById("shop-search")?.value.trim()));
+  document.body.classList.toggle("search-results-only", Boolean(state.searchKeyword));
 }
 
-document.getElementById("shop-search")?.addEventListener("input", () => {
-  updateSearchMode();
-  updateActiveFilterBar();
-  window.clearTimeout(window.customerSearchTimer);
-  window.customerSearchTimer = window.setTimeout(() => {
-    state.page = 1;
-    loadProducts();
-  }, 300);
-});
-
-document.getElementById("search-submit")?.addEventListener("click", () => {
+// Hàm áp dụng tìm kiếm: chỉ chạy khi bấm "Xem tất cả kết quả", Enter hoặc bấm nút Tìm kiếm
+window.applyCustomerSearch = function (keyword) {
+  state.searchKeyword = String(keyword !== undefined ? keyword : (document.getElementById("shop-search")?.value || "")).trim();
+  const searchInput = document.getElementById("shop-search");
+  if (searchInput) searchInput.value = state.searchKeyword;
   updateSearchMode();
   updateActiveFilterBar();
   state.page = 1;
   loadProducts();
   document.getElementById("products")?.scrollIntoView({ behavior: "smooth" });
+};
+
+document.getElementById("search-submit")?.addEventListener("click", () => {
+  const query = document.getElementById("shop-search")?.value.trim() || "";
+  window.applyCustomerSearch(query);
 });
 
 document.addEventListener("keydown", event => {
@@ -736,15 +735,33 @@ document.getElementById("pagination")?.addEventListener("click", event => {
 
 document.getElementById("product-grid")?.addEventListener("click", event => {
   const button = event.target.closest("[data-action]");
-  if (!button) return;
-  if (button.dataset.action === "details") showProductDetails(Number(button.dataset.id));
-  if (button.dataset.action === "cart") addToCart(Number(button.dataset.id), button);
+  if (button) {
+    if (button.dataset.action === "details") {
+      window.location.href = `product-detail.html?id=${button.dataset.id}`;
+      return;
+    }
+    if (button.dataset.action === "cart") {
+      addToCart(Number(button.dataset.id), button);
+      return;
+    }
+  }
+
+  // Bấm vào ảnh hoặc tên sản phẩm cũng điều hướng sang trang chi tiết
+  const clickableHeader = event.target.closest(".product-photo, .product-info h3");
+  if (clickableHeader) {
+    const card = clickableHeader.closest(".product-card");
+    const detailBtn = card?.querySelector('[data-action="details"]');
+    if (detailBtn?.dataset?.id) {
+      window.location.href = `product-detail.html?id=${detailBtn.dataset.id}`;
+    }
+  }
 });
 
 async function initCustomerHome() {
   const urlParams = new URLSearchParams(window.location.search);
   const initialSearch = urlParams.get("search");
   if (initialSearch) {
+    state.searchKeyword = initialSearch.trim();
     const searchInput = document.getElementById("shop-search");
     if (searchInput) {
       searchInput.value = initialSearch;
