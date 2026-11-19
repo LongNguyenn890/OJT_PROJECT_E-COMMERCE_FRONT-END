@@ -51,11 +51,13 @@ http.interceptors.response.use(
       // Server có trả lời nhưng là lỗi (4xx, 5xx)
       const { status, data } = error.response;
 
-      // Tự động đăng xuất và chuyển về trang đăng nhập khi nhận lỗi 401 Unauthorized
-      // hoặc lỗi 404 không tìm thấy thông tin tài khoản
+      // Tự động đăng xuất và chuyển về trang đăng nhập khi nhận lỗi 401 Unauthorized,
+      // 404 không tìm thấy thông tin tài khoản, hoặc 403 tài khoản đã bị khóa
       const detailStr = (data && typeof data.detail === "string") ? data.detail : "";
+      const isAccountLocked = status === 403 && detailStr.toLowerCase().includes("khóa");
       const isAccountNotFound = (
         status === 401 ||
+        isAccountLocked ||
         (status === 404 && (
           detailStr.toLowerCase().includes("không tìm thấy thông tin tài khoản") ||
           detailStr.toLowerCase().includes("tài khoản") ||
@@ -69,9 +71,12 @@ http.interceptors.response.use(
         if (!isAuthPage) {
           localStorage.removeItem("token");
           localStorage.removeItem("user");
-          const msg = (status === 404 || detailStr.toLowerCase().includes("không tìm thấy"))
-            ? "Không tìm thấy thông tin tài khoản. Vui lòng đăng nhập lại."
-            : "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+          let msg = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+          if (isAccountLocked) {
+            msg = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.";
+          } else if (status === 404 || detailStr.toLowerCase().includes("không tìm thấy")) {
+            msg = "Không tìm thấy thông tin tài khoản. Vui lòng đăng nhập lại.";
+          }
           sessionStorage.setItem("auth_message", msg);
 
           const root = document.body?.dataset?.root || "./";
@@ -90,7 +95,10 @@ http.interceptors.response.use(
 );
 
 const api = {
-  get: (path, params, config) => http.get(path, { params, ...config }).then((res) => res.data),
+  get: (path, params, config) => {
+    const actualParams = (params && params.params && typeof params.params === "object") ? params.params : params;
+    return http.get(path, { params: actualParams, ...config }).then((res) => res.data);
+  },
   post: (path, body, config) => http.post(path, body, config).then((res) => res.data),
   put: (path, body, config) => http.put(path, body, config).then((res) => res.data),
   patch: (path, body, config) => http.patch(path, body, config).then((res) => res.data),

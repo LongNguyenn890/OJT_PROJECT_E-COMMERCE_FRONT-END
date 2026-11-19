@@ -87,9 +87,212 @@ if (!checkRouteGuard()) {
 }
 
 // ==========================================================
-// 2. RENDER HEADER & FOOTER THEO VAI TRÒ (GUEST / CUSTOMER / ADMIN)
+// 2. RENDER LAYOUT QUẢN TRỊ VIÊN & NHÂN VIÊN (ADMIN SIDEBAR & TOPBAR)
+// Dùng chung cho toàn bộ thành viên nhóm theo chuẩn Figma Design (FR-041, FR-036)
+// ==========================================================
+function renderAdminLayout() {
+  const sidebarElem = document.getElementById("admin-sidebar");
+  const topbarElem = document.getElementById("admin-topbar");
+  if (!sidebarElem && !topbarElem) return;
+
+  const root = document.body.dataset.root || "./";
+  const currentPath = window.location.pathname;
+
+  const token = typeof Auth !== "undefined" ? Auth.getToken() : localStorage.getItem("token");
+  let user = typeof Auth !== "undefined" ? Auth.getUser() : null;
+  if (!user) {
+    try {
+      user = JSON.parse(localStorage.getItem("user") || "null");
+    } catch (_) {}
+  }
+
+  const role = (user?.role || "").toUpperCase();
+  const isAdmin = role === "ADMIN";
+  const isStaff = role === "STAFF";
+
+  const rawName = user?.full_name || user?.name || user?.email || (isAdmin ? "Nguyễn Thu Hà" : "Nhân viên vận hành");
+  const displayName = typeof capitalizeWords === "function" ? capitalizeWords(rawName) : rawName;
+
+  let avatarSrc = `${root}assets/images/avt người dùng.svg`;
+  if (user && user.avatar) {
+    if (user.avatar.startsWith("http") || user.avatar.startsWith("data:") || user.avatar.startsWith("blob:")) {
+      avatarSrc = user.avatar;
+    } else {
+      const origin = (typeof CONFIG !== "undefined" && CONFIG.API_BASE_URL)
+        ? CONFIG.API_BASE_URL.replace(/\/api\/?$/, "")
+        : "";
+      avatarSrc = `${origin}${user.avatar.startsWith("/") ? "" : "/"}${user.avatar}`;
+    }
+  }
+
+  // Phân tích URL hiện tại để gán active state cho menu item
+  const isDashboardActive = currentPath.endsWith("/admin-dashboard.html") || currentPath.endsWith("/admin-dashboard");
+  const isStaffActive = currentPath.endsWith("/admin-staff.html");
+  const isCustomersActive = currentPath.endsWith("/admin-customers.html") || currentPath.endsWith("/admin-users.html");
+  const isProductsActive = currentPath.endsWith("/admin-products.html") || currentPath.endsWith("/items.html");
+  const isCategoriesActive = currentPath.endsWith("/admin-categories.html");
+  const isOrdersActive = currentPath.endsWith("/admin-orders.html");
+  const isInventoryActive = currentPath.endsWith("/admin-inventory.html");
+  const isReportsActive = currentPath.endsWith("/admin-reports.html");
+  const isProfileActive = currentPath.endsWith("/profile.html");
+
+  if (sidebarElem) {
+    sidebarElem.innerHTML = `
+      <div class="admin-sidebar-brand">
+        <a href="${root}pages/admin-dashboard.html" class="admin-brand-link">
+          <img src="${root}assets/images/logo_shop.svg" alt="ShopEase" class="admin-brand-logo">
+          <div class="admin-brand-text-wrap">
+            <span class="admin-brand-name">ShopEase</span>
+            <span class="admin-brand-subtitle">Admin Console</span>
+          </div>
+        </a>
+      </div>
+
+      <div class="admin-sidebar-menu-wrap">
+        <div class="admin-nav-group-title">QUẢN TRỊ HỆ THỐNG</div>
+        <nav class="admin-sidebar-menu">
+          <a href="${root}pages/admin-dashboard.html" class="admin-nav-item ${isDashboardActive ? "active" : ""}">
+            <svg class="admin-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+            <span>Tổng quan</span>
+          </a>
+
+          <a href="${root}pages/admin-orders.html" class="admin-nav-item ${isOrdersActive ? "active" : ""}">
+            <svg class="admin-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            <span>Quản lý Đơn hàng</span>
+          </a>
+
+          <a href="${root}pages/admin-products.html" class="admin-nav-item ${isProductsActive ? "active" : ""}">
+            <svg class="admin-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+            <span>Quản lý Sản phẩm</span>
+          </a>
+
+          <a href="${root}pages/admin-categories.html" class="admin-nav-item ${isCategoriesActive ? "active" : ""}">
+            <svg class="admin-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <span>Quản lý Danh mục</span>
+          </a>
+
+          <a href="${root}pages/admin-inventory.html" class="admin-nav-item ${isInventoryActive ? "active" : ""}">
+            <svg class="admin-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            <span>Quản lý Kho hàng</span>
+          </a>
+
+          <a href="${root}pages/admin-staff.html" class="admin-nav-item ${isStaffActive ? "active" : ""}">
+            <svg class="admin-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>Quản lý Nhân viên</span>
+          </a>
+
+          <a href="${root}pages/admin-customers.html" class="admin-nav-item ${isCustomersActive ? "active" : ""}">
+            <svg class="admin-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>Quản lý Khách hàng</span>
+          </a>
+
+          <a href="${root}pages/admin-reports.html" class="admin-nav-item ${isReportsActive ? "active" : ""}">
+            <svg class="admin-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <span>Thống kê &amp; Báo cáo</span>
+          </a>
+
+          <a href="${root}pages/profile.html" class="admin-nav-item ${isProfileActive ? "active" : ""}">
+            <svg class="admin-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>Cài đặt hệ thống</span>
+          </a>
+        </nav>
+      </div>
+
+      <div class="admin-sidebar-bottom">
+        <a href="${root}pages/customer-home.html" class="admin-sidebar-store-link">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>Xem Cửa hàng bán lẻ</span>
+        </a>
+      </div>
+    `;
+  }
+
+  if (topbarElem) {
+    topbarElem.innerHTML = `
+      <div class="admin-topbar-inner">
+        <div class="admin-topbar-left">
+          <button type="button" class="admin-hamburger" id="admin-sidebar-toggle" title="Thu gọn / Mở rộng Sidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div class="admin-global-search">
+            <svg class="admin-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="admin-search-input" placeholder="Tìm kiếm toàn cục (mã đơn, tên sản phẩm, khách hàng)..." aria-label="Tìm kiếm toàn cục">
+          </div>
+        </div>
+
+        <div class="admin-topbar-right">
+          <!-- Nút Thông báo cảnh báo tồn kho và đơn hàng với chấm đỏ -->
+          <button type="button" class="admin-notify-btn" title="Thông báo cảnh báo tồn kho và đơn hàng" id="admin-notify-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="admin-notify-dot" title="Có cảnh báo mới"></span>
+          </button>
+
+          <div class="admin-topbar-divider"></div>
+
+          <!-- Thông tin Người dùng (Avatar + Tên + Chức danh theo Figma) -->
+          <div class="admin-header-profile">
+            <img src="${avatarSrc}" alt="${displayName}" class="admin-profile-avatar" onerror="this.src='${root}assets/images/avt người dùng.svg'">
+            <div class="admin-profile-info">
+              <div class="admin-profile-name">${displayName} (${isAdmin ? "Admin" : "Staff"})</div>
+              <div class="admin-profile-role">${isAdmin ? "Quản trị viên trưởng" : "Nhân viên vận hành"}</div>
+            </div>
+          </div>
+
+          <!-- Nút Đăng xuất màu đỏ #ba1a1a theo Figma -->
+          <button type="button" class="admin-header-logout" id="admin-logout-btn" title="Đăng xuất">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <span>Đăng xuất</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    // Gắn sự kiện Đăng xuất
+    const logoutBtn = topbarElem.querySelector("#admin-logout-btn");
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", () => {
+        if (typeof Auth !== "undefined" && Auth.confirmLogout) {
+          Auth.confirmLogout(root);
+        } else {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          window.location.href = `${root}pages/login.html`;
+        }
+      });
+    }
+
+    // Gắn sự kiện Hamburger menu cho tablet/mobile
+    const toggleBtn = topbarElem.querySelector("#admin-sidebar-toggle");
+    if (toggleBtn && sidebarElem) {
+      let backdrop = document.querySelector(".admin-sidebar-backdrop");
+      if (!backdrop) {
+        backdrop = document.createElement("div");
+        backdrop.className = "admin-sidebar-backdrop";
+        document.body.appendChild(backdrop);
+      }
+
+      toggleBtn.addEventListener("click", () => {
+        const isShow = sidebarElem.classList.toggle("show");
+        backdrop.classList.toggle("show", isShow);
+      });
+
+      backdrop.addEventListener("click", () => {
+        sidebarElem.classList.remove("show");
+        backdrop.classList.remove("show");
+      });
+    }
+  }
+}
+
+// ==========================================================
+// 3. RENDER HEADER & FOOTER CHO TRANG KHÁCH HÀNG (SHOP CLIENT)
 // ==========================================================
 function renderLayout() {
+  if (document.body.classList.contains("admin-page") || document.getElementById("admin-sidebar") || document.getElementById("admin-topbar")) {
+    renderAdminLayout();
+    return;
+  }
+
   const headerElem = document.getElementById("app-header");
   const footerElem = document.getElementById("app-footer");
   if (!headerElem && !footerElem) return;
@@ -907,5 +1110,7 @@ function checkPendingToast() {
 }
 
 // Tự động render layout và kích hoạt toast chờ
+window.renderAdminLayout = renderAdminLayout;
+window.renderLayout = renderLayout;
 renderLayout();
 checkPendingToast();
