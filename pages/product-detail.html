@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chi tiết sản phẩm | ShopEase</title>
+  <link rel="icon" href="../assets/images/logo_shop.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/items.css">
+  <link rel="stylesheet" href="../css/product-detail.css">
+</head>
+<body class="shop-page" data-root="../">
+  <!-- Topline banner -->
+  <div class="shop-topline">
+    <span><img src="../assets/images/giao hàng.svg" alt=""> Miễn phí giao hàng đơn hàng từ 500.000₫ · Thanh toán khi nhận hàng (COD) miễn phí</span>
+    <span><img src="../assets/images/tổng đài.svg" alt=""> CSKH toàn quốc: 1900 6868</span>
+  </div>
+
+  <!-- Header chung của ShopEase do layout.js tự render -->
+  <header id="app-header"></header>
+
+  <!-- NỘI DUNG CHÍNH TRANG CHI TIẾT SẢN PHẨM -->
+  <main class="detail-page-wrapper">
+    <!-- Trạng thái Loading -->
+    <div id="detail-loading-box" class="detail-loading-state">
+      <div class="detail-spinner"></div>
+      <p>Đang tải thông tin sản phẩm từ hệ thống…</p>
+    </div>
+
+    <!-- Trạng thái Lỗi / Không tìm thấy -->
+    <div id="detail-error-box" class="detail-error-state" hidden>
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2" style="margin: 0 auto 16px;">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <h3 id="error-title">Không tìm thấy sản phẩm</h3>
+      <p id="error-message">Sản phẩm bạn đang tìm kiếm không tồn tại hoặc đã ngừng kinh doanh.</p>
+      <a href="customer-home.html" class="btn-back-home">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Quay lại trang sản phẩm
+      </a>
+    </div>
+
+    <!-- KHU VỰC CHI TIẾT SẢN PHẨM HOÀN CHỈNH (Hiển thị khi tải xong) -->
+    <div id="detail-content" hidden>
+      <!-- 1. Thanh điều hướng Breadcrumb -->
+      <nav class="se-breadcrumb" aria-label="Đường dẫn điều hướng">
+        <ol class="se-breadcrumb-list">
+          <li class="se-breadcrumb-item">
+            <a href="customer-home.html">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              <span>Trang chủ</span>
+            </a>
+          </li>
+          <li class="se-breadcrumb-separator" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </li>
+          <li class="se-breadcrumb-item">
+            <a href="customer-home.html#products" id="breadcrumb-category">Ngành hàng</a>
+          </li>
+          <li class="se-breadcrumb-separator" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </li>
+          <li class="se-breadcrumb-item se-breadcrumb-current" id="breadcrumb-product-name" aria-current="page">
+            <span>Chi tiết sản phẩm</span>
+          </li>
+        </ol>
+      </nav>
+
+      <!-- 2. Khung sản phẩm chính (Gallery bên trái + Thông tin & Mua hàng bên phải) -->
+      <section class="product-main-card">
+        <!-- Cột trái: Bộ sưu tập ảnh sản phẩm -->
+        <div class="product-gallery">
+          <div class="gallery-main-viewport" id="gallery-main-viewport" title="Nhấp vào để phóng to ảnh">
+            <span class="gallery-badge discount" id="gallery-discount-badge" hidden>-0%</span>
+            <span class="gallery-badge stock-pill" id="gallery-stock-badge">Còn hàng</span>
+            <img class="gallery-main-img" id="main-product-image" src="../assets/images/logo_shop.svg" alt="Ảnh sản phẩm">
+            <button type="button" class="gallery-zoom-btn" id="gallery-zoom-btn" aria-label="Phóng to ảnh">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                <line x1="11" y1="8" x2="11" y2="14"></line>
+                <line x1="8" y1="11" x2="14" y2="11"></line>
+              </svg>
+              <span>Phóng to ảnh</span>
+            </button>
+          </div>
+          <!-- Danh sách ảnh thu nhỏ Thumbnails -->
+          <div class="gallery-thumbs" id="gallery-thumbs"></div>
+          <!-- Thanh tiện ích thông tin bảo chứng dưới ảnh -->
+          <div class="gallery-info-strip">
+            <div class="gallery-info-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span>Nhấp vào ảnh để xem kích thước phóng to</span>
+            </div>
+            <div class="gallery-info-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>Ảnh chụp sản phẩm thực tế 100%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cột phải: Chi tiết thông số, Giá, Số lượng và Nút mua -->
+        <div class="product-details">
+          <!-- Tag danh mục -->
+          <span class="product-cat-tag" id="product-category-tag">Danh mục</span>
+
+          <!-- Tên sản phẩm -->
+          <h1 class="product-title" id="product-title">Tên sản phẩm</h1>
+
+          <!-- Đánh giá, Lượt bán, Mã SKU -->
+          <div class="product-rating-meta">
+            <div class="stars-rating">
+              <svg width="15" height="15" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span>4.9</span>
+            </div>
+            <span class="rating-count">(128 đánh giá)</span>
+            <span class="rating-divider"></span>
+            <span class="sold-count">Đã bán <strong>500+</strong></span>
+            <span class="rating-divider"></span>
+            <span class="sku-code">SKU: <strong id="product-sku">N/A</strong></span>
+          </div>
+
+          <!-- Khối giá sản phẩm -->
+          <div class="product-price-box">
+            <div class="price-main-row">
+              <span class="current-price" id="product-current-price">0₫</span>
+              <del class="original-price" id="product-original-price" hidden>0₫</del>
+              <span class="discount-pill" id="product-discount-pill" hidden>-0%</span>
+            </div>
+            <div class="save-amount-tip" id="product-save-tip" hidden>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span id="product-save-text">Tiết kiệm 0₫</span>
+            </div>
+          </div>
+
+          <!-- Điểm nổi bật tóm tắt -->
+          <div class="product-highlights">
+            <p id="product-short-desc">Mô tả sản phẩm đang được cập nhật.</p>
+            <ul class="highlights-list">
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Cam kết 100% sản phẩm chính hãng, đầy đủ giấy tờ chứng nhận
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Bảo hành chính hãng 12 - 24 tháng theo quy chuẩn nhà sản xuất
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Hỗ trợ 1 đổi 1 trong 7 ngày đầu nếu có lỗi từ nhà sản xuất
+              </li>
+            </ul>
+          </div>
+
+          <!-- Trạng thái tồn kho -->
+          <div class="stock-status-row">
+            <span class="quantity-label">Tình trạng:</span>
+            <span class="stock-badge in-stock" id="stock-status-badge">
+              <span class="stock-dot"></span>
+              <span id="stock-status-text">Còn hàng</span>
+            </span>
+          </div>
+
+          <!-- Bộ chọn số lượng & Nút đặt hàng -->
+          <div class="purchase-controls">
+            <div class="quantity-row">
+              <span class="quantity-label">Số lượng:</span>
+              <div class="quantity-stepper">
+                <button type="button" class="qty-btn" id="qty-minus" aria-label="Giảm số lượng">-</button>
+                <input type="number" id="qty-input" class="qty-input" value="1" min="1" max="99" aria-label="Số lượng đặt mua">
+                <button type="button" class="qty-btn" id="qty-plus" aria-label="Tăng số lượng">+</button>
+              </div>
+            </div>
+
+            <!-- Nút Thêm vào giỏ hàng & Mua ngay -->
+            <div class="cta-buttons-row">
+              <button type="button" class="btn-add-cart" id="btn-add-to-cart">
+                <img src="../assets/images/thêm giỏ hàng.svg" alt="">
+                <span>Thêm vào giỏ hàng</span>
+              </button>
+              <button type="button" class="btn-buy-now" id="btn-buy-now">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <span>Mua ngay</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Cam kết dịch vụ ShopEase (4 cam kết chuẩn Figma) -->
+          <div class="trust-promises-grid">
+            <div class="trust-promise-item">
+              <div class="promise-icon-wrap"><img src="../assets/images/giao hàng.svg" alt=""></div>
+              <div class="promise-text">
+                <strong>Miễn Phí Giao Hàng</strong>
+                <small>Áp dụng đơn từ 500.000₫</small>
+              </div>
+            </div>
+            <div class="trust-promise-item">
+              <div class="promise-icon-wrap"><img src="../assets/images/đổi trả.svg" alt=""></div>
+              <div class="promise-text">
+                <strong>Đổi Trả 7 Ngày</strong>
+                <small>Miễn phí nếu lỗi sản xuất</small>
+              </div>
+            </div>
+            <div class="trust-promise-item">
+              <div class="promise-icon-wrap"><img src="../assets/images/bảo hành.svg" alt=""></div>
+              <div class="promise-text">
+                <strong>Hàng Chính Hãng</strong>
+                <small>Cam kết 100% chính hãng</small>
+              </div>
+            </div>
+            <div class="trust-promise-item">
+              <div class="promise-icon-wrap"><img src="../assets/images/hotline.svg" alt=""></div>
+              <div class="promise-text">
+                <strong>Hỗ Trợ 24/7</strong>
+                <small>Tổng đài CSKH 1900 6868</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Khu vực Tabs chi tiết (Mô tả, Thông số kỹ thuật, Chính sách, Đánh giá) -->
+      <section class="product-tabs-card">
+        <div class="tabs-nav-bar" role="tablist">
+          <button type="button" class="tab-nav-btn active" data-tab="tab-desc" role="tab" aria-selected="true">
+            <span>Mô tả sản phẩm</span>
+          </button>
+          <button type="button" class="tab-nav-btn" data-tab="tab-specs" role="tab" aria-selected="false">
+            <span>Thông số kỹ thuật</span>
+          </button>
+          <button type="button" class="tab-nav-btn" data-tab="tab-policy" role="tab" aria-selected="false">
+            <span>Chính sách bán hàng</span>
+          </button>
+          <button type="button" class="tab-nav-btn" data-tab="tab-reviews" role="tab" aria-selected="false">
+            <span>Đánh giá khách hàng</span>
+            <span class="tab-badge">128</span>
+          </button>
+        </div>
+
+        <div class="tab-panel-body">
+          <!-- Tab 1: Mô tả chi tiết -->
+          <div class="tab-pane active" id="tab-desc" role="tabpanel">
+            <div class="product-desc-content" id="product-detailed-description">
+              <p>Mô tả chi tiết sản phẩm.</p>
+            </div>
+          </div>
+
+          <!-- Tab 2: Thông số kỹ thuật -->
+          <div class="tab-pane" id="tab-specs" role="tabpanel">
+            <div class="specs-table-wrap">
+              <table class="specs-table">
+                <tbody>
+                  <tr>
+                    <td class="spec-name">Mã sản phẩm (SKU)</td>
+                    <td class="spec-val" id="spec-sku">N/A</td>
+                  </tr>
+                  <tr>
+                    <td class="spec-name">Ngành hàng / Danh mục</td>
+                    <td class="spec-val" id="spec-category">N/A</td>
+                  </tr>
+                  <tr>
+                    <td class="spec-name">Tình trạng tồn kho</td>
+                    <td class="spec-val" id="spec-stock">N/A</td>
+                  </tr>
+                  <tr>
+                    <td class="spec-name">Bảo hành</td>
+                    <td class="spec-val">12 tháng chính hãng (Kích hoạt điện tử theo số điện thoại)</td>
+                  </tr>
+                  <tr>
+                    <td class="spec-name">Xuất xứ / Phân phối</td>
+                    <td class="spec-val">Chính hãng ShopEase Distribution Vietnam</td>
+                  </tr>
+                  <tr>
+                    <td class="spec-name">Quy cách đóng gói</td>
+                    <td class="spec-val">Hộp nguyên seal, đầy đủ phụ kiện và sổ hướng dẫn sử dụng kèm phiếu bảo hành</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Tab 3: Chính sách bán hàng & cam kết -->
+          <div class="tab-pane" id="tab-policy" role="tabpanel">
+            <div class="policies-grid">
+              <div class="policy-card">
+                <h4><img src="../assets/images/giao hàng.svg" alt="" width="20" height="20"> Giao hàng siêu tốc</h4>
+                <p>Nội thành Hà Nội & TP.HCM nhận hàng trong 2-4 giờ. Các tỉnh thành khác nhận hàng từ 2-3 ngày làm việc qua đối tác vận chuyển uy tín.</p>
+              </div>
+              <div class="policy-card">
+                <h4><img src="../assets/images/COD.svg" alt="" width="20" height="20"> Kiểm hàng trước thanh toán</h4>
+                <p>Khách hàng được quyền đồng kiểm tra ngoại quan kiện hàng cùng nhân viên giao hàng trước khi tiến hành thanh toán tiền mặt (COD).</p>
+              </div>
+              <div class="policy-card">
+                <h4><img src="../assets/images/đổi trả.svg" alt="" width="20" height="20"> Đổi trả miễn phí 7 ngày</h4>
+                <p>Đổi mới 100% nếu phát sinh bất kỳ lỗi kỹ thuật nào từ nhà sản xuất trong vòng 7 ngày kể từ ngày nhận hàng thành công.</p>
+              </div>
+              <div class="policy-card">
+                <h4><img src="../assets/images/bảo hành.svg" alt="" width="20" height="20"> Bảo hành điện tử</h4>
+                <p>Tự động lưu lịch sử bảo hành theo số điện thoại và mã đơn hàng, không lo thất lạc hóa đơn hay giấy tờ bảo hành.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 4: Đánh giá & Bình luận -->
+          <div class="tab-pane" id="tab-reviews" role="tabpanel">
+            <div class="reviews-summary-panel">
+              <div class="review-score-box">
+                <div class="review-big-num">4.9</div>
+                <div class="review-stars-big">★★★★★</div>
+                <div class="review-total-text">Dựa trên 128 đánh giá thực tế</div>
+              </div>
+              <div class="review-bars-list">
+                <div class="review-bar-row">
+                  <span class="bar-star-label">5 sao</span>
+                  <div class="bar-track"><div class="bar-fill" style="width: 88%;"></div></div>
+                  <span class="bar-count">112</span>
+                </div>
+                <div class="review-bar-row">
+                  <span class="bar-star-label">4 sao</span>
+                  <div class="bar-track"><div class="bar-fill" style="width: 9%;"></div></div>
+                  <span class="bar-count">12</span>
+                </div>
+                <div class="review-bar-row">
+                  <span class="bar-star-label">3 sao</span>
+                  <div class="bar-track"><div class="bar-fill" style="width: 2%;"></div></div>
+                  <span class="bar-count">3</span>
+                </div>
+                <div class="review-bar-row">
+                  <span class="bar-star-label">2 sao</span>
+                  <div class="bar-track"><div class="bar-fill" style="width: 1%;"></div></div>
+                  <span class="bar-count">1</span>
+                </div>
+                <div class="review-bar-row">
+                  <span class="bar-star-label">1 sao</span>
+                  <div class="bar-track"><div class="bar-fill" style="width: 0%;"></div></div>
+                  <span class="bar-count">0</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Danh sách nhận xét mẫu từ khách hàng -->
+            <div class="reviews-comments-list">
+              <div class="review-comment-card">
+                <div class="reviewer-header">
+                  <span class="reviewer-name">Nguyễn Hoàng Long <span style="color:#16a34a; font-weight:400; font-size:12px;">✓ Đã mua hàng tại ShopEase</span></span>
+                  <span class="review-date">Hôm qua, 14:20</span>
+                </div>
+                <div class="review-comment-stars">★★★★★</div>
+                <p class="review-comment-text">Sản phẩm đóng gói rất cẩn thận, hộp nguyên seal không hề móp méo. Giao hàng cực nhanh, đặt sáng mà chiều đã nhận được. Chất lượng tuyệt vời đúng như mô tả!</p>
+              </div>
+              <div class="review-comment-card">
+                <div class="reviewer-header">
+                  <span class="reviewer-name">Trần Thị Mai Anh <span style="color:#16a34a; font-weight:400; font-size:12px;">✓ Đã mua hàng tại ShopEase</span></span>
+                  <span class="review-date">3 ngày trước</span>
+                </div>
+                <div class="review-comment-stars">★★★★★</div>
+                <p class="review-comment-text">Hàng chính hãng chuẩn xịn, bảo hành đầy đủ qua điện thoại. Dùng rất mượt mà và êm tay. Nhân viên CSKH 1900 6868 tư vấn rất nhiệt tình, 10 điểm cho ShopEase!</p>
+              </div>
+              <div class="review-comment-card">
+                <div class="reviewer-header">
+                  <span class="reviewer-name">Lê Quang Huy <span style="color:#16a34a; font-weight:400; font-size:12px;">✓ Đã mua hàng tại ShopEase</span></span>
+                  <span class="review-date">1 tuần trước</span>
+                </div>
+                <div class="review-comment-stars">★★★★★</div>
+                <p class="review-comment-text">Giá tốt hơn so với các hệ thống lớn mà chất lượng tương đương. Miễn phí vận chuyển tận nhà và được mở ra kiểm hàng trước khi trả tiền nên rất an tâm.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Sản phẩm tương tự / Sản phẩm liên quan (API related_products) -->
+      <section class="related-products-section" id="related-products-section" hidden>
+        <div class="section-title-wrap">
+          <h2>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+            Sản Phẩm Tương Tự
+          </h2>
+        </div>
+        <div class="related-grid" id="related-products-grid">
+          <!-- Render động từ product-detail.js -->
+        </div>
+      </section>
+
+      <!-- 5. Sản phẩm đã xem gần đây (localStorage) -->
+      <section class="related-products-section" id="recent-viewed-section" hidden>
+        <div class="section-title-wrap">
+          <h2>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Sản Phẩm Đã Xem Gần Đây
+          </h2>
+          <button type="button" class="clear-recent-btn" id="btn-clear-recent-detail" title="Xóa lịch sử đã xem">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Xóa lịch sử
+          </button>
+        </div>
+        <div class="related-grid" id="recent-viewed-grid">
+          <!-- Render động từ product-detail.js -->
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Pop-up phóng to ảnh (Image Lightbox Modal) -->
+  <div class="image-lightbox-modal" id="image-lightbox-modal" hidden>
+    <div class="lightbox-backdrop" id="lightbox-backdrop"></div>
+    <div class="lightbox-dialog" role="dialog" aria-modal="true" aria-label="Xem ảnh phóng to">
+      <div class="lightbox-header">
+        <div class="lightbox-title-box">
+          <h4 id="lightbox-product-title">Tên sản phẩm</h4>
+          <span class="lightbox-counter" id="lightbox-counter">Ảnh 1 / 1</span>
+        </div>
+        <button type="button" class="lightbox-close-btn" id="lightbox-close-btn" aria-label="Đóng popup">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="lightbox-body">
+        <button type="button" class="lightbox-nav-btn prev" id="lightbox-prev-btn" aria-label="Ảnh trước">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <div class="lightbox-img-wrap">
+          <img id="lightbox-main-img" src="" alt="Ảnh phóng to">
+        </div>
+        <button type="button" class="lightbox-nav-btn next" id="lightbox-next-btn" aria-label="Ảnh sau">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+      <div class="lightbox-thumbs" id="lightbox-thumbs"></div>
+    </div>
+  </div>
+
+  <!-- Footer chung của ShopEase do layout.js tự render -->
+  <footer id="app-footer"></footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/pages/product-detail.js"></script>
+</body>
+</html>

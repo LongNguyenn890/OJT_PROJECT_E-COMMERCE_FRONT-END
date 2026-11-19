@@ -251,8 +251,9 @@ function renderLayout() {
             <span>ShopEase<small>Mua sắm dễ dàng mỗi ngày</small></span>
           </a>
           <div class="header-search">
-            <input id="shop-search" type="search" placeholder="Tìm kiếm sản phẩm, thương hiệu... (Ctrl + K)">
+            <input id="shop-search" type="search" placeholder="Tìm kiếm sản phẩm, thương hiệu... (Ctrl + K)" autocomplete="off">
             <button type="button" id="search-submit" title="Tìm kiếm">⌕ Tìm</button>
+            <div class="search-suggest-dropdown" id="search-suggest-dropdown" hidden></div>
           </div>
           <div class="header-tools">
             <!-- 1. Hotline CSKH -->
@@ -384,29 +385,8 @@ function renderLayout() {
       });
     }
 
-    // 3. Xử lý tìm kiếm liên trang (nếu gõ tìm kiếm từ trang profile hoặc admin -> chuyển về trang chủ kết quả tìm kiếm)
-    const shopSearchInput = document.getElementById("shop-search");
-    const searchSubmitBtn = document.getElementById("search-submit");
-    if (!isCustomerHome) {
-      const handleCrossPageSearch = () => {
-        const query = shopSearchInput ? shopSearchInput.value.trim() : "";
-        if (query) {
-          window.location.href = `${root}pages/customer-home.html?search=${encodeURIComponent(query)}#products`;
-        } else {
-          window.location.href = `${root}pages/customer-home.html#products`;
-        }
-      };
-
-      if (searchSubmitBtn) searchSubmitBtn.addEventListener("click", handleCrossPageSearch);
-      if (shopSearchInput) {
-        shopSearchInput.addEventListener("keydown", (e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            handleCrossPageSearch();
-          }
-        });
-      }
-    }
+    // 3. Gợi ý tìm kiếm (Debounce + Sản phẩm đã xem gần đây từ localStorage) & Tìm kiếm liên trang
+    setupSearchSuggestions(root, isCustomerHome);
 
     // 4. Xử lý cuộn mượt nội trang & ScrollSpy tự động chuyển đổi mục active trên Navbar theo vị trí cuộn
     if (isCustomerHome) {
@@ -886,6 +866,262 @@ function renderLayout() {
     footerElem.innerHTML = `
       <div class="container">© ${new Date().getFullYear()} ShopEase Việt Nam · Base code thực tập doanh nghiệp HN-KS25-CNTT1</div>`;
   }
+}
+
+// ==========================================================
+// 6. GỢI Ý TÌM KIẾM (DEBOUNCE) & SẢN PHẨM ĐÃ XEM GẦN ĐÂY (LOCALSTORAGE)
+// ==========================================================
+function setupSearchSuggestions(root, isCustomerHome) {
+  const input = document.getElementById("shop-search");
+  const dropdown = document.getElementById("search-suggest-dropdown");
+  const searchBtn = document.getElementById("search-submit");
+  if (!input || !dropdown) return;
+
+  const KEY_RECENT = "shopease_recently_viewed";
+  let debounceTimer = null;
+  let currentRequestId = 0;
+
+  const escapeHTML = (str) =>
+    String(str ?? "").replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    }[c]));
+
+  const formatPrice = (val) => `${Number(val || 0).toLocaleString("vi-VN")}₫`;
+
+  const resolveImg = (path) => {
+    if (!path) return `${root}assets/images/logo_shop.svg`;
+    if (/^(https?:)?\/\//i.test(path) || path.startsWith("data:")) return path;
+    const origin = (typeof CONFIG !== "undefined" && CONFIG.API_BASE_URL)
+      ? CONFIG.API_BASE_URL.replace(/\/api\/?$/, "")
+      : "http://127.0.0.1:8000";
+    return `${origin}${path.startsWith("/") ? "" : "/"}${path}`;
+  };
+
+  const highlightMatch = (text, query) => {
+    if (!query || !text) return escapeHTML(text);
+    const safe = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`(${safe})`, "gi");
+    return escapeHTML(text).replace(regex, "<mark>$1</mark>");
+  };
+
+  const getRecentViewed = () => {
+    try {
+      return JSON.parse(localStorage.getItem(KEY_RECENT) || "[]");
+    } catch (_) {
+      return [];
+    }
+  };
+
+  const doSubmitSearch = (keyword) => {
+    dropdown.hidden = true;
+    const q = (keyword !== undefined ? keyword : input.value).trim();
+    if (isCustomerHome && typeof window.applyCustomerSearch === "function") {
+      window.applyCustomerSearch(q);
+    } else {
+      if (q) {
+        window.location.href = `${root}pages/customer-home.html?search=${encodeURIComponent(q)}#products`;
+      } else {
+        window.location.href = `${root}pages/customer-home.html#products`;
+      }
+    }
+  };
+
+  const showRecentOrPopular = () => {
+    const recents = getRecentViewed();
+    if (recents.length > 0) {
+      dropdown.innerHTML = `
+        <div class="suggest-header">
+          <span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Sản phẩm đã xem gần đây
+          </span>
+          <button type="button" class="suggest-clear-btn" id="btn-clear-suggest-recent">Xóa lịch sử</button>
+        </div>
+        <div class="suggest-list">
+          ${recents.slice(0, 5).map(item => {
+            const hasPromo = item.promotional_price && Number(item.promotional_price) < Number(item.price);
+            return `
+              <a href="${root}pages/product-detail.html?id=${item.id}" class="suggest-item">
+                <img src="${escapeHTML(resolveImg(item.image_url))}" class="suggest-thumb" alt="${escapeHTML(item.name)}" onerror="this.src='${root}assets/images/logo_shop.svg'">
+                <div class="suggest-info">
+                  <div class="suggest-title">${escapeHTML(item.name)}</div>
+                  <div class="suggest-meta">
+                    <span class="suggest-price">${formatPrice(item.promotional_price || item.price)}</span>
+                    ${hasPromo ? `<span class="suggest-old-price">${formatPrice(item.price)}</span>` : ""}
+                    ${item.category_name ? `<span class="suggest-cat">${escapeHTML(item.category_name)}</span>` : ""}
+                  </div>
+                </div>
+              </a>
+            `;
+          }).join("")}
+        </div>
+      `;
+
+      dropdown.querySelector("#btn-clear-suggest-recent")?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        localStorage.removeItem(KEY_RECENT);
+        showRecentOrPopular();
+        if (typeof showToast === "function") showToast("Đã xóa lịch sử sản phẩm đã xem", "info");
+      });
+    } else {
+      const popularTags = ["iPhone 15", "Samsung Galaxy", "Bàn phím cơ", "Tai nghe không dây", "iPad Pro", "Laptop"];
+      dropdown.innerHTML = `
+        <div class="suggest-header">
+          <span>🔥 Tìm kiếm phổ biến</span>
+        </div>
+        <div class="suggest-tags-wrap">
+          ${popularTags.map(tag => `<button type="button" class="suggest-tag-chip" data-search-tag="${escapeHTML(tag)}">${escapeHTML(tag)}</button>`).join("")}
+        </div>
+      `;
+
+      dropdown.querySelectorAll("[data-search-tag]").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const tag = btn.dataset.searchTag;
+          input.value = tag;
+          doSubmitSearch(tag);
+        });
+      });
+    }
+    dropdown.hidden = false;
+  };
+
+  const showLoading = () => {
+    dropdown.innerHTML = `
+      <div class="suggest-loading">
+        <span>Đang tìm kiếm gợi ý sản phẩm…</span>
+      </div>
+    `;
+    dropdown.hidden = false;
+  };
+
+  const fetchSuggestions = async (query) => {
+    const reqId = ++currentRequestId;
+    try {
+      let results = [];
+      let total = 0;
+      if (typeof api !== "undefined" && api.get) {
+        const data = await api.get("/products", { search: query, page_size: 6 });
+        if (reqId !== currentRequestId) return;
+        results = data.items || [];
+        total = Number(data.total || results.length);
+      } else {
+        const baseUrl = (typeof CONFIG !== "undefined" && CONFIG.API_BASE_URL) ? CONFIG.API_BASE_URL : "http://127.0.0.1:8000/api";
+        const url = `${baseUrl}/products?search=${encodeURIComponent(query)}&page_size=6`;
+        const resp = await fetch(url);
+        const data = await resp.json();
+        if (reqId !== currentRequestId) return;
+        results = data.items || [];
+        total = Number(data.total || results.length);
+      }
+
+      if (results.length === 0) {
+        dropdown.innerHTML = `
+          <div class="suggest-empty">
+            Không tìm thấy sản phẩm phù hợp với "<strong>${escapeHTML(query)}</strong>"
+            <small>Thử tìm kiếm với tên sản phẩm, danh mục hoặc thương hiệu khác.</small>
+          </div>
+        `;
+        dropdown.hidden = false;
+        return;
+      }
+
+      dropdown.innerHTML = `
+        <div class="suggest-header">
+          <span>Gợi ý sản phẩm (${total} kết quả)</span>
+        </div>
+        <div class="suggest-list">
+          ${results.map(prod => {
+            const hasPromo = prod.promotional_price && Number(prod.promotional_price) < Number(prod.price);
+            const imgPath = (prod.product_images && prod.product_images.length > 0)
+              ? prod.product_images[0].image_url
+              : "";
+            return `
+              <a href="${root}pages/product-detail.html?id=${prod.id}" class="suggest-item">
+                <img src="${escapeHTML(resolveImg(imgPath))}" class="suggest-thumb" alt="${escapeHTML(prod.name)}" onerror="this.src='${root}assets/images/logo_shop.svg'">
+                <div class="suggest-info">
+                  <div class="suggest-title">${highlightMatch(prod.name, query)}</div>
+                  <div class="suggest-meta">
+                    <span class="suggest-price">${formatPrice(prod.promotional_price || prod.price)}</span>
+                    ${hasPromo ? `<span class="suggest-old-price">${formatPrice(prod.price)}</span>` : ""}
+                    ${prod.category ? `<span class="suggest-cat">${escapeHTML(prod.category.name)}</span>` : ""}
+                  </div>
+                </div>
+              </a>
+            `;
+          }).join("")}
+        </div>
+        <div class="suggest-footer">
+          <button type="button" class="suggest-view-all" id="btn-suggest-view-all">
+            Xem tất cả kết quả cho "${escapeHTML(query)}" (${total}) →
+          </button>
+        </div>
+      `;
+
+      dropdown.querySelector("#btn-suggest-view-all")?.addEventListener("click", () => {
+        doSubmitSearch(query);
+      });
+
+      dropdown.hidden = false;
+    } catch (err) {
+      if (reqId !== currentRequestId) return;
+      dropdown.innerHTML = `
+        <div class="suggest-empty">
+          Lỗi tìm kiếm: ${escapeHTML(err.message || "Không thể kết nối máy chủ")}
+        </div>
+      `;
+      dropdown.hidden = false;
+    }
+  };
+
+  // 1. Gõ phím có DEBOUNCE (280ms)
+  input.addEventListener("input", () => {
+    clearTimeout(debounceTimer);
+    const q = input.value.trim();
+    if (!q) {
+      showRecentOrPopular();
+      return;
+    }
+    showLoading();
+    debounceTimer = setTimeout(() => {
+      fetchSuggestions(q);
+    }, 280);
+  });
+
+  // 2. Focus vào ô tìm kiếm: hiển thị gợi ý hoặc sản phẩm đã xem gần đây
+  input.addEventListener("focus", () => {
+    const q = input.value.trim();
+    if (!q) {
+      showRecentOrPopular();
+    } else {
+      fetchSuggestions(q);
+    }
+  });
+
+  // 3. Phím Enter hoặc nút Tìm kiếm
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      doSubmitSearch();
+    } else if (e.key === "Escape") {
+      dropdown.hidden = true;
+    }
+  });
+
+  searchBtn?.addEventListener("click", () => {
+    doSubmitSearch();
+  });
+
+  // 4. Đóng dropdown khi nhấp ra ngoài ô tìm kiếm
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".header-search")) {
+      dropdown.hidden = true;
+    }
+  });
 }
 
 // Tự động kiểm tra và hiển thị toast đang chờ (sau khi chuyển trang đăng nhập/đăng ký)
