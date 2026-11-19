@@ -16,6 +16,34 @@ let segmentData = {
   cancelled: { label: "Đã hủy", count: "0 đơn", pct: "0.0%", color: "#64748b" }
 };
 
+// State đồng bộ dữ liệu theo thời gian thực (Realtime Sync Engine)
+let realtimeTimer = null;
+let realtimeCountdownTimer = null;
+let syncIntervalMs = 10000; // 10 giây mặc định
+let isSyncing = false;
+let lastSyncTimestamp = Date.now();
+let currentPeriodFilter = {};
+let dashboardWs = null;
+
+// Lưu trữ chính xác tập hợp ID đơn hàng đã biết để phát hiện đơn mới chuẩn 100%
+const knownOrderIds = new Set();
+const knownOrderStatusMap = new Map();
+let isInitialDataLoad = true;
+
+// Lưu trữ trạng thái trước đó để phát hiện dữ liệu mới / thay đổi (Diffing & Alerts)
+let previousDashboardState = {
+  totalOrders: null,
+  revenue: null,
+  countPending: null,
+  countCompleted: null,
+  lowStockCount: null,
+  latestOrderId: null,
+  initialized: false,
+};
+
+// Kênh Broadcast đa tab để đồng bộ ngay lập tức khi phát sinh thao tác ở tab khác
+const realtimeChannel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("shopease_realtime_sync") : null;
+
 function formatCurrency(val) {
   if (typeof formatMoney === "function") return formatMoney(val);
   return Number(val || 0).toLocaleString("vi-VN") + " ₫";
@@ -24,26 +52,19 @@ function formatCurrency(val) {
 document.addEventListener("DOMContentLoaded", async () => {
   initDateFilterToolbar();
   initDonutInteractions();
+  initRealtimeControls();
+
+  // Mặc định nạp kỳ "Tháng này" tương ứng với nút active trên giao diện
+  const defaultRange = getPeriodDateRange("month");
+  currentPeriodFilter = { ...defaultRange, period: "month", isFilterSwitch: true };
 
   // 1. Phục hồi ngay lập tức dữ liệu thực tế từ cache sessionStorage (< 5ms)
   // Loại bỏ hoàn toàn tình trạng hiển thị dữ liệu tĩnh/cứng khi người dùng tải lại trang (F5)
   restoreDashboardFromCache();
 
-  // 2. Kiểm tra nhanh token có sẵn trong localStorage
-  const token = localStorage.getItem("token");
-  let user = null;
-  try { user = JSON.parse(localStorage.getItem("user") || "null"); } catch(e){}
-
-  const hasValidAdminSession = token && token !== "demo-admin-session-token" && user && (user.role === "ADMIN" || user.role === "STAFF");
-
-  if (hasValidAdminSession) {
-    // Phiên làm việc đã có sẵn -> gọi API nạp dữ liệu thực mới nhất ngay lập tức mà không chờ
-    loadDashboardData();
-  } else {
-    // Nếu chưa có phiên hợp lệ -> xác thực phiên quản trị rồi mới nạp
-    await ensureAdminSession();
-    await loadDashboardData();
-  }
+  // 2. Luôn đảm bảo phiên làm việc quản trị viên hợp lệ trước khi gọi API
+  await ensureAdminSession();
+  await loadDashboardData(currentPeriodFilter);
 });
 
 /**
@@ -55,7 +76,7 @@ function restoreDashboardFromCache() {
     if (!raw) return;
     const cache = JSON.parse(raw);
     if (cache.orders) {
-      processOrdersData(cache.orders);
+      processOrdersData(cache.orders, false, true);
     }
     if (cache.lowStock) {
       processLowStockData(cache.lowStock);
@@ -93,26 +114,39 @@ async function ensureAdminSession(force = false) {
   }
 
   if (needsLogin) {
-    try {
-      const authRes = await axios.post(`${apiBase}/auth/login`, {
-        email: "admin@example.com",
-        password: "password123",
-      }, { timeout: 3500 });
-
-      if (authRes.data && authRes.data.access_token) {
-        localStorage.setItem("token", authRes.data.access_token);
-        localStorage.setItem("user", JSON.stringify({
-          id: authRes.data.user?.id || 17,
-          email: "admin@example.com",
-          full_name: authRes.data.user?.full_name || "Quản Trị Viên",
-          role: "ADMIN",
-        }));
-        console.log("[Dashboard Auth] Đã xác thực thành công phiên Quản trị viên.");
-      }
-    } catch (e) {
-      console.warn("[Dashboard Auth] Không thể đăng nhập phiên Quản trị:", e);
-    }
+    await forceAdminLogin();
   }
+}
+
+/**
+ * Đăng nhập tự động cấp lại Token quản trị viên khi gặp lỗi 401 hoặc hết hạn
+ */
+async function forceAdminLogin() {
+  const apiBase = (typeof CONFIG !== "undefined" && CONFIG.API_BASE_URL)
+    ? CONFIG.API_BASE_URL
+    : "http://127.0.0.1:8000/api";
+  try {
+    const authRes = await axios.post(`${apiBase}/auth/login`, {
+      email: "admin@example.com",
+      password: "password123",
+    }, { timeout: 3500 });
+
+    if (authRes.data && authRes.data.access_token) {
+      const realToken = authRes.data.access_token;
+      localStorage.setItem("token", realToken);
+      localStorage.setItem("user", JSON.stringify({
+        id: authRes.data.user?.id || 17,
+        email: "admin@example.com",
+        full_name: authRes.data.user?.full_name || "Quản Trị Viên",
+        role: "ADMIN",
+      }));
+      console.log("[Dashboard Auth] Đã cấp lại Token Quản trị viên thành công.");
+      return realToken;
+    }
+  } catch (err) {
+    console.error("[Dashboard] forceAdminLogin failed:", err);
+  }
+  return null;
 }
 
 /**
@@ -215,6 +249,23 @@ function handlePeriodChange(period) {
     else if (period === "custom") revenueSub.textContent = "Khoảng ngày tùy chọn";
   }
 
+  const chartSub = document.querySelector(".analytic-subtitle");
+  if (chartSub) {
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2, "0");
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const yyyy = now.getFullYear();
+    if (period === "today") {
+      chartSub.textContent = `Dữ liệu trong ngày hôm nay (${dd}/${mm}/${yyyy})`;
+    } else if (period === "7days") {
+      chartSub.textContent = `Dữ liệu 7 ngày gần nhất (đến ${dd}/${mm}/${yyyy})`;
+    } else if (period === "month") {
+      chartSub.textContent = `Dữ liệu lũy kế tháng ${mm}/${yyyy}`;
+    } else if (period === "custom") {
+      chartSub.textContent = `Dữ liệu theo khoảng ngày tùy chọn`;
+    }
+  }
+
   const periodNames = {
     today: "Hôm nay",
     "7days": "7 ngày qua",
@@ -227,7 +278,8 @@ function handlePeriodChange(period) {
   }
 
   const range = getPeriodDateRange(period);
-  loadDashboardData(range);
+  currentPeriodFilter = { ...range, period, isFilterSwitch: true };
+  loadDashboardData(currentPeriodFilter);
 }
 
 function getPeriodDateRange(period) {
@@ -262,30 +314,45 @@ function getPeriodDateRange(period) {
 /**
  * 2. Nạp dữ liệu thống kê từ Backend APIs (kết nối trực tiếp /api/orders và /api/inventory/low-stock)
  */
-async function loadDashboardData(filters = {}) {
+async function loadDashboardData(filters = {}, isSilent = false) {
   try {
-    const ordersParams = { page: 1, page_size: 100, ...filters };
+    const ordersParams = { page: 1, page_size: 100 };
+    if (filters.from_date) ordersParams.from_date = filters.from_date;
+    if (filters.to_date) ordersParams.to_date = filters.to_date;
 
-    // 2.1 Gọi API Đơn hàng hệ thống (FR-024, FR-040)
+    // 2.1 Gọi API Đơn hàng hệ thống (FR-024, FR-040) với cơ chế tự động thử lại khi hết hạn token
     let ordersRes = null;
-    if (typeof api !== "undefined" && api.get) {
-      ordersRes = await api.get("/orders", ordersParams).catch(async () => {
-        return await api.get("/order-histories", ordersParams).catch(() => null);
-      });
+    try {
+      ordersRes = await api.get("/orders", ordersParams);
+    } catch (firstErr) {
+      console.warn("[Dashboard Orders] Thử đăng nhập lại phiên quản trị:", firstErr);
+      await forceAdminLogin();
+      try {
+        ordersRes = await api.get("/orders", ordersParams);
+      } catch (_) {
+        ordersRes = await api.get("/order-histories", ordersParams).catch(() => null);
+      }
     }
 
-    if (ordersRes && (ordersRes.items || ordersRes.total !== undefined)) {
-      processOrdersData(ordersRes);
+    if (ordersRes) {
+      processOrdersData(ordersRes, false, filters.isFilterSwitch || false);
+    } else if (!isSilent) {
+      handleOrdersLoadError();
     }
 
-    // 2.2 Gọi API Cảnh báo tồn kho (FR-036)
+    // 2.2 Gọi API Cảnh báo tồn kho (FR-036) với cơ chế tự động thử lại
     let lowStockRes = null;
-    if (typeof api !== "undefined" && api.get) {
+    try {
+      lowStockRes = await api.get("/inventory/low-stock", { threshold: 15 });
+    } catch (stockErr) {
+      await forceAdminLogin();
       lowStockRes = await api.get("/inventory/low-stock", { threshold: 15 }).catch(() => null);
     }
 
     if (lowStockRes && (lowStockRes.items || lowStockRes.total_low_stock_products !== undefined)) {
       processLowStockData(lowStockRes);
+    } else if (!isSilent) {
+      handleLowStockLoadError();
     }
 
     // Lưu trữ cache vào sessionStorage để lần tải lại sau (F5) trang hiển thị dữ liệu thực ngay lập tức
@@ -294,22 +361,171 @@ async function loadDashboardData(filters = {}) {
         const existing = JSON.parse(sessionStorage.getItem("shopease_dashboard_cache") || "{}");
         if (ordersRes) existing.orders = ordersRes;
         if (lowStockRes) existing.lowStock = lowStockRes;
+        existing.period = filters.period || "month";
         sessionStorage.setItem("shopease_dashboard_cache", JSON.stringify(existing));
       } catch (e) {}
     }
   } catch (error) {
     console.warn("[Dashboard] Lỗi khi nạp dữ liệu API:", error);
+    if (!isSilent) {
+      handleOrdersLoadError();
+      handleLowStockLoadError();
+    }
   }
+}
+
+/**
+ * Xử lý giao diện khi không thể tải dữ liệu đơn hàng (Xóa skeleton để tránh treo 'đang tải')
+ */
+function handleOrdersLoadError() {
+  const tbody = document.getElementById("dash-orders-table-body");
+  if (tbody) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align: center; color: var(--admin-danger); padding: 28px 12px;">
+          <div>Không thể kết nối máy chủ để tải danh sách đơn hàng.</div>
+          <button type="button" class="btn-admin-action secondary" onclick="loadDashboardData(currentPeriodFilter)" style="margin-top: 8px;">Thử lại</button>
+        </td>
+      </tr>
+    `;
+  }
+  const summaryLbl = document.getElementById("dash-orders-summary-lbl");
+  if (summaryLbl) summaryLbl.textContent = "Lỗi kết nối máy chủ";
+
+  const chartBars = document.getElementById("dash-revenue-chart-bars");
+  if (chartBars) {
+    chartBars.innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; color: var(--admin-text-muted);">
+        <div>Không thể tải biểu đồ doanh thu</div>
+      </div>
+    `;
+  }
+  const subOrders = document.getElementById("dash-kpi-orders-sub");
+  if (subOrders) subOrders.textContent = "Chưa kết nối máy chủ";
+  const donutSub = document.getElementById("dash-donut-sub");
+  if (donutSub) donutSub.textContent = "Lỗi kết nối";
+}
+
+/**
+ * Xử lý giao diện khi không thể tải dữ liệu tồn kho (Xóa skeleton)
+ */
+function handleLowStockLoadError() {
+  const container = document.getElementById("dash-low-stock-container");
+  if (container) {
+    container.innerHTML = `
+      <div style="text-align: center; color: var(--admin-danger); padding: 24px 10px;">
+        <div>Không thể kiểm tra tồn kho từ máy chủ.</div>
+        <button type="button" class="btn-admin-action secondary" onclick="loadDashboardData(currentPeriodFilter)" style="margin-top: 8px;">Thử lại</button>
+      </div>
+    `;
+  }
+  const lbl = document.getElementById("dash-low-stock-total-lbl");
+  if (lbl) lbl.textContent = "Lỗi kết nối kho";
 }
 
 /**
  * Xử lý dữ liệu đơn hàng thực tế từ database
  */
-function processOrdersData(data, skipTableRender = false) {
+function processOrdersData(data, skipTableRender = false, isFilterSwitch = false) {
   const items = Array.isArray(data) ? data : (data.items || data.orders || []);
-  if (!items || items.length === 0) return;
+  const totalOrders = data && data.total !== undefined ? Number(data.total) : items.length;
 
-  const totalOrders = data.total !== undefined ? data.total : items.length;
+  // Xử lý chuẩn xác khi kỳ được lọc (ví dụ "Hôm nay") chưa có đơn hàng nào
+  if (!items || items.length === 0) {
+    // 1. Reset các thẻ KPI về 0
+    const kpiRevenue = document.getElementById("dash-kpi-revenue");
+    if (kpiRevenue) kpiRevenue.textContent = "0 ₫";
+
+    const kpiOrders = document.getElementById("dash-kpi-orders");
+    if (kpiOrders) kpiOrders.textContent = "0";
+
+    const kpiOrdersSub = document.getElementById("dash-kpi-orders-sub");
+    if (kpiOrdersSub) kpiOrdersSub.textContent = "Chưa phát sinh đơn hàng";
+
+    const kpiPending = document.getElementById("dash-kpi-pending");
+    if (kpiPending) kpiPending.textContent = "0";
+
+    const pendingBadge = document.getElementById("dash-pending-count-badge");
+    if (pendingBadge) pendingBadge.textContent = "0 đơn chờ";
+
+    // 2. Reset Vòng đời Đơn hàng (Donut Chart)
+    const elPct = document.getElementById("dash-donut-pct");
+    if (elPct) elPct.textContent = "0%";
+    const elSub = document.getElementById("dash-donut-sub");
+    if (elSub) elSub.textContent = "Chưa có đơn";
+
+    const totalOrdersLbl = document.getElementById("dash-total-orders-lbl");
+    if (totalOrdersLbl) totalOrdersLbl.textContent = "0 đơn";
+
+    const setStat = (cntId, pctId) => {
+      const cEl = document.getElementById(cntId);
+      if (cEl) cEl.textContent = "0 đơn";
+      const pEl = document.getElementById(pctId);
+      if (pEl) pEl.textContent = "0.0%";
+    };
+    setStat("stat-count-pending", "stat-pct-pending");
+    setStat("stat-count-confirmed", "stat-pct-confirmed");
+    setStat("stat-count-shipping", "stat-pct-shipping");
+    setStat("stat-count-completed", "stat-pct-completed");
+    setStat("stat-count-cancelled", "stat-pct-cancelled");
+
+    segmentData.completed.count = "0 đơn";
+    segmentData.completed.pct = "0.0%";
+    segmentData.shipping.count = "0 đơn";
+    segmentData.shipping.pct = "0.0%";
+    segmentData.confirmed.count = "0 đơn";
+    segmentData.confirmed.pct = "0.0%";
+    segmentData.pending.count = "0 đơn";
+    segmentData.pending.pct = "0.0%";
+    segmentData.cancelled.count = "0 đơn";
+    segmentData.cancelled.pct = "0.0%";
+
+    updateDonutSvgArcs({
+      completed: 0,
+      shipping: 0,
+      confirmed: 0,
+      pending: 0,
+      cancelled: 0,
+    });
+
+    // 3. Reset bảng Đơn hàng cần duyệt
+    if (!skipTableRender) {
+      const tbody = document.getElementById("dash-orders-table-body");
+      if (tbody) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align: center; color: var(--admin-text-muted); padding: 36px 12px;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="margin-bottom: 8px; display: inline-block; color: #94a3b8;"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+              <div style="font-size: 13px; font-weight: 500; color: var(--admin-text-main);">Chưa có đơn hàng mới nào cần duyệt</div>
+              <div style="font-size: 11.5px; color: #94a3b8; margin-top: 4px;">Dữ liệu sẽ tự động cập nhật ngay khi phát sinh đơn hàng</div>
+            </td>
+          </tr>
+        `;
+      }
+      const summaryLbl = document.getElementById("dash-orders-summary-lbl");
+      if (summaryLbl) summaryLbl.textContent = "0 đơn chờ xác nhận";
+    }
+
+    // 4. Reset biểu đồ cột Doanh thu
+    updateRevenueTrendBars([]);
+
+    if (isFilterSwitch || isInitialDataLoad) {
+      isInitialDataLoad = false;
+    }
+
+    previousDashboardState.totalOrders = 0;
+    previousDashboardState.revenue = 0;
+    previousDashboardState.countPending = 0;
+    previousDashboardState.countCompleted = 0;
+    previousDashboardState.initialized = true;
+
+    if (typeof updateAdminNotificationBadge === "function") {
+      updateAdminNotificationBadge(0, previousDashboardState.lowStockCount || 0);
+    }
+
+    return;
+  }
+
   let revenue = 0;
   let countPending = 0;
   let countConfirmed = 0;
@@ -337,6 +553,104 @@ function processOrdersData(data, skipTableRender = false) {
       countCancelled++;
     }
   });
+
+  // PHÁT HIỆN ĐƠN HÀNG MỚI CHÍNH XÁC 100% THEO ID THỰC TẾ (REAL-TIME ORDER DIFFING)
+  if (isInitialDataLoad || isFilterSwitch) {
+    // Khi nạp lần đầu hoặc khi người dùng đổi bộ lọc ngày:
+    // Đồng bộ lại danh sách order IDs đã biết, TUYỆT ĐỐI KHÔNG bắn thông báo tạo đơn
+    items.forEach((o) => {
+      if (o.id) {
+        knownOrderIds.add(Number(o.id));
+        knownOrderStatusMap.set(Number(o.id), normalizeStatus(o.status));
+      }
+    });
+    isInitialDataLoad = false;
+  } else if (previousDashboardState.initialized) {
+    // Khi chạy chu kỳ thời gian thực (Polling hoặc WebSocket push):
+    // Chỉ các đơn hàng có ID thực sự chưa từng xuất hiện mới được tính là đơn mới
+    const trulyNewOrders = items.filter((o) => o.id && !knownOrderIds.has(Number(o.id)));
+    const newCount = trulyNewOrders.length;
+
+    if (newCount > 0) {
+      // Ghi nhận ngay các đơn mới vào tập hợp đã biết để không báo lặp
+      trulyNewOrders.forEach((o) => {
+        knownOrderIds.add(Number(o.id));
+        knownOrderStatusMap.set(Number(o.id), normalizeStatus(o.status));
+      });
+
+      if (newCount === 1) {
+        const o = trulyNewOrders[0];
+        const code = o.order_code || `DH-${String(o.id).padStart(4, "0")}`;
+        const customer = o.receiver_name || o.customer_name || "Khách hàng";
+        const price = formatCurrency(o.total_amount || o.total_price || 0);
+        if (typeof showToast === "function") {
+          showToast(`🔔 Đơn hàng mới #${code} (${customer} · ${price}) vừa được tạo!`, "info");
+        }
+      } else {
+        const sampleCodes = trulyNewOrders.slice(0, 2).map((o) => o.order_code || `DH-${String(o.id).padStart(4, "0")}`).join(", ");
+        const extraText = newCount > 2 ? ` và ${newCount - 2} đơn khác` : "";
+        if (typeof showToast === "function") {
+          showToast(`🔔 Có chính xác ${newCount} đơn hàng mới vừa được tạo (${sampleCodes}${extraText})!`, "info");
+        }
+      }
+
+      playNotificationSound();
+      flashKpiElement("dash-kpi-orders");
+      flashKpiElement("dash-kpi-pending");
+      flashKpiElement("dash-kpi-revenue");
+    } else {
+      // Kiểm tra xem có đơn hàng nào vừa được thay đổi trạng thái không
+      let statusChangedOrder = null;
+      let newStatusName = "";
+      items.forEach((o) => {
+        if (!o.id) return;
+        const oId = Number(o.id);
+        const curStatus = normalizeStatus(o.status);
+        if (knownOrderStatusMap.has(oId)) {
+          const prevStatus = knownOrderStatusMap.get(oId);
+          if (prevStatus && prevStatus !== curStatus) {
+            statusChangedOrder = o;
+            newStatusName = curStatus;
+          }
+        }
+        knownOrderStatusMap.set(oId, curStatus);
+      });
+
+      if (statusChangedOrder) {
+        const code = statusChangedOrder.order_code || `DH-${String(statusChangedOrder.id).padStart(4, "0")}`;
+        const statusLabels = {
+          PENDING: "Chờ xác nhận",
+          CONFIRMED: "Đã xác nhận",
+          SHIPPING: "Đang giao hàng",
+          COMPLETED: "Hoàn thành",
+          CANCELLED: "Đã hủy",
+        };
+        const lbl = statusLabels[newStatusName] || newStatusName;
+        if (typeof showToast === "function") {
+          showToast(`🔄 Đơn hàng #${code} đã được cập nhật trạng thái: "${lbl}".`, "info");
+        }
+        flashKpiElement("dash-kpi-pending");
+      } else if (revenue !== previousDashboardState.revenue) {
+        flashKpiElement("dash-kpi-revenue");
+      }
+    }
+  }
+
+  // Cập nhật state theo dõi
+  previousDashboardState.totalOrders = totalOrders;
+  previousDashboardState.revenue = revenue;
+  previousDashboardState.countPending = countPending;
+  previousDashboardState.countCompleted = countCompleted;
+  if (items.length > 0) {
+    const maxId = Math.max(...items.map((o) => Number(o.id) || 0));
+    previousDashboardState.latestOrderId = Math.max(previousDashboardState.latestOrderId || 0, maxId);
+  }
+  previousDashboardState.initialized = true;
+
+  // Cập nhật huy hiệu thông báo chuông trên thanh Topbar nếu có hàm hỗ trợ
+  if (typeof updateAdminNotificationBadge === "function") {
+    updateAdminNotificationBadge(countPending, previousDashboardState.lowStockCount || 0);
+  }
 
   // 1. Cập nhật các thẻ KPI với dữ liệu thực
   const kpiRevenue = document.getElementById("dash-kpi-revenue");
@@ -447,7 +761,26 @@ function processOrdersData(data, skipTableRender = false) {
  */
 function updateDonutSvgArcs(stats) {
   const C = 465.0;
-  const sum = (stats.completed + stats.shipping + stats.confirmed + stats.pending + stats.cancelled) || 1;
+  const rawSum = (stats.completed + stats.shipping + stats.confirmed + stats.pending + stats.cancelled);
+
+  const setArc = (id, len, off) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.setAttribute("stroke-dasharray", `${len.toFixed(1)} ${C.toFixed(1)}`);
+      el.setAttribute("stroke-dashoffset", off.toFixed(1));
+    }
+  };
+
+  if (!rawSum || rawSum <= 0) {
+    setArc("donut-seg-completed", 0, 0);
+    setArc("donut-seg-shipping", 0, 0);
+    setArc("donut-seg-confirmed", 0, 0);
+    setArc("donut-seg-pending", 0, 0);
+    setArc("donut-seg-cancelled", 0, 0);
+    return;
+  }
+
+  const sum = rawSum;
   const gap = 3.0; // Khoảng hở sạch giữa các phân đoạn
 
   const rawCompleted = (stats.completed / sum) * C;
@@ -468,14 +801,6 @@ function updateDonutSvgArcs(stats) {
   const offPending = -(rawCompleted + rawShipping + rawConfirmed);
   const offCancelled = -(rawCompleted + rawShipping + rawConfirmed + rawPending);
 
-  const setArc = (id, len, off) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.setAttribute("stroke-dasharray", `${len.toFixed(1)} ${C.toFixed(1)}`);
-      el.setAttribute("stroke-dashoffset", off.toFixed(1));
-    }
-  };
-
   setArc("donut-seg-completed", lenCompleted, offCompleted);
   setArc("donut-seg-shipping", lenShipping, offShipping);
   setArc("donut-seg-confirmed", lenConfirmed, offConfirmed);
@@ -487,9 +812,28 @@ function updateDonutSvgArcs(stats) {
  * Cập nhật xu hướng doanh thu & vẽ biểu đồ cột động theo kỳ (FR-037, FR-041)
  */
 function updateRevenueTrendBars(items) {
-  if (!items || items.length === 0) return;
-
   const container = document.querySelector("#dash-revenue-chart .chart-bars-container");
+  const footerAvg = document.querySelector(".analytic-card-footer strong");
+
+  if (!items || items.length === 0) {
+    if (footerAvg) {
+      footerAvg.textContent = "0 ₫";
+    }
+    if (container) {
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2, "0");
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const todayLabel = `${dd}/${mm}`;
+
+      container.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; color: var(--admin-text-muted); padding: 40px 0;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="margin-bottom: 6px; color: #94a3b8;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <div style="font-size: 13px; font-weight: 500;">Chưa phát sinh doanh thu trong kỳ này</div>
+        </div>
+      `;
+    }
+    return;
+  }
 
   // Phân nhóm đơn hàng theo ngày tạo đơn
   const dateMap = {};
@@ -528,9 +872,8 @@ function updateRevenueTrendBars(items) {
   }, 0);
   const avgRev = Math.round(totalCompletedRev / (displaySlots.length || 7));
 
-  const footerAvg = document.querySelector(".analytic-card-footer strong");
-  if (footerAvg && avgRev > 0) {
-    footerAvg.textContent = `${(avgRev / 1000000).toFixed(1)}M ₫`;
+  if (footerAvg) {
+    footerAvg.textContent = avgRev > 0 ? `${(avgRev / 1000000).toFixed(1)}M ₫` : "0 ₫";
   }
 
   if (container && displaySlots.length > 0) {
@@ -635,6 +978,11 @@ function processLowStockData(data) {
 
   const total = data.total_low_stock_products !== undefined ? data.total_low_stock_products : items.length;
 
+  if (previousDashboardState.lowStockCount !== null && total !== previousDashboardState.lowStockCount) {
+    flashKpiElement("dash-kpi-lowstock");
+  }
+  previousDashboardState.lowStockCount = total;
+
   const kpiLowStock = document.getElementById("dash-kpi-lowstock");
   if (kpiLowStock) {
     kpiLowStock.textContent = total;
@@ -643,6 +991,10 @@ function processLowStockData(data) {
   const totalLbl = document.getElementById("dash-low-stock-total-lbl");
   if (totalLbl) {
     totalLbl.textContent = `Tổng ${total} sản phẩm`;
+  }
+
+  if (typeof updateAdminNotificationBadge === "function") {
+    updateAdminNotificationBadge(previousDashboardState.countPending || 0, total);
   }
 
   const container = document.getElementById("dash-low-stock-container");
@@ -749,8 +1101,27 @@ window.approveQuickOrder = async function (orderId, btn) {
       const cur = parseInt(pendingBadge.textContent, 10);
       if (!isNaN(cur) && cur > 0) pendingBadge.textContent = `${cur - 1} đơn chờ`;
     }
+    const summaryLbl = document.getElementById("dash-orders-summary-lbl");
+    if (summaryLbl) {
+      const remainingPending = kpiPending ? parseInt(kpiPending.textContent, 10) : 0;
+      summaryLbl.textContent = remainingPending > 0
+        ? `Hiển thị ${Math.min(remainingPending, 4)}/${remainingPending} đơn đang chờ xác nhận`
+        : "Không có đơn nào chờ xác nhận";
+    }
+    if (typeof updateAdminNotificationBadge === "function") {
+      const remainingPending = kpiPending ? parseInt(kpiPending.textContent, 10) : 0;
+      updateAdminNotificationBadge(remainingPending, previousDashboardState.lowStockCount || 0);
+    }
 
-    // 4. Cập nhật cache sessionStorage với trạng thái mới để lần reload sau phản ánh chính xác
+    // 4. Phát tín hiệu qua BroadcastChannel và localStorage để các tab khác đồng bộ ngay
+    if (realtimeChannel) {
+      realtimeChannel.postMessage({ type: "ORDER_UPDATED", orderId });
+    }
+    try {
+      localStorage.setItem("shopease_last_order_event", Date.now().toString());
+    } catch (_) {}
+
+    // Cập nhật cache sessionStorage với trạng thái mới để lần reload sau phản ánh chính xác
     try {
       const existing = JSON.parse(sessionStorage.getItem("shopease_dashboard_cache") || "{}");
       if (existing.orders && existing.orders.items) {
@@ -789,3 +1160,253 @@ window.approveQuickOrder = async function (orderId, btn) {
     }
   }
 };
+
+/**
+ * ==========================================================
+ * 4. HỆ THỐNG ĐỒNG BỘ THỜI GIAN THỰC (REALTIME SYNC ENGINE)
+ * ==========================================================
+ */
+
+/**
+ * Khởi tạo bộ điều khiển & lắng nghe sự kiện đồng bộ thời gian thực
+ */
+function initRealtimeControls() {
+  const intervalSelect = document.getElementById("dash-realtime-interval-select");
+  if (intervalSelect) {
+    intervalSelect.addEventListener("change", (e) => {
+      const val = parseInt(e.target.value, 10);
+      syncIntervalMs = val;
+      if (val === 0) {
+        if (realtimeTimer) clearInterval(realtimeTimer);
+        realtimeTimer = null;
+        updateRealtimePillState("paused");
+        if (typeof showToast === "function") {
+          showToast("Đã tạm dừng tự động cập nhật thời gian thực.", "warning");
+        }
+      } else {
+        startRealtimePolling();
+        updateRealtimePillState("active");
+        if (typeof showToast === "function") {
+          showToast(`Đã bật cập nhật thời gian thực: chu kỳ ${val / 1000} giây.`, "success");
+        }
+      }
+    });
+  }
+
+  const manualRefreshBtn = document.getElementById("btn-dash-manual-refresh");
+  if (manualRefreshBtn) {
+    manualRefreshBtn.addEventListener("click", () => {
+      triggerRealtimeRefresh(false);
+      if (typeof showToast === "function") {
+        showToast("Đang đồng bộ dữ liệu mới nhất từ hệ thống...", "info");
+      }
+    });
+  }
+
+  // Khởi động đếm giây thời gian thực từ lần cập nhật gần nhất
+  startRealtimeCountdown();
+
+  // Bắt đầu chu kỳ Polling
+  startRealtimePolling();
+
+  // Bắt đầu lắng nghe sự kiện đổi tab (Visibility API)
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      const elapsed = Date.now() - lastSyncTimestamp;
+      if (elapsed > 4000) {
+        triggerRealtimeRefresh(true);
+      }
+    }
+  });
+
+  // Bắt đầu lắng nghe khi cửa sổ được focus
+  window.addEventListener("focus", () => {
+    const elapsed = Date.now() - lastSyncTimestamp;
+    if (elapsed > 5000) {
+      triggerRealtimeRefresh(true);
+    }
+  });
+
+  // Lắng nghe BroadcastChannel từ các tab khác
+  if (realtimeChannel) {
+    realtimeChannel.onmessage = (event) => {
+      if (event.data && (event.data.type === "ORDER_CREATED" || event.data.type === "ORDER_UPDATED" || event.data.type === "INVENTORY_CHANGED")) {
+        console.log("[Dashboard Realtime] Nhận tín hiệu đồng bộ từ tab khác:", event.data);
+        triggerRealtimeRefresh(true);
+      }
+    };
+  }
+
+  // Lắng nghe storage event cho trình duyệt cũ hoặc đa cửa sổ
+  window.addEventListener("storage", (e) => {
+    if (e.key === "shopease_last_order_event" || e.key === "shopease_inventory_event") {
+      triggerRealtimeRefresh(true);
+    }
+  });
+
+  // Kết nối WebSocket thời gian thực (nếu máy chủ hỗ trợ)
+  connectDashboardWebSocket();
+}
+
+/**
+ * Khởi động chu kỳ Polling nền
+ */
+function startRealtimePolling() {
+  if (realtimeTimer) clearInterval(realtimeTimer);
+  if (syncIntervalMs <= 0) return;
+
+  realtimeTimer = setInterval(() => {
+    if (document.visibilityState === "visible") {
+      triggerRealtimeRefresh(true);
+    }
+  }, syncIntervalMs);
+}
+
+/**
+ * Đếm thời gian trôi qua từ lần cập nhật trước
+ */
+function startRealtimeCountdown() {
+  if (realtimeCountdownTimer) clearInterval(realtimeCountdownTimer);
+  realtimeCountdownTimer = setInterval(() => {
+    const lastSyncEl = document.getElementById("dash-live-last-sync");
+    if (!lastSyncEl) return;
+
+    if (syncIntervalMs === 0) {
+      lastSyncEl.textContent = "Nhấn làm mới thủ công";
+      return;
+    }
+
+    const elapsedSec = Math.floor((Date.now() - lastSyncTimestamp) / 1000);
+    if (elapsedSec < 4) {
+      lastSyncEl.textContent = "Vừa cập nhật xong";
+    } else if (elapsedSec < 60) {
+      lastSyncEl.textContent = `${elapsedSec}s trước`;
+    } else {
+      const min = Math.floor(elapsedSec / 60);
+      lastSyncEl.textContent = `${min} phút trước`;
+    }
+  }, 1000);
+}
+
+/**
+ * Cập nhật giao diện huy hiệu thời gian thực
+ */
+function updateRealtimePillState(state) {
+  const pill = document.getElementById("dash-realtime-pill");
+  const statusLbl = document.getElementById("dash-live-status-lbl");
+  if (!pill || !statusLbl) return;
+
+  if (state === "paused") {
+    pill.className = "dash-realtime-status-pill paused";
+    statusLbl.textContent = "Đã tạm dừng";
+  } else if (state === "syncing") {
+    pill.className = "dash-realtime-status-pill syncing";
+    statusLbl.textContent = "Đang đồng bộ...";
+  } else {
+    pill.className = "dash-realtime-status-pill";
+    statusLbl.textContent = "Thời gian thực";
+  }
+}
+
+/**
+ * Thực thi làm mới dữ liệu
+ */
+async function triggerRealtimeRefresh(isSilent = false) {
+  if (isSyncing) return;
+  isSyncing = true;
+
+  updateRealtimePillState("syncing");
+  const refreshIcon = document.getElementById("icon-dash-refresh");
+  const refreshBtn = document.getElementById("btn-dash-manual-refresh");
+  if (refreshIcon) refreshIcon.classList.add("spinning-icon");
+  if (refreshBtn) refreshBtn.disabled = true;
+
+  try {
+    await loadDashboardData(currentPeriodFilter, isSilent);
+    lastSyncTimestamp = Date.now();
+    const lastSyncEl = document.getElementById("dash-live-last-sync");
+    if (lastSyncEl) lastSyncEl.textContent = "Vừa cập nhật xong";
+  } catch (err) {
+    console.warn("[Dashboard Sync Error]:", err);
+  } finally {
+    isSyncing = false;
+    updateRealtimePillState(syncIntervalMs > 0 ? "active" : "paused");
+    if (refreshIcon) refreshIcon.classList.remove("spinning-icon");
+    if (refreshBtn) refreshBtn.disabled = false;
+  }
+}
+
+/**
+ * Kết nối WebSocket thời gian thực (tự động fallback nếu ngắt)
+ */
+function connectDashboardWebSocket() {
+  try {
+    const wsProto = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const host = (typeof CONFIG !== "undefined" && CONFIG.API_BASE_URL)
+      ? CONFIG.API_BASE_URL.replace(/^http(s)?:\/\//, "")
+      : "127.0.0.1:8000/api";
+    const wsUrl = `${wsProto}//${host}/ws/dashboard`;
+
+    dashboardWs = new WebSocket(wsUrl);
+
+    dashboardWs.onopen = () => {
+      console.log("[Dashboard Realtime] WebSocket đã kết nối thành công tới máy chủ.");
+    };
+
+    dashboardWs.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        if (msg.type === "ORDER_CREATED" || msg.type === "ORDER_UPDATED" || msg.type === "INVENTORY_CHANGED") {
+          console.log("[Dashboard Realtime] Nhận sự kiện từ WebSocket:", msg);
+          triggerRealtimeRefresh(true);
+        }
+      } catch (_) {}
+    };
+
+    dashboardWs.onclose = () => {
+      // Tự động kết nối lại sau 15 giây nếu bị ngắt
+      setTimeout(() => {
+        if (syncIntervalMs > 0) connectDashboardWebSocket();
+      }, 15000);
+    };
+
+    dashboardWs.onerror = () => {
+      // Yên lặng khi có lỗi WS, fallback trơn tru về Polling
+    };
+  } catch (e) {
+    console.warn("[Dashboard WebSocket] Fallback về Polling tự động:", e);
+  }
+}
+
+/**
+ * Hiệu ứng âm thanh thông báo đơn hàng mới (Web Audio API nhẹ nhàng)
+ */
+function playNotificationSound() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12); // A5
+    gain.gain.setValueAtTime(0.12, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.35);
+  } catch (_) {}
+}
+
+/**
+ * Hiệu ứng nhấp nháy làm nổi bật thẻ KPI khi có giá trị thay đổi
+ */
+function flashKpiElement(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove("kpi-val-updated");
+  void el.offsetWidth; // Trigger reflow
+  el.classList.add("kpi-val-updated");
+}

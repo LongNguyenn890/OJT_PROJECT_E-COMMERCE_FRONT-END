@@ -128,7 +128,7 @@ function renderAdminLayout() {
   // Phân tích URL hiện tại để gán active state cho menu item
   const isDashboardActive = currentPath.endsWith("/admin-dashboard.html") || currentPath.endsWith("/admin-dashboard");
   const isStaffActive = currentPath.endsWith("/admin-staff.html");
-  const isCustomersActive = currentPath.endsWith("/admin-customers.html") || currentPath.endsWith("/admin-users.html");
+  const isCustomersActive = currentPath.endsWith("/admin-customers.html") || currentPath.endsWith("/customer-management.html") || currentPath.endsWith("/admin-users.html");
   const isProductsActive = currentPath.endsWith("/admin-products.html") || currentPath.endsWith("/items.html");
   const isCategoriesActive = currentPath.endsWith("/admin-categories.html");
   const isOrdersActive = currentPath.endsWith("/admin-orders.html");
@@ -224,7 +224,7 @@ function renderAdminLayout() {
           <!-- Nút Thông báo cảnh báo tồn kho và đơn hàng với chấm đỏ -->
           <button type="button" class="admin-notify-btn" title="Thông báo cảnh báo tồn kho và đơn hàng" id="admin-notify-btn">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            <span class="admin-notify-dot" title="Có cảnh báo mới"></span>
+            <span class="admin-notify-dot" id="admin-notify-badge" title="Có cảnh báo mới"></span>
           </button>
 
           <div class="admin-topbar-divider"></div>
@@ -260,6 +260,71 @@ function renderAdminLayout() {
         }
       });
     }
+
+    // Gắn sự kiện click xem chi tiết thông báo trên Topbar
+    const notifyBtn = topbarElem.querySelector("#admin-notify-btn");
+    if (notifyBtn) {
+      notifyBtn.addEventListener("click", () => {
+        const pCount = typeof previousDashboardState !== "undefined" ? (previousDashboardState.countPending || 0) : 0;
+        const lCount = typeof previousDashboardState !== "undefined" ? (previousDashboardState.lowStockCount || 0) : 0;
+        
+        let msg = "";
+        if (pCount === 0 && lCount === 0) {
+          msg = "✅ Hệ thống hiện tại không có cảnh báo nào chưa xử lý.";
+        } else {
+          const parts = [];
+          if (pCount > 0) parts.push(`📋 ${pCount} đơn hàng mới cần xác nhận`);
+          if (lCount > 0) parts.push(`⚠️ ${lCount} sản phẩm sắp hết hàng trong kho`);
+          msg = parts.join(" · ");
+        }
+        if (typeof showToast === "function") {
+          showToast(msg, pCount > 0 ? "warning" : "info");
+        }
+      });
+    }
+
+    // Hàm cập nhật huy hiệu số thông báo trên Topbar chuẩn xác tuyệt đối
+    window.updateAdminNotificationBadge = function(pendingOrdersCount, lowStockCount) {
+      const btn = document.getElementById("admin-notify-btn");
+      const badge = document.getElementById("admin-notify-badge") || document.querySelector(".admin-notify-dot");
+      if (!badge) return;
+      const pCount = Math.max(0, Number(pendingOrdersCount) || 0);
+      const lCount = Math.max(0, Number(lowStockCount) || 0);
+      const total = pCount + lCount;
+
+      if (total === 0) {
+        badge.style.display = "none";
+        if (btn) btn.title = "Không có thông báo mới";
+      } else {
+        badge.style.display = "inline-flex";
+        badge.style.alignItems = "center";
+        badge.style.justifyContent = "center";
+        if (pCount > 0) {
+          badge.textContent = pCount > 9 ? "9+" : String(pCount);
+          badge.style.minWidth = "16px";
+          badge.style.height = "16px";
+          badge.style.fontSize = "10px";
+          badge.style.fontWeight = "700";
+          badge.style.color = "#ffffff";
+          badge.style.padding = "0 3px";
+          badge.style.borderRadius = "10px";
+          badge.style.top = "4px";
+          badge.style.right = "4px";
+        } else {
+          badge.textContent = "";
+          badge.style.width = "9px";
+          badge.style.height = "9px";
+          badge.style.borderRadius = "50%";
+          badge.style.padding = "0";
+          badge.style.top = "8px";
+          badge.style.right = "8px";
+        }
+        const desc = [];
+        if (pCount > 0) desc.push(`${pCount} đơn hàng cần xác nhận`);
+        if (lCount > 0) desc.push(`${lCount} mặt hàng tồn kho thấp`);
+        if (btn) btn.title = `Thông báo: ${desc.join(" · ")}`;
+      }
+    };
 
     // Gắn sự kiện Hamburger menu cho tablet/mobile
     const toggleBtn = topbarElem.querySelector("#admin-sidebar-toggle");

@@ -10,6 +10,163 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Liberation+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/admin.css">
+  <style>
+    /* Styling Realtime Dashboard Sync */
+    .admin-dash-subhead-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .admin-dash-subhead-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .dash-realtime-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: -0.1px;
+      user-select: none;
+      transition: all 0.25s ease;
+      box-shadow: 0 1px 3px rgba(16, 185, 129, 0.1);
+    }
+    .dash-realtime-status-pill.paused {
+      background: #f1f5f9;
+      color: #64748b;
+      border-color: #cbd5e1;
+      box-shadow: none;
+    }
+    .dash-realtime-status-pill.syncing {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-color: #bfdbfe;
+      box-shadow: 0 1px 3px rgba(37, 99, 235, 0.15);
+    }
+    .live-pulse-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #10b981;
+      display: inline-block;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .dash-realtime-status-pill.syncing .live-pulse-indicator {
+      background-color: #3b82f6;
+    }
+    .dash-realtime-status-pill.paused .live-pulse-indicator {
+      background-color: #94a3b8;
+    }
+    .live-pulse-indicator::after {
+      content: "";
+      position: absolute;
+      top: -3px;
+      left: -3px;
+      right: -3px;
+      bottom: -3px;
+      border-radius: 50%;
+      background-color: inherit;
+      opacity: 0.7;
+      animation: live-pulse-anim 2s infinite ease-out;
+    }
+    .dash-realtime-status-pill.paused .live-pulse-indicator::after {
+      animation: none;
+    }
+    @keyframes live-pulse-anim {
+      0% {
+        transform: scale(1);
+        opacity: 0.85;
+      }
+      100% {
+        transform: scale(2.6);
+        opacity: 0;
+      }
+    }
+    .live-sync-divider {
+      opacity: 0.45;
+    }
+    .live-last-sync-text {
+      font-weight: 500;
+      opacity: 0.9;
+      font-size: 11.5px;
+    }
+    .realtime-control-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .realtime-interval-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ffffff;
+      border: 1px solid var(--admin-border);
+      border-radius: 8px;
+      padding: 0 10px;
+      height: 36px;
+      color: var(--admin-text-muted);
+      font-size: 12px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      transition: border-color 0.15s ease;
+    }
+    .realtime-interval-wrap:hover {
+      border-color: #cbd5e1;
+    }
+    .realtime-interval-select {
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--admin-text-main);
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .spinning-icon {
+      animation: spin-refresh-anim 0.75s linear infinite;
+    }
+    @keyframes spin-refresh-anim {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .kpi-val-updated {
+      animation: kpi-flash-anim 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes kpi-flash-anim {
+      0% {
+        color: #2563eb;
+        transform: scale(1.08);
+      }
+      50% {
+        color: #10b981;
+      }
+      100% {
+        color: inherit;
+        transform: scale(1);
+      }
+    }
+    .new-order-highlight {
+      animation: row-highlight-anim 2s ease-out;
+    }
+    @keyframes row-highlight-anim {
+      0% {
+        background-color: #ecfdf5;
+      }
+      100% {
+        background-color: transparent;
+      }
+    }
+  </style>
   <script>
     // Đảm bảo có phiên đăng nhập Quản trị viên (Nguyễn Thu Hà theo thiết kế Figma) để luôn xem được giao diện trực tiếp
     if (!localStorage.getItem("token") || !localStorage.getItem("user")) {
@@ -36,17 +193,46 @@
       <header id="admin-topbar" class="admin-topbar"></header>
 
       <main class="admin-content">
-        <!-- Sub-Header & Period Quick Filters (FR-041) -->
+        <!-- Sub-Header & Period Quick Filters (FR-041) & Realtime Controls -->
         <div class="admin-dash-subhead">
-          <h1 class="admin-dash-title">Tổng quan hoạt động kinh doanh</h1>
-          <div class="quick-date-toolbar" id="dash-date-filter-toolbar">
-            <button type="button" class="btn-date-filter" data-period="today">Hôm nay</button>
-            <button type="button" class="btn-date-filter" data-period="7days">7 ngày qua</button>
-            <button type="button" class="btn-date-filter active" data-period="month">Tháng này</button>
-            <button type="button" class="btn-date-filter" data-period="custom">
-              <svg width="12" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              <span>Tùy chọn ngày</span>
-            </button>
+          <div class="admin-dash-subhead-left">
+            <h1 class="admin-dash-title">Tổng quan hoạt động kinh doanh</h1>
+            <div class="dash-realtime-status-pill" id="dash-realtime-pill" title="Trạng thái đồng bộ dữ liệu thời gian thực">
+              <span class="live-pulse-indicator"></span>
+              <span class="live-status-label" id="dash-live-status-lbl">Thời gian thực</span>
+              <span class="live-sync-divider">·</span>
+              <span class="live-last-sync-text" id="dash-live-last-sync">Vừa cập nhật xong</span>
+            </div>
+          </div>
+
+          <div class="admin-dash-subhead-actions">
+            <div class="quick-date-toolbar" id="dash-date-filter-toolbar">
+              <button type="button" class="btn-date-filter" data-period="today">Hôm nay</button>
+              <button type="button" class="btn-date-filter" data-period="7days">7 ngày qua</button>
+              <button type="button" class="btn-date-filter active" data-period="month">Tháng này</button>
+              <button type="button" class="btn-date-filter" data-period="custom">
+                <svg width="12" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span>Tùy chọn ngày</span>
+              </button>
+            </div>
+
+            <div class="realtime-control-group">
+              <div class="realtime-interval-wrap" title="Chọn tần suất tự động đồng bộ dữ liệu">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <select id="dash-realtime-interval-select" class="realtime-interval-select">
+                  <option value="5000">Tự động: 5s</option>
+                  <option value="10000" selected>Tự động: 10s</option>
+                  <option value="30000">Tự động: 30s</option>
+                  <option value="60000">Tự động: 1m</option>
+                  <option value="0">Tạm dừng</option>
+                </select>
+              </div>
+
+              <button type="button" class="btn-admin-action secondary" id="btn-dash-manual-refresh" title="Đồng bộ dữ liệu ngay lập tức" style="padding: 7px 14px; gap: 6px; height: 36px;">
+                <svg id="icon-dash-refresh" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                <span>Làm mới</span>
+              </button>
+            </div>
           </div>
         </div>
 

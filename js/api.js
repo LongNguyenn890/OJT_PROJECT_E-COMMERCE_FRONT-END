@@ -26,10 +26,12 @@ const http = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Tự động gắn token JWT nếu đã đăng nhập
+// Tự động gắn token JWT nếu đã đăng nhập (loại bỏ token giả lập demo)
 http.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (token && token !== "demo-admin-session-token") {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   return config;
 });
 
@@ -68,7 +70,10 @@ http.interceptors.response.use(
       if (isAccountNotFound) {
         const isAuthPage = window.location.pathname.endsWith("/login.html") ||
                            window.location.pathname.endsWith("/register.html");
-        if (!isAuthPage) {
+        const isAdminPage = window.location.pathname.includes("admin-") ||
+                            window.location.pathname.includes("customer-management") ||
+                            document.body?.dataset?.auth === "admin";
+        if (!isAuthPage && !isAdminPage) {
           localStorage.removeItem("token");
           localStorage.removeItem("user");
           let msg = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
