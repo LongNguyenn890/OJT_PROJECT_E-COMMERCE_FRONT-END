@@ -1,13 +1,18 @@
 /**
  * SHOPEASE - QUẢN LÝ DANH MỤC SẢN PHẨM (admin-categories.js)
- * Đồng bộ giao diện với hệ thống quản trị Shopease, loại bỏ thông tin dư thừa
+ * Kết nối toàn diện API Backend FastAPI (/api/categories):
+ *  - GET    /api/categories        : Lấy danh sách toàn bộ danh mục kèm số sản phẩm
+ *  - GET    /api/categories/{id}   : Lấy chi tiết thông tin và kiểm tra số lượng sản phẩm
+ *  - POST   /api/categories        : Tạo mới danh mục (kiểm tra tên duy nhất)
+ *  - PUT    /api/categories/{id}   : Cập nhật thông tin danh mục
+ *  - DELETE /api/categories/{id}   : Xóa danh mục (chặn nếu còn sản phẩm)
  */
 
 document.addEventListener("DOMContentLoaded", async () => {
-  // 1. Luôn đảm bảo phiên làm việc Quản trị viên hợp lệ
+  // 1. Luôn đảm bảo phiên làm việc Quản trị viên hợp lệ với JWT Token
   await ensureAdminSession();
 
-  // 2. Khởi tạo các sự kiện giao diện
+  // 2. Khởi tạo các sự kiện giao diện (Modal, Bộ lọc, Form)
   initModalTriggers();
   initSearchAndFilters();
   initFormSubmissions();
@@ -22,6 +27,26 @@ let filteredCategories = [];
 let currentDeletingCategory = null;
 let currentPage = 1;
 const pageSize = 10;
+
+/**
+ * Trích xuất câu thông báo lỗi chính xác từ ApiError hoặc AxiosError
+ */
+function extractErrorMessage(err, fallback = "Đã xảy ra lỗi.") {
+  if (!err) return fallback;
+  if (typeof err === "string") return err;
+  if (err.data && typeof err.data.detail === "string") return err.data.detail;
+  if (err.data && Array.isArray(err.data.detail)) {
+    return err.data.detail.map((e) => e.msg || e).join("; ");
+  }
+  if (err.response && err.response.data && typeof err.response.data.detail === "string") {
+    return err.response.data.detail;
+  }
+  if (err.response && err.response.data && Array.isArray(err.response.data.detail)) {
+    return err.response.data.detail.map((e) => e.msg || e).join("; ");
+  }
+  if (err.message) return err.message;
+  return fallback;
+}
 
 /**
  * Đảm bảo token JWT hợp lệ với quyền ADMIN / STAFF
@@ -57,13 +82,24 @@ async function ensureAdminSession() {
       }, { timeout: 3500 });
 
       if (authRes.data && authRes.data.access_token) {
-        localStorage.setItem("token", authRes.data.access_token);
-        localStorage.setItem("user", JSON.stringify({
-          id: authRes.data.user?.id || 1,
-          email: "admin@example.com",
-          full_name: authRes.data.user?.full_name || "Quản Trị Viên",
-          role: "ADMIN",
-        }));
+        const realToken = authRes.data.access_token;
+        localStorage.setItem("token", realToken);
+        try {
+          const profileRes = await axios.get(`${apiBase}/auth/me`, {
+            headers: { Authorization: `Bearer ${realToken}` },
+            timeout: 2500,
+          });
+          if (profileRes.data) {
+            localStorage.setItem("user", JSON.stringify(profileRes.data));
+          }
+        } catch (_) {
+          localStorage.setItem("user", JSON.stringify({
+            id: 1,
+            email: "admin@example.com",
+            full_name: "Quản Trị Viên",
+            role: "ADMIN",
+          }));
+        }
       }
     } catch (e) {
       console.warn("[Categories Auth] Không thể đăng nhập phiên Quản trị:", e);
@@ -74,7 +110,7 @@ async function ensureAdminSession() {
 /**
  * Nạp danh sách danh mục từ Backend (GET /api/categories)
  */
-async function loadCategoriesData() {
+async function loadCategoriesData(keyword = "") {
   const tbody = document.getElementById("cat-table-body");
   if (tbody) {
     tbody.innerHTML = `
@@ -88,22 +124,24 @@ async function loadCategoriesData() {
   }
 
   try {
-    const res = await api.get("/categories");
+    const params = keyword ? { keyword } : {};
+    const res = await api.get("/categories", params);
     rawCategories = Array.isArray(res) ? res : (res.items || res.categories || []);
     
     // Cập nhật các thẻ KPI
     updateCategoryKpis(rawCategories);
 
-    // Áp dụng bộ lọc hiện tại và render bảng
+    // Áp dụng bộ lọc và render bảng
     applyFiltersAndSort();
   } catch (error) {
-    console.error("[Categories] Lỗi tải danh mục:", error);
+    console.error("[Categories] Lỗi nạp danh mục từ API:", error);
+    const errorMsg = extractErrorMessage(error, "Lỗi kết nối máy chủ API");
     if (tbody) {
       tbody.innerHTML = `
         <tr>
           <td colspan="6" style="text-align: center; color: var(--admin-danger); padding: 40px 16px;">
             <div style="font-size: 14px; font-weight: 600; margin-bottom: 6px;">Không thể tải danh sách danh mục</div>
-            <div style="font-size: 12.5px; color: var(--admin-text-muted); margin-bottom: 12px;">${escapeHtml(error.message || "Lỗi kết nối máy chủ API")}</div>
+            <div style="font-size: 12.5px; color: var(--admin-text-muted); margin-bottom: 12px;">${escapeHtml(errorMsg)}</div>
             <button type="button" class="btn-admin-action secondary" onclick="loadCategoriesData()">Thử lại</button>
           </td>
         </tr>
@@ -158,7 +196,7 @@ function applyFiltersAndSort() {
 
   let list = [...rawCategories];
 
-  // 1. Lọc theo từ khóa tìm kiếm (tên hoặc mô tả)
+  // 1. Lọc theo từ khóa tìm kiếm (tên, mô tả hoặc mã DM)
   if (keyword) {
     list = list.filter((cat) => {
       const name = String(cat.name || "").toLowerCase();
@@ -474,10 +512,10 @@ function hideModalError(bannerId) {
 }
 
 /**
- * Khởi tạo xử lý Form Thêm mới và Chỉnh sửa
+ * Khởi tạo xử lý Form Thêm mới và Chỉnh sửa qua API
  */
 function initFormSubmissions() {
-  // 1. Submit Tạo danh mục mới
+  // 1. Submit Tạo danh mục mới (POST /api/categories)
   const formCreate = document.getElementById("form-create-category");
   if (formCreate) {
     formCreate.addEventListener("submit", async (e) => {
@@ -513,11 +551,8 @@ function initFormSubmissions() {
 
         await loadCategoriesData();
       } catch (err) {
-        console.error("[Categories] Lỗi tạo danh mục:", err);
-        const errMsg = (err.response && err.response.data && err.response.data.detail)
-          || (err.message)
-          || "Không thể thêm danh mục do lỗi hệ thống.";
-        
+        console.error("[Categories] Lỗi tạo danh mục qua API:", err);
+        const errMsg = extractErrorMessage(err, "Không thể thêm danh mục do lỗi hệ thống.");
         showModalError("create-cat-error-banner", errMsg);
         if (nameInput) nameInput.focus();
       } finally {
@@ -529,7 +564,7 @@ function initFormSubmissions() {
     });
   }
 
-  // 2. Submit Cập nhật danh mục
+  // 2. Submit Cập nhật danh mục (PUT /api/categories/{id})
   const formEdit = document.getElementById("form-edit-category");
   if (formEdit) {
     formEdit.addEventListener("submit", async (e) => {
@@ -567,11 +602,8 @@ function initFormSubmissions() {
 
         await loadCategoriesData();
       } catch (err) {
-        console.error("[Categories] Lỗi cập nhật danh mục:", err);
-        const errMsg = (err.response && err.response.data && err.response.data.detail)
-          || (err.message)
-          || "Không thể cập nhật danh mục do lỗi hệ thống.";
-        
+        console.error("[Categories] Lỗi cập nhật danh mục qua API:", err);
+        const errMsg = extractErrorMessage(err, "Không thể cập nhật danh mục do lỗi hệ thống.");
         showModalError("edit-cat-error-banner", errMsg);
         if (nameInput) nameInput.focus();
       } finally {
@@ -583,7 +615,7 @@ function initFormSubmissions() {
     });
   }
 
-  // 3. Submit Xác nhận Xóa danh mục
+  // 3. Submit Xác nhận Xóa danh mục (DELETE /api/categories/{id})
   const btnConfirmDelete = document.getElementById("btn-confirm-delete-category");
   if (btnConfirmDelete) {
     btnConfirmDelete.addEventListener("click", async () => {
@@ -616,11 +648,8 @@ function initFormSubmissions() {
         currentDeletingCategory = null;
         await loadCategoriesData();
       } catch (err) {
-        console.error("[Categories] Lỗi xóa danh mục:", err);
-        const errMsg = (err.response && err.response.data && err.response.data.detail)
-          || (err.message)
-          || "Không thể xóa danh mục này.";
-
+        console.error("[Categories] Lỗi xóa danh mục qua API:", err);
+        const errMsg = extractErrorMessage(err, "Không thể xóa danh mục này.");
         showModalError("delete-cat-error-banner", errMsg);
         if (typeof showToast === "function") {
           showToast(errMsg, "error");
@@ -634,11 +663,10 @@ function initFormSubmissions() {
 }
 
 /**
- * Mở modal chỉnh sửa danh mục với thông tin điền sẵn
+ * Mở modal chỉnh sửa danh mục và đồng bộ dữ liệu mới nhất từ API (GET /api/categories/{id})
  */
-function openEditCategoryModal(id) {
-  const category = rawCategories.find((c) => Number(c.id) === Number(id));
-  if (!category) return;
+async function openEditCategoryModal(id) {
+  let category = rawCategories.find((c) => Number(c.id) === Number(id));
 
   hideModalError("edit-cat-error-banner");
 
@@ -647,20 +675,36 @@ function openEditCategoryModal(id) {
   const descInput = document.getElementById("edit-cat-desc");
   const prodCountEl = document.getElementById("edit-cat-product-count");
 
-  if (idInput) idInput.value = category.id;
-  if (nameInput) nameInput.value = category.name || "";
-  if (descInput) descInput.value = category.description || "";
-  if (prodCountEl) prodCountEl.textContent = `${category.product_count || 0} sản phẩm`;
+  // Điền dữ liệu từ danh sách đã nạp
+  if (category) {
+    if (idInput) idInput.value = category.id;
+    if (nameInput) nameInput.value = category.name || "";
+    if (descInput) descInput.value = category.description || "";
+    if (prodCountEl) prodCountEl.textContent = `${category.product_count || 0} sản phẩm`;
+  }
 
   openModal("modal-edit-category");
   if (nameInput) nameInput.focus();
+
+  // Gọi API GET /categories/{id} để nạp dữ liệu chuẩn xác nhất từ server
+  try {
+    const detail = await api.get(`/categories/${id}`);
+    if (detail) {
+      if (idInput) idInput.value = detail.id;
+      if (nameInput) nameInput.value = detail.name || "";
+      if (descInput) descInput.value = detail.description || "";
+      if (prodCountEl) prodCountEl.textContent = `${detail.product_count || 0} sản phẩm`;
+    }
+  } catch (err) {
+    console.warn("[Categories] Không thể nạp chi tiết từ API:", err);
+  }
 }
 
 /**
- * Mở modal xác nhận xóa danh mục kèm kiểm tra ràng buộc sản phẩm
+ * Mở modal xác nhận xóa danh mục kèm kiểm tra ràng buộc sản phẩm qua API
  */
-function openDeleteCategoryModal(id) {
-  const category = rawCategories.find((c) => Number(c.id) === Number(id));
+async function openDeleteCategoryModal(id) {
+  let category = rawCategories.find((c) => Number(c.id) === Number(id));
   if (!category) return;
 
   currentDeletingCategory = category;
@@ -673,40 +717,51 @@ function openDeleteCategoryModal(id) {
   const safeBox = document.getElementById("delete-box-no-products");
   const btnConfirm = document.getElementById("btn-confirm-delete-category");
 
-  const productCount = Number(category.product_count || 0);
+  function updateDeleteModalUI(cat) {
+    const productCount = Number(cat.product_count || 0);
 
-  if (catNameEl) catNameEl.textContent = category.name;
-  if (catIdLbl) catIdLbl.textContent = `DM-${String(category.id).padStart(3, "0")} (#${category.id})`;
-  if (prodCountLbl) prodCountLbl.textContent = productCount;
+    if (catNameEl) catNameEl.textContent = cat.name;
+    if (catIdLbl) catIdLbl.textContent = `DM-${String(cat.id).padStart(3, "0")} (#${cat.id})`;
+    if (prodCountLbl) prodCountLbl.textContent = productCount;
 
-  // Điều chỉnh giao diện theo trạng thái số lượng sản phẩm
-  if (productCount > 0) {
-    // Có sản phẩm: Hiển thị cảnh báo và vô hiệu hóa nút xóa
-    if (warningBox) warningBox.style.display = "flex";
-    if (safeBox) safeBox.style.display = "none";
+    if (productCount > 0) {
+      if (warningBox) warningBox.style.display = "flex";
+      if (safeBox) safeBox.style.display = "none";
 
-    if (btnConfirm) {
-      btnConfirm.disabled = true;
-      btnConfirm.title = `Không thể xóa vì còn ${productCount} sản phẩm`;
-      btnConfirm.innerHTML = `<span>Không thể xóa</span>`;
-      btnConfirm.style.opacity = "0.6";
-      btnConfirm.style.cursor = "not-allowed";
-    }
-  } else {
-    // Không có sản phẩm: An toàn để xóa
-    if (warningBox) warningBox.style.display = "none";
-    if (safeBox) safeBox.style.display = "flex";
+      if (btnConfirm) {
+        btnConfirm.disabled = true;
+        btnConfirm.title = `Không thể xóa vì còn ${productCount} sản phẩm`;
+        btnConfirm.innerHTML = `<span>Không thể xóa</span>`;
+        btnConfirm.style.opacity = "0.6";
+        btnConfirm.style.cursor = "not-allowed";
+      }
+    } else {
+      if (warningBox) warningBox.style.display = "none";
+      if (safeBox) safeBox.style.display = "flex";
 
-    if (btnConfirm) {
-      btnConfirm.disabled = false;
-      btnConfirm.title = "Xác nhận xóa danh mục này";
-      btnConfirm.innerHTML = `<span>Xóa danh mục</span>`;
-      btnConfirm.style.opacity = "1";
-      btnConfirm.style.cursor = "pointer";
+      if (btnConfirm) {
+        btnConfirm.disabled = false;
+        btnConfirm.title = "Xác nhận xóa danh mục này";
+        btnConfirm.innerHTML = `<span>Xóa danh mục</span>`;
+        btnConfirm.style.opacity = "1";
+        btnConfirm.style.cursor = "pointer";
+      }
     }
   }
 
+  updateDeleteModalUI(category);
   openModal("modal-confirm-delete-category");
+
+  // Kiểm tra số lượng sản phẩm mới nhất từ server qua GET /categories/{id}
+  try {
+    const freshCat = await api.get(`/categories/${id}`);
+    if (freshCat) {
+      currentDeletingCategory = freshCat;
+      updateDeleteModalUI(freshCat);
+    }
+  } catch (err) {
+    console.warn("[Categories] Không thể nạp lại thông tin danh mục từ API:", err);
+  }
 }
 
 // Gắn các hàm gọi từ thuộc tính onclick của HTML ra phạm vi toàn cục window

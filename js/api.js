@@ -109,3 +109,8 @@ const api = {
   patch: (path, body, config) => http.patch(path, body, config).then((res) => res.data),
   delete: (path, config) => http.delete(path, config).then((res) => res.data),
 };
+
+// Đảm bảo api có thể truy cập qua window.api
+if (typeof window !== "undefined") {
+  window.api = api;
+}
