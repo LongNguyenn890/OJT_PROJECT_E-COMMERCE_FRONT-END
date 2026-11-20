@@ -65,8 +65,19 @@ function checkRouteGuard() {
       return false;
     }
 
-    // 2. Đã đăng nhập nhưng không có vai trò ADMIN hoặc STAFF: Chặn và đá về trang chủ
+    // 2. Chặn riêng trang Quản lý nhân viên nếu không phải ADMIN
+    const isStaffPage = currentPath.includes("admin-staff") || currentPath.includes("admin-users");
     const role = (user.role || "").toUpperCase();
+    if (isStaffPage && role !== "ADMIN") {
+      sessionStorage.setItem("pending_toast", JSON.stringify({
+        message: "Truy cập bị từ chối! Bạn không có quyền truy cập trang Quản lý nhân viên. Chỉ Quản trị viên (ADMIN) mới có quyền truy cập.",
+        type: "error"
+      }));
+      window.location.href = role === "STAFF" ? `${root}pages/admin-dashboard.html` : `${root}pages/customer-home.html`;
+      return false;
+    }
+
+    // 3. Đã đăng nhập nhưng không có vai trò ADMIN hoặc STAFF: Chặn và đá về trang chủ
     if (role !== "ADMIN" && role !== "STAFF") {
       sessionStorage.setItem("pending_toast", JSON.stringify({
         message: "Truy cập bị từ chối! Tài khoản của bạn không có quyền quản trị hệ thống.",
@@ -134,7 +145,6 @@ function renderAdminLayout() {
   const isOrdersActive = currentPath.endsWith("/admin-orders.html");
   const isInventoryActive = currentPath.endsWith("/admin-inventory.html");
   const isReportsActive = currentPath.endsWith("/admin-reports.html");
-  const isProfileActive = currentPath.endsWith("/profile.html");
 
   if (sidebarElem) {
     sidebarElem.innerHTML = `
@@ -176,10 +186,12 @@ function renderAdminLayout() {
             <span>Quản lý Kho hàng</span>
           </a>
 
+          ${isAdmin ? `
           <a href="${root}pages/admin-staff.html" class="admin-nav-item ${isStaffActive ? "active" : ""}">
             <svg class="admin-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             <span>Quản lý Nhân viên</span>
           </a>
+          ` : ""}
 
           <a href="${root}pages/admin-customers.html" class="admin-nav-item ${isCustomersActive ? "active" : ""}">
             <svg class="admin-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -189,11 +201,6 @@ function renderAdminLayout() {
           <a href="${root}pages/admin-reports.html" class="admin-nav-item ${isReportsActive ? "active" : ""}">
             <svg class="admin-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
             <span>Thống kê &amp; Báo cáo</span>
-          </a>
-
-          <a href="${root}pages/profile.html" class="admin-nav-item ${isProfileActive ? "active" : ""}">
-            <svg class="admin-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            <span>Cài đặt hệ thống</span>
           </a>
         </nav>
       </div>
@@ -1429,8 +1436,329 @@ function checkPendingToast() {
   }
 }
 
+// ==========================================================
+// 10. BỘ NÂNG CẤP DROPDOWN SELECT CAO CẤP DÙNG CHUNG CHO ADMIN
+// Biến mọi thẻ <select> thành giao diện Dropdown tùy chỉnh hiện đại (AGY Custom Select)
+// ==========================================================
+
+// Monkey-patch value setter của HTMLSelectElement để tự động đồng bộ khi code JS gán select.value = "..."
+if (!window._agySelectPatched && typeof HTMLSelectElement !== "undefined") {
+  window._agySelectPatched = true;
+  const originalDesc = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value");
+  if (originalDesc && originalDesc.set) {
+    Object.defineProperty(HTMLSelectElement.prototype, "value", {
+      get() {
+        return originalDesc.get.call(this);
+      },
+      set(val) {
+        originalDesc.set.call(this, val);
+        if (typeof this._customSelectSync === "function") {
+          this._customSelectSync();
+        }
+      },
+      configurable: true,
+      enumerable: true
+    });
+  }
+}
+
+function initAdminCustomSelects(container = document) {
+  // Chỉ áp dụng cho các trang quản trị
+  const isAdmin = document.body.classList.contains("admin-page") ||
+                  document.getElementById("admin-sidebar") ||
+                  window.location.pathname.includes("/admin-");
+  if (!isAdmin) return;
+
+  const selector = ".admin-select-box select, .orders-filter-row select, .admin-filter-inputs select, select.admin-form-input, .realtime-interval-select, select.filter-date-input, select.admin-select";
+  const selects = (container || document).querySelectorAll(selector);
+
+  selects.forEach((select) => {
+    if (select._customSelectEnhanced) {
+      if (typeof select._customSelectSync === "function") {
+        select._customSelectSync();
+      }
+      return;
+    }
+    select._customSelectEnhanced = true;
+
+    // Ẩn select gốc một cách an toàn và giữ nguyên trong DOM
+    select.classList.add("agy-native-hidden");
+
+    // Tạo wrapper tùy chỉnh
+    const wrapper = document.createElement("div");
+    wrapper.className = "agy-custom-select";
+    if (select.classList.contains("realtime-interval-select")) {
+      wrapper.classList.add("is-realtime");
+    }
+    if (select.classList.contains("admin-form-input") || select.style.width === "100%") {
+      wrapper.classList.add("is-fullwidth");
+    }
+    if (select.id) {
+      wrapper.setAttribute("data-for-id", select.id);
+    }
+
+    // Nút kích hoạt Dropdown (Trigger)
+    const trigger = document.createElement("button");
+    trigger.type = "button";
+    trigger.className = "agy-select-trigger";
+    trigger.setAttribute("aria-haspopup", "listbox");
+    trigger.setAttribute("aria-expanded", "false");
+
+    const textSpan = document.createElement("span");
+    textSpan.className = "agy-select-text";
+
+    const chevronSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    chevronSvg.setAttribute("class", "agy-select-chevron");
+    chevronSvg.setAttribute("width", "14");
+    chevronSvg.setAttribute("height", "14");
+    chevronSvg.setAttribute("viewBox", "0 0 24 24");
+    chevronSvg.setAttribute("fill", "none");
+    chevronSvg.setAttribute("stroke", "currentColor");
+    chevronSvg.setAttribute("stroke-width", "2.2");
+    chevronSvg.setAttribute("stroke-linecap", "round");
+    chevronSvg.setAttribute("stroke-linejoin", "round");
+    const poly = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+    poly.setAttribute("points", "6 9 12 15 18 9");
+    chevronSvg.appendChild(poly);
+
+    trigger.appendChild(textSpan);
+    trigger.appendChild(chevronSvg);
+
+    // Menu danh sách lựa chọn (Dropdown)
+    const dropdown = document.createElement("div");
+    dropdown.className = "agy-select-dropdown";
+    dropdown.setAttribute("role", "listbox");
+
+    wrapper.appendChild(trigger);
+    wrapper.appendChild(dropdown);
+
+    // Hàm render các options
+    function buildOptions() {
+      dropdown.innerHTML = "";
+      const options = Array.from(select.options);
+
+      options.forEach((opt) => {
+        const item = document.createElement("div");
+        item.className = "agy-select-option";
+        item.setAttribute("role", "option");
+        item.setAttribute("data-value", opt.value);
+        if (opt.value === select.value) {
+          item.classList.add("is-selected");
+        }
+
+        const labelSpan = document.createElement("span");
+        labelSpan.className = "agy-option-label";
+        labelSpan.textContent = opt.textContent;
+
+        const checkSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        checkSvg.setAttribute("class", "agy-option-check");
+        checkSvg.setAttribute("width", "14");
+        checkSvg.setAttribute("height", "14");
+        checkSvg.setAttribute("viewBox", "0 0 24 24");
+        checkSvg.setAttribute("fill", "none");
+        checkSvg.setAttribute("stroke", "currentColor");
+        checkSvg.setAttribute("stroke-width", "2.5");
+        checkSvg.setAttribute("stroke-linecap", "round");
+        checkSvg.setAttribute("stroke-linejoin", "round");
+        const checkPoly = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+        checkPoly.setAttribute("points", "20 6 9 17 4 12");
+        checkSvg.appendChild(checkPoly);
+
+        item.appendChild(labelSpan);
+        item.appendChild(checkSvg);
+
+        item.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (select.value !== opt.value) {
+            select.value = opt.value;
+            select.dispatchEvent(new Event("change", { bubbles: true }));
+            select.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+          syncFromSelect();
+          closeMenu();
+          trigger.focus();
+        });
+
+        dropdown.appendChild(item);
+      });
+
+      syncFromSelect();
+    }
+
+    // Hàm đồng bộ text hiển thị từ select gốc
+    function syncFromSelect() {
+      const selectedOpt = select.selectedOptions && select.selectedOptions[0]
+        ? select.selectedOptions[0]
+        : select.options[select.selectedIndex];
+      textSpan.textContent = selectedOpt ? selectedOpt.textContent : "";
+
+      const allItems = dropdown.querySelectorAll(".agy-select-option");
+      allItems.forEach((it) => {
+        if (it.getAttribute("data-value") === select.value) {
+          it.classList.add("is-selected");
+        } else {
+          it.classList.remove("is-selected");
+        }
+      });
+    }
+
+    function openMenu() {
+      // Đóng tất cả dropdown khác trước
+      document.querySelectorAll(".agy-custom-select.is-open").forEach((el) => {
+        if (el !== wrapper) {
+          el.classList.remove("is-open");
+          const tr = el.querySelector(".agy-select-trigger");
+          if (tr) tr.setAttribute("aria-expanded", "false");
+        }
+      });
+
+      // Đóng popover chọn ngày nếu đang mở (trên các trang quản trị)
+      const datePopover = document.getElementById("order-date-popover") || document.getElementById("dash-date-popover");
+      if (datePopover && datePopover.classList.contains("show")) {
+        datePopover.classList.remove("show");
+        const dateTrigger = document.getElementById("btn-order-date-trigger") || document.getElementById("btn-custom-date-trigger");
+        if (dateTrigger) dateTrigger.setAttribute("aria-expanded", "false");
+      }
+
+      wrapper.classList.add("is-open");
+      trigger.setAttribute("aria-expanded", "true");
+
+      // Căn chỉnh không tràn mép phải màn hình
+      const rect = dropdown.getBoundingClientRect();
+      const winWidth = window.innerWidth || document.documentElement.clientWidth;
+      if (rect.right > winWidth - 10) {
+        dropdown.style.left = "auto";
+        dropdown.style.right = "0";
+      } else if (!wrapper.classList.contains("is-realtime")) {
+        dropdown.style.left = "0";
+        dropdown.style.right = "auto";
+      }
+
+      // Cuộn mục đang chọn vào tầm nhìn
+      const selectedItem = dropdown.querySelector(".agy-select-option.is-selected");
+      if (selectedItem) {
+        selectedItem.scrollIntoView({ block: "nearest" });
+      }
+    }
+
+    function closeMenu() {
+      wrapper.classList.remove("is-open");
+      trigger.setAttribute("aria-expanded", "false");
+    }
+
+    trigger.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (select.disabled) return;
+      if (wrapper.classList.contains("is-open")) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    });
+
+    // Hỗ trợ phím tắt
+    trigger.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeMenu();
+      } else if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") {
+        if (!wrapper.classList.contains("is-open")) {
+          e.preventDefault();
+          openMenu();
+        }
+      }
+    });
+
+    // Lưu các hàm liên kết vào select gốc
+    select._customSelectSync = syncFromSelect;
+    select._customSelectRebuild = buildOptions;
+
+    // Chèn wrapper vào ngay sau thẻ select gốc
+    select.insertAdjacentElement("afterend", wrapper);
+
+    // Dựng danh sách options ban đầu
+    buildOptions();
+
+    // Lắng nghe sự kiện change từ select gốc
+    select.addEventListener("change", syncFromSelect);
+
+    // MutationObserver để theo dõi thay đổi options (ví dụ nạp qua API từ backend)
+    const observer = new MutationObserver(() => {
+      buildOptions();
+    });
+    observer.observe(select, { childList: true, subtree: true });
+  });
+}
+
+// Đóng mọi dropdown khi nhấp ra ngoài
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".agy-custom-select")) {
+    document.querySelectorAll(".agy-custom-select.is-open").forEach((el) => {
+      el.classList.remove("is-open");
+      const tr = el.querySelector(".agy-select-trigger");
+      if (tr) tr.setAttribute("aria-expanded", "false");
+    });
+  }
+});
+
+// Đóng khi nhấn phím Escape
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    document.querySelectorAll(".agy-custom-select.is-open").forEach((el) => {
+      el.classList.remove("is-open");
+      const tr = el.querySelector(".agy-select-trigger");
+      if (tr) tr.setAttribute("aria-expanded", "false");
+    });
+  }
+});
+
+// Tự động quét và nâng cấp khi có DOM mới (ví dụ modal mở hoặc dynamic inject)
+if (typeof MutationObserver !== "undefined") {
+  const bodyObserver = new MutationObserver((mutations) => {
+    let hasNewSelects = false;
+    for (const m of mutations) {
+      if (m.type === "childList" && m.addedNodes.length > 0) {
+        for (const node of m.addedNodes) {
+          if (node.nodeType === 1) {
+            if (node.tagName === "SELECT" || (node.querySelector && node.querySelector("select"))) {
+              hasNewSelects = true;
+              break;
+            }
+          }
+        }
+      }
+      if (hasNewSelects) break;
+    }
+    if (hasNewSelects) {
+      initAdminCustomSelects();
+    }
+  });
+  if (document.body) {
+    bodyObserver.observe(document.body, { childList: true, subtree: true });
+  }
+}
+
 // Tự động render layout và kích hoạt toast chờ
 window.renderAdminLayout = renderAdminLayout;
 window.renderLayout = renderLayout;
+window.initAdminCustomSelects = initAdminCustomSelects;
+window.syncCustomSelects = function () {
+  document.querySelectorAll("select").forEach((sel) => {
+    if (typeof sel._customSelectRebuild === "function") sel._customSelectRebuild();
+    else if (typeof sel._customSelectSync === "function") sel._customSelectSync();
+  });
+};
+
 renderLayout();
 checkPendingToast();
+
+// Khởi chạy nâng cấp custom dropdown
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    initAdminCustomSelects();
+  });
+} else {
+  initAdminCustomSelects();
+}
+setTimeout(() => {
+  initAdminCustomSelects();
+}, 250);

@@ -98,28 +98,15 @@
       gap: 12px;
       padding: 16px;
       background: #ffffff;
+      overflow: visible !important;
+      position: relative;
+      z-index: 30;
     }
-    .filter-input-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .orders-filter-card {
+      overflow: visible !important;
+      position: relative;
+      z-index: 30;
     }
-    .filter-date-input {
-      height: 38px;
-      padding: 0 12px;
-      border: 1px solid var(--admin-border);
-      border-radius: 8px;
-      font-size: 13px;
-      color: var(--admin-text-main);
-      background-color: #ffffff;
-      outline: none;
-      transition: border-color 0.15s ease;
-    }
-    .filter-date-input:focus {
-      border-color: var(--admin-primary);
-      box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
-    }
-
     /* Order Code & Customer Cell */
     .order-code-badge {
       font-family: 'Liberation Mono', monospace;
@@ -348,9 +335,50 @@
       color: #e11d48;
       border-color: #fecdd3;
     }
-    .btn-table-action.cancel-btn:hover {
+    .btn-table-action.cancel-btn:hover:not(:disabled):not(.disabled) {
       background-color: #fee2e2;
       color: #dc2626;
+    }
+    .btn-table-action:disabled,
+    .btn-table-action.disabled {
+      cursor: not-allowed !important;
+      pointer-events: none;
+    }
+    .btn-table-action.confirm-flow:disabled,
+    .btn-table-action.confirm-flow.disabled {
+      background-color: #f1f5f9;
+      color: #94a3b8;
+      border-color: #e2e8f0;
+      opacity: 0.85;
+    }
+    .btn-table-action.ship-flow:disabled,
+    .btn-table-action.ship-flow.disabled {
+      background-color: #f1f5f9;
+      color: #94a3b8;
+      border-color: #e2e8f0;
+      opacity: 0.85;
+    }
+    .btn-table-action.complete-flow:disabled,
+    .btn-table-action.complete-flow.disabled {
+      background-color: #f1f5f9;
+      color: #94a3b8;
+      border-color: #e2e8f0;
+      opacity: 0.85;
+    }
+    .btn-table-action.bank-confirm:disabled,
+    .btn-table-action.bank-confirm.disabled {
+      background: #f1f5f9;
+      color: #94a3b8;
+      border-color: #e2e8f0;
+      box-shadow: none;
+      opacity: 0.85;
+    }
+    .btn-table-action.cancel-btn:disabled,
+    .btn-table-action.cancel-btn.disabled {
+      background-color: #f8fafc;
+      color: #cbd5e1;
+      border-color: #e2e8f0;
+      opacity: 0.7;
     }
 
     /* Modal Stepper & Detail Sections */
@@ -584,7 +612,7 @@
         </div>
 
         <!-- Khung Bộ Lọc & Tìm Kiếm Đơn Hàng -->
-        <div class="admin-table-card" style="margin-bottom: 24px; padding: 0; overflow: hidden;">
+        <div class="admin-table-card orders-filter-card" style="margin-bottom: 24px; padding: 0; overflow: visible !important; position: relative; z-index: 30;">
           <!-- Tabs lọc theo trạng thái đơn hàng -->
           <div class="orders-filter-tabs">
             <button type="button" class="order-tab-item active" data-status="">
@@ -628,14 +656,59 @@
               </select>
             </div>
 
-            <div class="filter-input-group">
-              <span style="font-size: 12px; color: var(--admin-text-muted); font-weight: 500;">Từ:</span>
-              <input type="date" id="filter-order-from-date" class="filter-date-input" title="Từ ngày">
-            </div>
+            <!-- Bộ chọn khoảng ngày thông minh cho đơn hàng -->
+            <div class="order-date-picker-wrap">
+              <button type="button" class="order-date-trigger-btn" id="btn-order-date-trigger" aria-haspopup="true" aria-expanded="false" title="Chọn khoảng thời gian tạo đơn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="order-date-icon">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <span id="order-date-display-label">Khoảng ngày tạo đơn</span>
+                <span class="order-date-clear-inline" id="btn-order-date-clear-inline" title="Xóa lọc khoảng ngày" style="display: none;">&times;</span>
+                <svg class="order-date-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
 
-            <div class="filter-input-group">
-              <span style="font-size: 12px; color: var(--admin-text-muted); font-weight: 500;">Đến:</span>
-              <input type="date" id="filter-order-to-date" class="filter-date-input" title="Đến ngày">
+              <!-- Popover Chọn khoảng ngày cao cấp -->
+              <div class="order-date-popover" id="order-date-popover">
+                <div class="popover-header">
+                  <div class="popover-title">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span>Lọc đơn hàng theo ngày tạo</span>
+                  </div>
+                  <button type="button" class="popover-close-btn" id="btn-close-order-date-popover" title="Đóng">&times;</button>
+                </div>
+
+                <div class="popover-presets">
+                  <button type="button" class="order-preset-pill active" data-preset="all">Tất cả</button>
+                  <button type="button" class="order-preset-pill" data-preset="today">Hôm nay</button>
+                  <button type="button" class="order-preset-pill" data-preset="yesterday">Hôm qua</button>
+                  <button type="button" class="order-preset-pill" data-preset="7days">7 ngày qua</button>
+                  <button type="button" class="order-preset-pill" data-preset="30days">30 ngày qua</button>
+                  <button type="button" class="order-preset-pill" data-preset="this_month">Tháng này</button>
+                  <button type="button" class="order-preset-pill" data-preset="last_month">Tháng trước</button>
+                </div>
+
+                <div class="popover-date-row">
+                  <div class="popover-date-field">
+                    <label for="filter-order-from-date">Từ ngày</label>
+                    <input type="date" id="filter-order-from-date" class="popover-date-input">
+                  </div>
+                  <div class="popover-date-field">
+                    <label for="filter-order-to-date">Đến ngày</label>
+                    <input type="date" id="filter-order-to-date" class="popover-date-input">
+                  </div>
+                </div>
+
+                <div class="popover-footer">
+                  <button type="button" class="btn-admin-action secondary" id="btn-cancel-order-date" style="padding: 6px 14px; height: 34px;">Xóa chọn</button>
+                  <button type="button" class="btn-admin-primary" id="btn-apply-order-date" style="padding: 6px 16px; height: 34px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>Áp dụng</span>
+                  </button>
+                </div>
+              </div>
             </div>
 
             <button type="button" class="btn-admin-action secondary" id="btn-reset-order-filters" title="Xóa toàn bộ bộ lọc" style="height: 38px;">

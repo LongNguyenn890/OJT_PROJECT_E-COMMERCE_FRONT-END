@@ -446,52 +446,57 @@ body.admin-page {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: nowrap;
+  gap: 12px;
 }
 
 .admin-dash-title {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 24px;
+  font-size: 19px;
   font-weight: 700;
   color: var(--admin-text-main);
   margin: 0;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.2px;
+  white-space: nowrap;
 }
 
 .quick-date-toolbar {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  background-color: #f2f3ff;
-  padding: 4px;
-  border-radius: 12px;
+  gap: 2px;
+  background-color: #f1f5f9;
+  padding: 3px;
+  border-radius: 9px;
+  white-space: nowrap;
 }
 
 .btn-date-filter {
-  padding: 6px 16px;
-  border-radius: var(--admin-radius-sm);
+  padding: 5px 11px;
+  border-radius: 7px;
   font-size: 12px;
   font-weight: 600;
-  color: var(--admin-text-secondary);
+  color: #64748b;
   background: transparent;
   border: none;
   cursor: pointer;
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   transition: all 0.15s ease;
 }
 
 .btn-date-filter:hover {
-  color: var(--admin-text-main);
+  color: #1e293b;
+  background: rgba(255, 255, 255, 0.6);
 }
 
 .btn-date-filter.active {
-  background-color: #ffffff;
-  box-shadow: var(--admin-shadow);
-  color: var(--admin-primary-dark);
+  background: #ffffff;
+  color: #2563eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  font-weight: 600;
 }
 
 /* 5. PRIMARY KPI METRICS GRID (FR-036, FR-037, BR-11, BR-14) */
@@ -1673,8 +1678,6 @@ body.admin-page {
     padding: 16px;
   }
 }
-  box-shadow: var(--admin-shadow-md);
-}
 
 .admin-kpi-info {
   min-width: 0;
@@ -2536,15 +2539,676 @@ body.admin-page {
   color: var(--admin-text-main);
 }
 
-.admin-select-box select {
-  border: 1px solid var(--admin-border);
-  border-radius: var(--admin-radius-sm);
-  padding: 8px 12px;
-  background: #f8fafc;
+/* ==========================================================
+   ENHANCED SELECT DROPDOWN LIST & DATE PICKERS (ADMIN)
+   ========================================================== */
+
+/* Wrapper cho Select */
+.admin-select-box {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Base styling cho mọi dropdown select trong khu vực quản trị (fallback khi chưa kích hoạt custom select) */
+.admin-select-box select,
+.admin-select,
+.orders-filter-row select,
+.admin-filter-inputs select,
+select.admin-form-input {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  height: 38px;
+  padding: 0 36px 0 13px !important;
+  background-color: #ffffff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  background-size: 14px 14px !important;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 13px;
-  color: var(--admin-text-main);
-  outline: none;
+  font-weight: 500;
+  color: #1e293b;
   cursor: pointer;
+  outline: none;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+/* Hover state cho select */
+.admin-select-box select:hover,
+.admin-select:hover,
+.orders-filter-row select:hover,
+.admin-filter-inputs select:hover,
+select.admin-form-input:hover {
+  border-color: #94a3b8;
+  background-color: #f8fafc;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Focus state cho select */
+.admin-select-box select:focus,
+.admin-select:focus,
+.orders-filter-row select:focus,
+.admin-filter-inputs select:focus,
+select.admin-form-input:focus {
+  border-color: #2563eb;
+  background-color: #ffffff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  background-size: 14px 14px !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Option tags */
+.admin-select-box select option,
+.admin-select option,
+select.admin-form-input option,
+.orders-filter-row select option {
+  padding: 8px 12px;
+  background-color: #ffffff;
+  color: #1e293b;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ==========================================================
+   AGY MODERN CUSTOM SELECT DROPDOWNS (GLOBAL ADMIN)
+   Thay thế dropdown mặc định thô của trình duyệt bằng UI hiện đại
+   ========================================================== */
+
+/* Ẩn select gốc một cách chuẩn accessibility */
+select.agy-native-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
+}
+
+/* Khung chứa Custom Select */
+.agy-custom-select {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.agy-custom-select.is-fullwidth {
+  display: flex;
+  width: 100%;
+}
+
+.admin-select-box .agy-custom-select {
+  width: 100%;
+}
+
+/* Nút kích hoạt Dropdown (Trigger) */
+.agy-select-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-width: 160px;
+  height: 38px;
+  padding: 0 14px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1e293b;
+  cursor: pointer;
+  outline: none;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.agy-select-trigger:hover {
+  border-color: #94a3b8;
+  background-color: #f8fafc;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+}
+
+.agy-custom-select.is-open .agy-select-trigger,
+.agy-select-trigger:focus-visible {
+  border-color: #2563eb;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.agy-select-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #1e293b;
+  line-height: 1.25;
+}
+
+.agy-select-chevron {
+  flex-shrink: 0;
+  color: #64748b;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.15s ease;
+}
+
+.agy-custom-select.is-open .agy-select-chevron {
+  transform: rotate(180deg);
+  color: #2563eb;
+}
+
+/* Danh sách menu Dropdown (Popup Options) */
+.agy-select-dropdown {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  min-width: 100%;
+  width: max-content;
+  max-width: 340px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 12px 30px -5px rgba(15, 23, 42, 0.15), 0 8px 12px -6px rgba(15, 23, 42, 0.06);
+  padding: 6px;
+  z-index: 1050;
+  display: none;
+  max-height: 270px;
+  overflow-y: auto;
+  box-sizing: border-box;
+  transform-origin: top center;
+}
+
+.agy-custom-select.is-open .agy-select-dropdown {
+  display: block;
+  animation: agyDropdownEnter 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.agy-select-dropdown.open-up {
+  top: auto;
+  bottom: calc(100% + 5px);
+  transform-origin: bottom center;
+}
+
+@keyframes agyDropdownEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Thanh cuộn tinh tế cho Dropdown */
+.agy-select-dropdown::-webkit-scrollbar {
+  width: 5px;
+}
+.agy-select-dropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+.agy-select-dropdown::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.agy-select-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Từng mục lựa chọn (Option Item) */
+.agy-select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  line-height: 1.35;
+}
+
+.agy-select-option:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.agy-select-option.is-selected {
+  background-color: #eff6ff;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.agy-option-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agy-option-check {
+  flex-shrink: 0;
+  display: none;
+  color: #2563eb;
+}
+
+.agy-select-option.is-selected .agy-option-check {
+  display: inline-flex;
+}
+
+/* Biến thể dành cho Realtime Interval Dropdown (Dashboard) */
+.agy-custom-select.is-realtime {
+  display: inline-flex;
+  align-items: center;
+}
+.agy-custom-select.is-realtime .agy-select-trigger,
+.agy-custom-select.is-realtime.is-open .agy-select-trigger,
+.agy-custom-select.is-realtime .agy-select-trigger:focus-visible {
+  min-width: auto;
+  height: 32px;
+  border: none !important;
+  background: transparent !important;
+  padding: 0 4px;
+  box-shadow: none !important;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e293b;
+  gap: 5px;
+}
+.agy-custom-select.is-realtime .agy-select-trigger:hover {
+  background: transparent !important;
+  color: #2563eb;
+}
+.agy-custom-select.is-realtime .agy-select-chevron {
+  width: 12px;
+  height: 12px;
+  color: #64748b;
+}
+.agy-custom-select.is-realtime .agy-select-dropdown {
+  right: 0;
+  left: auto;
+  min-width: 160px;
+}
+
+/* Fallback triệt để cho native select trong realtime wrap */
+select.realtime-interval-select,
+select.realtime-interval-select:hover,
+select.realtime-interval-select:focus {
+  background-image: none !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 0 4px !important;
+}
+
+/* ==========================================================
+   ENHANCED DATE INPUT & ORDER DATE RANGE PICKER (ADMIN)
+   ========================================================== */
+
+/* Hộp chọn khoảng ngày thông minh (Order Date Range Picker) */
+.order-date-picker-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.order-date-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 14px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  outline: none;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.order-date-trigger-btn:hover {
+  border-color: #94a3b8;
+  background-color: #f8fafc;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+}
+
+.order-date-trigger-btn[aria-expanded="true"],
+.order-date-trigger-btn:focus-visible {
+  border-color: #2563eb;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.order-date-trigger-btn.has-value {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.order-date-trigger-btn.has-value .order-date-icon {
+  color: #2563eb;
+}
+
+.order-date-icon {
+  color: #64748b;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.order-date-chevron {
+  color: #64748b;
+  flex-shrink: 0;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.15s ease;
+}
+
+.order-date-trigger-btn[aria-expanded="true"] .order-date-chevron {
+  transform: rotate(180deg);
+  color: #2563eb;
+}
+
+.order-date-clear-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 2px;
+  transition: all 0.15s ease;
+}
+
+.order-date-clear-inline:hover {
+  background: #bfdbfe;
+  color: #1e40af;
+  transform: scale(1.1);
+}
+
+/* Popover Panel chọn ngày */
+.order-date-popover {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 360px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 12px 30px -5px rgba(15, 23, 42, 0.15), 0 8px 12px -6px rgba(15, 23, 42, 0.08);
+  z-index: 1050;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.order-date-popover.show {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.order-date-popover .popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.order-date-popover .popover-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.order-date-popover .popover-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.order-date-popover .popover-close-btn:hover {
+  color: #0f172a;
+  background-color: #f1f5f9;
+}
+
+.order-date-popover .popover-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.order-preset-pill {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 4px 9px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.order-preset-pill:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.order-preset-pill.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+.order-date-popover .popover-date-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.order-date-popover .popover-date-field label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.order-date-popover .popover-date-input {
+  width: 100%;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #0f172a;
+  background-color: #ffffff;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.order-date-popover .popover-date-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+}
+
+.order-date-popover .popover-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* Hộp bao quanh trường chọn ngày dạng Group: [icon / TỪ / ĐẾN] + [input date] */
+.filter-input-group {
+  display: inline-flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0 10px 0 12px;
+  height: 38px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+  gap: 6px;
+}
+
+.filter-input-group:hover {
+  border-color: #94a3b8;
+  background-color: #f8fafc;
+}
+
+.filter-input-group:focus-within {
+  border-color: #2563eb;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.filter-input-group .filter-date-icon {
+  color: #64748b;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.filter-input-group:focus-within .filter-date-icon {
+  color: #2563eb;
+}
+
+.filter-input-group .filter-date-label,
+.filter-input-group > span {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* Date input bên trong filter-input-group */
+.filter-input-group input[type="date"],
+.filter-input-group .filter-date-input {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  height: 100% !important;
+  outline: none !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+/* Trường input date độc lập */
+input[type="date"].filter-date-input,
+.admin-date-input {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #0f172a;
+  background-color: #ffffff;
+  outline: none;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+input[type="date"].filter-date-input:hover,
+.admin-date-input:hover {
+  border-color: #94a3b8;
+  background-color: #f8fafc;
+}
+
+input[type="date"].filter-date-input:focus,
+.admin-date-input:focus {
+  border-color: #2563eb;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Tùy chỉnh icon Lịch của trình duyệt (Calendar Picker Indicator) */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+  border-radius: 4px;
+  padding: 3px;
+  margin-left: 6px;
+  transition: all 0.18s ease;
+  filter: invert(30%) sepia(20%) saturate(1500%) hue-rotate(180deg) brightness(90%) contrast(90%);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  background-color: #eff6ff;
+  filter: invert(24%) sepia(85%) saturate(1915%) hue-rotate(210deg) brightness(94%) contrast(92%);
+  transform: scale(1.1);
 }
 
 .btn-admin-action {
@@ -2607,6 +3271,12 @@ body.admin-page {
   background: #dde1ff;
 }
 
+.orders-filter-card,
+.admin-filter-card,
+.orders-filter-row {
+  overflow: visible !important;
+}
+
 /* Thẻ Bảng Dữ Liệu */
 .admin-table-card {
   background: var(--admin-card-bg);
@@ -2629,14 +3299,18 @@ body.admin-page {
   color: var(--admin-text-muted);
 }
 
-.admin-pagination {
+.admin-pagination,
+.admin-pagination-btns {
   display: flex;
+  align-items: center;
   gap: 6px;
 }
 
-.page-btn {
+.page-btn,
+.btn-page {
   min-width: 32px;
   height: 32px;
+  padding: 0 8px;
   border: 1px solid var(--admin-border);
   background: #ffffff;
   border-radius: 6px;
@@ -2648,15 +3322,93 @@ body.admin-page {
   color: var(--admin-text-main);
   cursor: pointer;
   transition: all 0.15s ease;
+  user-select: none;
 }
 
-.page-btn.active {
+.page-btn:hover:not(:disabled):not(.active),
+.btn-page:hover:not(:disabled):not(.active) {
+  border-color: var(--admin-primary);
+  color: var(--admin-primary);
+  background-color: #eff6ff;
+}
+
+.page-btn.active,
+.btn-page.active {
   background: var(--admin-primary);
   color: #ffffff;
   border-color: var(--admin-primary);
+  font-weight: 700;
+  cursor: default;
 }
 
-.page-btn.disabled {
-  opacity: 0.5;
+.page-btn:disabled,
+.page-btn.disabled,
+.btn-page:disabled,
+.btn-page.disabled {
+  opacity: 0.4;
   cursor: not-allowed;
+  pointer-events: none;
+}
+
+.page-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 32px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #94a3b8;
+  user-select: none;
+}
+
+/* Nút Xem thêm thay cho phân trang số ở các trang quản trị */
+.load-more-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-load-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 20px;
+  background-color: #ffffff;
+  color: var(--admin-primary);
+  border: 1px solid var(--admin-primary);
+  border-radius: var(--admin-radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-load-more:hover {
+  background-color: var(--admin-lavender);
+  border-color: var(--admin-primary);
+  color: var(--admin-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.15);
+}
+
+.btn-load-more:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.all-loaded-badge {
+  font-size: 12px;
+  color: #64748b;
+  background-color: #f8fafc;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
 }

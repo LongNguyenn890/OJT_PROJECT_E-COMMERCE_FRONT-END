@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShopEase - Quản lý Sản phẩm</title>
+  <link rel="icon" href="../assets/images/logo_shop.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Liberation+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/admin-products.css">
+  <script>
+    // Đảm bảo có phiên làm việc Quản trị viên
+    if (!localStorage.getItem("token") || !localStorage.getItem("user")) {
+      localStorage.setItem("token", "demo-admin-session-token");
+      localStorage.setItem("user", JSON.stringify({
+        id: 1,
+        name: "Nguyễn Thu Hà",
+        full_name: "Nguyễn Thu Hà",
+        username: "admin_ha",
+        email: "ha.admin@shopease.vn",
+        role: "ADMIN"
+      }));
+    }
+  </script>
+</head>
+<body class="admin-page" data-root="../" data-auth="admin">
+  <div class="admin-layout">
+    <!-- Sidebar tự động render bởi layout.js -->
+    <aside id="admin-sidebar" class="admin-sidebar"></aside>
+
+    <!-- Khung nội dung chính -->
+    <div class="admin-main-wrap">
+      <!-- Topbar tự động render bởi layout.js -->
+      <header id="admin-topbar" class="admin-topbar"></header>
+
+      <main class="admin-content">
+        <!-- Header trang Quản lý Sản phẩm -->
+        <div class="admin-page-header-card">
+          <div class="admin-page-header-info">
+            <h1 class="admin-page-title">Quản lý Sản phẩm</h1>
+            <p class="admin-page-desc">Danh sách hàng hóa, thông tin giá bán, tồn kho, hình ảnh và trạng thái kinh doanh của toàn bộ sản phẩm</p>
+          </div>
+          <div class="admin-header-actions">
+            <button type="button" class="btn-admin-action secondary" id="btn-refresh-products" style="padding: 9px 16px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              <span>Làm mới dữ liệu</span>
+            </button>
+            <button type="button" class="btn-admin-primary" id="btn-open-create-product">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Thêm sản phẩm mới</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Thống kê nhanh Sản phẩm (KPI 4 Cột) -->
+        <div class="admin-metrics-4col">
+          <div class="admin-stat-card">
+            <div class="stat-top">
+              <span class="stat-label">Tổng sản phẩm</span>
+              <div class="stat-icon-box lavender">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+              </div>
+            </div>
+            <div class="stat-bottom">
+              <span class="stat-number" id="kpi-total-products">--</span>
+              <span class="stat-sub">mặt hàng trong hệ thống</span>
+            </div>
+          </div>
+
+          <div class="admin-stat-card">
+            <div class="stat-top">
+              <span class="stat-label">Đang kinh doanh</span>
+              <div class="stat-icon-box mint">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+            </div>
+            <div class="stat-bottom">
+              <span class="stat-number" id="kpi-visible-products" style="color: var(--admin-success);">--</span>
+              <span class="stat-sub">sản phẩm đang hiển thị</span>
+            </div>
+          </div>
+
+          <div class="admin-stat-card">
+            <div class="stat-top">
+              <span class="stat-label">Đang tạm ẩn</span>
+              <div class="stat-icon-box softblue">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+              </div>
+            </div>
+            <div class="stat-bottom">
+              <span class="stat-number" id="kpi-hidden-products" style="color: #64748b;">--</span>
+              <span class="stat-sub">sản phẩm ẩn khỏi gian hàng</span>
+            </div>
+          </div>
+
+          <div class="admin-stat-card">
+            <div class="stat-top">
+              <span class="stat-label">Hết hàng</span>
+              <div class="stat-icon-box danger">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+            </div>
+            <div class="stat-bottom">
+              <span class="stat-number" id="kpi-out-stock-products" style="color: var(--admin-danger);">--</span>
+              <span class="stat-sub">cần bổ sung tồn kho</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Thanh Tìm kiếm & Bộ lọc Sản phẩm (admin-filter-card) -->
+        <div class="admin-filter-card">
+          <div class="admin-filter-inputs">
+            <!-- Tìm kiếm theo Tên hoặc SKU -->
+            <div class="admin-search-box" style="flex: 1.5; min-width: 260px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--admin-text-muted);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="filter-search-input" placeholder="Tìm theo tên sản phẩm hoặc mã SKU..." autocomplete="off">
+            </div>
+
+            <!-- Lọc theo Danh mục -->
+            <div class="admin-select-box" style="min-width: 180px;">
+              <select id="filter-category-select">
+                <option value="">-- Tất cả danh mục --</option>
+                <!-- Nạp động qua JS từ /api/categories -->
+              </select>
+            </div>
+
+            <!-- Lọc theo Trạng thái hiển thị -->
+            <div class="admin-select-box" style="min-width: 160px;">
+              <select id="filter-status-select">
+                <option value="-1">-- Tất cả trạng thái --</option>
+                <option value="1">Đang kinh doanh (Hiển thị)</option>
+                <option value="0">Tạm ẩn</option>
+              </select>
+            </div>
+
+            <!-- Lọc theo Tình trạng kho hàng -->
+            <div class="admin-select-box" style="min-width: 150px;">
+              <select id="filter-stock-select">
+                <option value="">-- Tất cả tồn kho --</option>
+                <option value="in_stock">Còn hàng (> 0)</option>
+                <option value="out_stock">Hết hàng (0)</option>
+              </select>
+            </div>
+
+            <!-- Sắp xếp -->
+            <div class="admin-select-box" style="min-width: 160px;">
+              <select id="filter-sort-select">
+                <option value="newest" selected>Mới nhất</option>
+                <option value="price_asc">Giá tăng dần</option>
+                <option value="price_desc">Giá giảm dần</option>
+                <option value="best_selling">Bán chạy nhất</option>
+              </select>
+            </div>
+
+            <!-- Nút Xóa bộ lọc -->
+            <button type="button" class="btn-admin-action secondary" id="btn-reset-filters" title="Xóa bộ lọc">
+              <span>Xóa bộ lọc</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Bảng danh sách sản phẩm (op-table chuẩn) -->
+        <div class="admin-table-card">
+          <div class="op-table-wrap">
+            <table class="op-table" id="products-table">
+              <thead>
+                <tr>
+                  <th style="width: 120px;">MÃ SKU</th>
+                  <th style="min-width: 280px;">SẢN PHẨM</th>
+                  <th style="width: 160px;">GIÁ BÁN</th>
+                  <th style="width: 130px; text-align: center;">TỒN KHO</th>
+                  <th style="width: 140px; text-align: center;">TRẠNG THÁI</th>
+                  <th style="width: 120px; text-align: center;">THAO TÁC</th>
+                </tr>
+              </thead>
+              <tbody id="product-table-body">
+                <tr>
+                  <td colspan="6" style="text-align: center; padding: 40px; color: var(--admin-text-muted);">
+                    <span class="btn-op-spinner" style="width: 20px; height: 20px; border-width: 2px; margin-bottom: 8px;"></span>
+                    <div>Đang đồng bộ danh sách sản phẩm từ cơ sở dữ liệu...</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="admin-table-footer">
+            <span class="table-summary-text" id="product-summary-lbl">Đang tải...</span>
+            <div class="admin-pagination" id="product-pagination"></div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL: Thêm / Sửa Sản phẩm (Hỗ trợ upload ảnh và xem trước) -->
+  <div class="admin-modal-overlay" id="modal-product">
+    <div class="admin-modal-box" style="max-width: 840px;">
+      <div class="admin-modal-header">
+        <h2 class="admin-modal-title" id="product-modal-title">Thêm sản phẩm mới</h2>
+        <button type="button" class="btn-modal-close" data-close="modal-product">&times;</button>
+      </div>
+      <form id="form-product" autocomplete="off">
+        <input type="hidden" id="product-id">
+
+        <div class="admin-modal-body" style="padding: 24px; max-height: 75vh; overflow-y: auto;">
+          <!-- Banner lỗi modal -->
+          <div class="modal-error-banner" id="product-error-banner">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span class="error-text"></span>
+          </div>
+
+          <div class="product-form-grid">
+            <!-- CỘT 1: THÔNG TIN CƠ BẢN -->
+            <div class="product-form-col">
+              <div class="admin-form-group" style="margin-bottom: 14px;">
+                <label class="admin-label" for="prod-name" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Tên sản phẩm <span class="required" style="color: #dc2626;">*</span></label>
+                <input type="text" id="prod-name" class="admin-form-input" placeholder="Ví dụ: iPhone 15 Pro Max 256GB" required maxlength="200">
+              </div>
+
+              <div class="form-row-2col" style="margin-bottom: 14px;">
+                <div class="admin-form-group">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label class="admin-label" for="prod-sku" style="font-size: 13px; font-weight: 600; margin: 0;">Mã SKU <span class="required" style="color: #dc2626;">*</span></label>
+                    <button type="button" id="btn-auto-sku" style="background: none; border: none; font-size: 11px; color: var(--admin-primary); cursor: pointer; text-decoration: underline;">Tự sinh</button>
+                  </div>
+                  <input type="text" id="prod-sku" class="admin-form-input" placeholder="IP15PM-256-BLK" required maxlength="100" style="font-family: 'Liberation Mono', monospace;">
+                </div>
+
+                <div class="admin-form-group">
+                  <label class="admin-label" for="prod-category" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Danh mục <span class="required" style="color: #dc2626;">*</span></label>
+                  <select id="prod-category" class="admin-form-input" required>
+                    <option value="">-- Chọn danh mục --</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row-2col" style="margin-bottom: 14px;">
+                <div class="admin-form-group">
+                  <label class="admin-label" for="prod-price" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Giá gốc (VNĐ) <span class="required" style="color: #dc2626;">*</span></label>
+                  <input type="number" id="prod-price" class="admin-form-input" placeholder="29990000" min="1" step="1000" required>
+                </div>
+
+                <div class="admin-form-group">
+                  <label class="admin-label" for="prod-promotional-price" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Giá khuyến mãi (VNĐ)</label>
+                  <input type="number" id="prod-promotional-price" class="admin-form-input" placeholder="Nhỏ hơn giá gốc" min="0" step="1000">
+                </div>
+              </div>
+
+              <div class="form-row-2col" style="margin-bottom: 14px;">
+                <div class="admin-form-group">
+                  <label class="admin-label" for="prod-stock" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Số lượng tồn kho <span class="required" style="color: #dc2626;">*</span></label>
+                  <input type="number" id="prod-stock" class="admin-form-input" placeholder="50" min="0" step="1" required>
+                </div>
+
+                <div class="admin-form-group">
+                  <label class="admin-label" for="prod-visibility" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Trạng thái kinh doanh</label>
+                  <select id="prod-visibility" class="admin-form-input">
+                    <option value="1">Đang kinh doanh (Hiển thị)</option>
+                    <option value="0">Tạm ẩn (Không bán)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="admin-form-group">
+                <label class="admin-label" for="prod-description" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Mô tả chi tiết</label>
+                <textarea id="prod-description" class="admin-form-input" rows="4" placeholder="Nhập các đặc điểm nổi bật, thông số kỹ thuật của sản phẩm..."></textarea>
+              </div>
+            </div>
+
+            <!-- CỘT 2: QUẢN LÝ HÌNH ẢNH & UPLOAD CÓ XEM TRƯỚC -->
+            <div class="product-form-col">
+              <label class="admin-label" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Hình ảnh sản phẩm</label>
+              
+              <!-- Khu vực kéo thả / chọn file -->
+              <div class="image-upload-dropzone" id="image-dropzone">
+                <input type="file" id="product-images-input" multiple accept="image/png,image/jpeg,image/jpg" style="display: none;">
+                <div class="dropzone-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </div>
+                <div class="dropzone-title">Tải lên hình ảnh sản phẩm</div>
+                <div class="dropzone-sub">Kéo thả ảnh vào đây hoặc bấm để chọn tệp<br>(JPG, PNG tối đa 100MB mỗi file)</div>
+              </div>
+
+              <!-- Danh sách ảnh xem trước chuẩn bị tải lên -->
+              <div style="margin-top: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 12px; font-weight: 600; color: #475569;" id="preview-heading">Ảnh xem trước (0)</span>
+                  <small style="font-size: 11px; color: var(--admin-text-muted);">Bấm sao (★) để đặt làm ảnh chính</small>
+                </div>
+                <div class="images-preview-grid" id="images-preview-container">
+                  <!-- Render động preview ảnh -->
+                </div>
+              </div>
+
+              <!-- Danh sách ảnh hiện có trên máy chủ (khi chỉnh sửa) -->
+              <div id="existing-images-section" style="margin-top: 18px; display: none;">
+                <span style="font-size: 12px; font-weight: 600; color: #475569;">Ảnh đang lưu trữ trên hệ thống</span>
+                <div class="images-preview-grid" id="existing-images-container">
+                  <!-- Render động ảnh hiện có từ server -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-modal-footer">
+          <button type="button" class="btn-admin-action secondary" data-close="modal-product">Hủy bỏ</button>
+          <button type="submit" class="btn-admin-primary" id="btn-submit-product" style="padding: 8px 24px;">
+            <span>Lưu sản phẩm</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Xem chi tiết sản phẩm -->
+  <div class="admin-modal-overlay" id="modal-product-detail">
+    <div class="admin-modal-box" style="max-width: 620px;">
+      <div class="admin-modal-header">
+        <h2 class="admin-modal-title">Thông tin chi tiết sản phẩm</h2>
+        <button type="button" class="btn-modal-close" data-close="modal-product-detail">&times;</button>
+      </div>
+      <div class="admin-modal-body" id="product-detail-content" style="padding: 24px; max-height: 75vh; overflow-y: auto;">
+        <!-- Render động qua JS -->
+      </div>
+      <div class="admin-modal-footer">
+        <button type="button" class="btn-admin-action secondary" data-close="modal-product-detail">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Xác nhận Xóa / Ẩn sản phẩm -->
+  <div class="admin-modal-overlay" id="modal-confirm-delete">
+    <div class="admin-modal-box" style="max-width: 450px;">
+      <div class="admin-modal-header" style="border-bottom-color: #fee2e2;">
+        <h2 class="admin-modal-title" style="color: #dc2626; display: flex; align-items: center; gap: 8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>Xác nhận xóa sản phẩm</span>
+        </h2>
+        <button type="button" class="btn-modal-close" data-close="modal-confirm-delete">&times;</button>
+      </div>
+      <div class="admin-modal-body" style="padding: 24px; text-align: center;">
+        <div class="danger-modal-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        </div>
+        <h3 id="delete-product-name" style="font-size: 15.5px; font-weight: 700; color: var(--admin-text-main); margin: 0 0 6px 0;">--</h3>
+        <p style="font-size: 13px; color: var(--admin-text-muted); margin: 0 0 12px 0;">Mã SKU: <strong id="delete-product-sku">--</strong></p>
+        <p style="font-size: 12.5px; color: #64748b; line-height: 1.5; margin: 0;">
+          Lưu ý: Nếu sản phẩm đã từng phát sinh trong đơn hàng của khách, hệ thống sẽ tự động chuyển sang trạng thái <strong>Tạm ẩn</strong> để bảo toàn lịch sử hóa đơn. Nếu chưa có đơn hàng, sản phẩm sẽ được xóa vĩnh viễn.
+        </p>
+      </div>
+      <div class="admin-modal-footer">
+        <button type="button" class="btn-admin-action secondary" data-close="modal-confirm-delete">Hủy bỏ</button>
+        <button type="button" class="btn-admin-primary" id="btn-confirm-delete-action" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); border-color: #b91c1c; padding: 8px 22px; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);">
+          <span>Xóa sản phẩm</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts: Thứ tự nạp chuẩn -->
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/pages/admin-products.js"></script>
+</body>
+</html>

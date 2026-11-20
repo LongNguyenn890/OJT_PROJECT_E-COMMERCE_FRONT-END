@@ -231,13 +231,189 @@ function initDateFilterToolbar() {
   const buttons = toolbar.querySelectorAll(".btn-date-filter");
   buttons.forEach((btn) => {
     btn.addEventListener("click", () => {
+      const period = btn.dataset.period;
+      if (period === "custom") {
+        openCustomDatePopover();
+        return;
+      }
+
+      closeCustomDatePopover();
       buttons.forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
 
-      const period = btn.dataset.period;
+      const labelEl = document.getElementById("btn-custom-date-label");
+      if (labelEl) labelEl.textContent = "Tùy chọn ngày";
+
       handlePeriodChange(period);
     });
   });
+
+  initCustomDatePopover();
+}
+
+/**
+ * Khởi tạo Popover chọn khoảng ngày thống kê (Không dùng prompt)
+ */
+function initCustomDatePopover() {
+  const popover = document.getElementById("dash-date-popover");
+  if (!popover) return;
+
+  const btnClose = document.getElementById("btn-close-date-popover");
+  const btnCancel = document.getElementById("btn-cancel-custom-date");
+  const btnApply = document.getElementById("btn-apply-custom-date");
+  const fromInput = document.getElementById("dash-custom-from-date");
+  const toInput = document.getElementById("dash-custom-to-date");
+
+  // Nút tắt nhanh (Presets: 7 ngày, 14 ngày, 30 ngày, tháng này, tháng trước)
+  const presetPills = popover.querySelectorAll(".preset-pill");
+  presetPills.forEach((pill) => {
+    pill.addEventListener("click", () => {
+      presetPills.forEach((p) => p.classList.remove("active"));
+      pill.classList.add("active");
+
+      const now = new Date();
+      const formatD = (d) => {
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const dd = String(d.getDate()).padStart(2, "0");
+        return `${yyyy}-${mm}-${dd}`;
+      };
+
+      if (pill.dataset.days) {
+        const days = parseInt(pill.dataset.days, 10);
+        const past = new Date();
+        past.setDate(past.getDate() - days);
+        if (fromInput) fromInput.value = formatD(past);
+        if (toInput) toInput.value = formatD(now);
+      } else if (pill.dataset.range === "this_month") {
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        if (fromInput) fromInput.value = formatD(firstDay);
+        if (toInput) toInput.value = formatD(now);
+      } else if (pill.dataset.range === "last_month") {
+        const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const lastDayLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+        if (fromInput) fromInput.value = formatD(firstDayLastMonth);
+        if (toInput) toInput.value = formatD(lastDayLastMonth);
+      }
+    });
+  });
+
+  if (btnClose) btnClose.addEventListener("click", closeCustomDatePopover);
+  if (btnCancel) btnCancel.addEventListener("click", closeCustomDatePopover);
+
+  if (btnApply) {
+    btnApply.addEventListener("click", () => {
+      const fromVal = fromInput ? fromInput.value : "";
+      const toVal = toInput ? toInput.value : "";
+
+      if (!fromVal || !toVal) {
+        if (typeof showToast === "function") {
+          showToast("Vui lòng chọn đầy đủ cả ngày bắt đầu và ngày kết thúc!", "warning");
+        }
+        return;
+      }
+
+      if (fromVal > toVal) {
+        if (typeof showToast === "function") {
+          showToast("Ngày bắt đầu không được lớn hơn ngày kết thúc!", "warning");
+        }
+        return;
+      }
+
+      // Đánh dấu active nút Tùy chọn ngày
+      const toolbar = document.getElementById("dash-date-filter-toolbar");
+      if (toolbar) {
+        toolbar.querySelectorAll(".btn-date-filter").forEach((b) => b.classList.remove("active"));
+        const customBtn = toolbar.querySelector('[data-period="custom"]');
+        if (customBtn) customBtn.classList.add("active");
+      }
+
+      // Format ngày hiển thị tiếng Việt DD/MM
+      const formatVN = (str) => {
+        if (!str) return "";
+        const parts = str.split("-");
+        if (parts.length === 3) return `${parts[2]}/${parts[1]}`;
+        return str;
+      };
+
+      const formatVNDetail = (str) => {
+        if (!str) return "";
+        const parts = str.split("-");
+        if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        return str;
+      };
+
+      const labelEl = document.getElementById("btn-custom-date-label");
+      if (labelEl) {
+        labelEl.textContent = `${formatVN(fromVal)} - ${formatVN(toVal)}`;
+      }
+
+      const revenueSub = document.getElementById("dash-kpi-revenue-sub");
+      if (revenueSub) {
+        revenueSub.textContent = `Từ ${formatVNDetail(fromVal)} đến ${formatVNDetail(toVal)}`;
+      }
+
+      const chartSub = document.querySelector(".analytic-subtitle");
+      if (chartSub) {
+        chartSub.textContent = `Dữ liệu từ ${formatVNDetail(fromVal)} đến ${formatVNDetail(toVal)}`;
+      }
+
+      closeCustomDatePopover();
+
+      if (typeof showToast === "function") {
+        showToast(`Đang lọc dữ liệu từ ${formatVNDetail(fromVal)} đến ${formatVNDetail(toVal)}`, "info");
+      }
+
+      currentPeriodFilter = {
+        from_date: fromVal,
+        to_date: toVal,
+        period: "custom",
+        isFilterSwitch: true,
+      };
+
+      loadDashboardData(currentPeriodFilter);
+    });
+  }
+
+  // Đóng khi click ngoài
+  document.addEventListener("click", (e) => {
+    const trigger = document.getElementById("btn-custom-date-trigger");
+    if (popover && !popover.contains(e.target) && !trigger?.contains(e.target) && popover.classList.contains("show")) {
+      closeCustomDatePopover();
+    }
+  });
+}
+
+function openCustomDatePopover() {
+  const popover = document.getElementById("dash-date-popover");
+  if (!popover) return;
+
+  const fromInput = document.getElementById("dash-custom-from-date");
+  const toInput = document.getElementById("dash-custom-to-date");
+
+  // Điền ngày mặc định nếu chưa có
+  const now = new Date();
+  const formatD = (d) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  if (fromInput && !fromInput.value) {
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    fromInput.value = formatD(firstDay);
+  }
+  if (toInput && !toInput.value) {
+    toInput.value = formatD(now);
+  }
+
+  popover.classList.add("show");
+}
+
+function closeCustomDatePopover() {
+  const popover = document.getElementById("dash-date-popover");
+  if (popover) popover.classList.remove("show");
 }
 
 function handlePeriodChange(period) {
@@ -302,11 +478,9 @@ function getPeriodDateRange(period) {
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
     return { from_date: formatD(firstDay), to_date: formatD(now) };
   } else if (period === "custom") {
-    const fromVal = prompt("Nhập từ ngày (YYYY-MM-DD):", formatD(new Date(now.getFullYear(), now.getMonth(), 1)));
-    if (!fromVal) return {};
-    const toVal = prompt("Nhập đến ngày (YYYY-MM-DD):", formatD(now));
-    if (!toVal) return {};
-    return { from_date: fromVal, to_date: toVal };
+    return currentPeriodFilter.from_date && currentPeriodFilter.to_date
+      ? { from_date: currentPeriodFilter.from_date, to_date: currentPeriodFilter.to_date }
+      : {};
   }
   return {};
 }

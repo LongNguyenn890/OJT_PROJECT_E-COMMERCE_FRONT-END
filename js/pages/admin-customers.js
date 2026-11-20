@@ -142,7 +142,7 @@ async function loadCustomersKpis() {
 }
 
 /**
- * Tải danh sách khách hàng theo bộ lọc
+ * Tải danh sách khách hàng theo bộ lọc & phân trang tải thêm (Xem thêm)
  */
 async function loadCustomersList() {
   const tbody = document.getElementById("customers-table-body");
@@ -187,9 +187,14 @@ async function loadCustomersList() {
 
     const summaryLbl = document.getElementById("customers-summary-lbl");
     if (summaryLbl) {
-      const from = items.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-      const to = Math.min(currentPage * pageSize, totalItems);
-      summaryLbl.textContent = `Hiển thị ${from} - ${to} trong tổng số ${totalItems} khách hàng`;
+      const startItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+      const endItem = Math.min(currentPage * pageSize, totalItems);
+      const totalPages = Math.ceil(totalItems / pageSize) || 1;
+      if (totalItems === 0) {
+        summaryLbl.textContent = "Hiển thị 0 khách hàng";
+      } else {
+        summaryLbl.textContent = `Hiển thị ${startItem} - ${endItem} trong tổng số ${totalItems} khách hàng (Trang ${currentPage}/${totalPages})`;
+      }
     }
   } catch (e) {
     console.error("[Admin Customers] Lỗi tải danh sách khách hàng:", e);
@@ -295,39 +300,66 @@ function renderCustomersTable(items) {
 }
 
 /**
- * Render thanh phân trang
+ * Phân trang truyền thống theo số trang (Classic Pagination)
  */
-function renderPagination() {
+function renderPagination(total = totalItems) {
   const container = document.getElementById("customers-pagination");
   if (!container) return;
 
-  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+  const totalPages = Math.ceil(total / pageSize) || 1;
   if (totalPages <= 1) {
     container.innerHTML = "";
     return;
   }
 
-  let html = "";
-  html += `
-    <button type="button" class="page-btn" ${currentPage === 1 ? "disabled" : ""} onclick="changePage(${currentPage - 1})">
+  let html = `
+    <button type="button" class="page-btn prev-btn" ${currentPage === 1 ? "disabled" : ""} onclick="changePage(${currentPage - 1})" title="Trang trước">
       &laquo;
     </button>
   `;
 
-  for (let i = 1; i <= totalPages; i++) {
-    if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) {
       html += `
-        <button type="button" class="page-btn ${i === currentPage ? "active" : ""}" onclick="changePage(${i})">
+        <button type="button" class="page-btn ${i === currentPage ? "active" : ""}" ${i === currentPage ? "disabled" : ""} onclick="changePage(${i})">
           ${i}
         </button>
       `;
-    } else if (i === currentPage - 2 || i === currentPage + 2) {
-      html += `<span style="padding: 0 4px; color: #94a3b8;">...</span>`;
     }
+  } else {
+    html += `
+      <button type="button" class="page-btn ${currentPage === 1 ? "active" : ""}" ${currentPage === 1 ? "disabled" : ""} onclick="changePage(1)">
+        1
+      </button>
+    `;
+
+    if (currentPage > 3) {
+      html += `<span class="page-ellipsis">...</span>`;
+    }
+
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    for (let i = start; i <= end; i++) {
+      html += `
+        <button type="button" class="page-btn ${i === currentPage ? "active" : ""}" ${i === currentPage ? "disabled" : ""} onclick="changePage(${i})">
+          ${i}
+        </button>
+      `;
+    }
+
+    if (currentPage < totalPages - 2) {
+      html += `<span class="page-ellipsis">...</span>`;
+    }
+
+    html += `
+      <button type="button" class="page-btn ${currentPage === totalPages ? "active" : ""}" ${currentPage === totalPages ? "disabled" : ""} onclick="changePage(${totalPages})">
+        ${totalPages}
+      </button>
+    `;
   }
 
   html += `
-    <button type="button" class="page-btn" ${currentPage === totalPages ? "disabled" : ""} onclick="changePage(${currentPage + 1})">
+    <button type="button" class="page-btn next-btn" ${currentPage === totalPages ? "disabled" : ""} onclick="changePage(${currentPage + 1})" title="Trang sau">
       &raquo;
     </button>
   `;
@@ -335,12 +367,14 @@ function renderPagination() {
   container.innerHTML = html;
 }
 
-window.changePage = function (p) {
+async function changePage(p) {
   const totalPages = Math.ceil(totalItems / pageSize) || 1;
   if (p < 1 || p > totalPages || p === currentPage) return;
   currentPage = p;
-  loadCustomersList();
-};
+  await loadCustomersList();
+  window.scrollTo({ top: 120, behavior: "smooth" });
+}
+window.changePage = changePage;
 
 /**
  * Khởi tạo Bộ lọc & Tìm kiếm

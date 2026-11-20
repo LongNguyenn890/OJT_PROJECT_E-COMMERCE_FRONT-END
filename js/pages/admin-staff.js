@@ -21,14 +21,43 @@ let pendingStatusAction = null; // { id, name, newStatus }
 let pendingDeleteAction = null; // { id, name, email }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  initModals();
-  initFilters();
-  initForms();
+  // 0. Kiểm tra phân quyền ADMIN ngay khi khởi động
+  const localUser = JSON.parse(localStorage.getItem("user") || "null");
+  const localRole = (localUser && localUser.role ? String(localUser.role) : "").toUpperCase();
+  if (localUser && localRole && localRole !== "ADMIN") {
+    sessionStorage.setItem("pending_toast", JSON.stringify({
+      message: "Truy cập bị từ chối! Bạn không có quyền truy cập trang Quản lý nhân viên. Chỉ Quản trị viên (ADMIN) mới có quyền truy cập.",
+      type: "error"
+    }));
+    window.location.replace("admin-dashboard.html");
+    return;
+  }
 
-  // Đảm bảo phiên quản trị và tải dữ liệu
-  await ensureAdminSession();
-  await loadStaffKpis();
-  await loadStaffList();
+  try {
+    initModals();
+    initFilters();
+    initForms();
+  } catch (err) {
+    console.warn("[Admin Staff] Lỗi khởi tạo sự kiện UI:", err);
+  }
+
+  try {
+    await ensureAdminSession();
+  } catch (err) {
+    console.warn("[Admin Staff] Lỗi phiên quản trị:", err);
+  }
+
+  try {
+    await loadStaffKpis();
+  } catch (err) {
+    console.warn("[Admin Staff] Lỗi tải số liệu KPIs:", err);
+  }
+
+  try {
+    await loadStaffList();
+  } catch (err) {
+    console.error("[Admin Staff] Lỗi tải danh sách nhân sự:", err);
+  }
 });
 
 /**
@@ -49,8 +78,13 @@ async function ensureAdminSession() {
         timeout: 2500,
       });
       const roleStr = String(me.data?.role || "").toUpperCase();
-      if (!roleStr.includes("ADMIN") && !roleStr.includes("STAFF")) {
-        needsLogin = true;
+      if (roleStr !== "ADMIN") {
+        sessionStorage.setItem("pending_toast", JSON.stringify({
+          message: "Truy cập bị từ chối! Bạn không có quyền truy cập trang Quản lý nhân viên. Chỉ Quản trị viên (ADMIN) mới có quyền truy cập.",
+          type: "error"
+        }));
+        window.location.replace("admin-dashboard.html");
+        return;
       }
     } catch (e) {
       needsLogin = true;
@@ -164,9 +198,14 @@ async function loadStaffList() {
 
     const summaryLbl = document.getElementById("staff-summary-lbl");
     if (summaryLbl) {
-      const from = items.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-      const to = Math.min(currentPage * pageSize, totalItems);
-      summaryLbl.textContent = `Hiển thị ${from} - ${to} trong tổng số ${totalItems} nhân sự`;
+      const startItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+      const endItem = Math.min(currentPage * pageSize, totalItems);
+      const totalPages = Math.ceil(totalItems / pageSize) || 1;
+      if (totalItems === 0) {
+        summaryLbl.textContent = "Hiển thị 0 nhân sự";
+      } else {
+        summaryLbl.textContent = `Hiển thị ${startItem} - ${endItem} trong tổng số ${totalItems} nhân sự (Trang ${currentPage}/${totalPages})`;
+      }
     }
   } catch (e) {
     console.error("[Admin Staff] Lỗi tải danh sách nhân viên:", e);
@@ -234,6 +273,12 @@ function renderStaffTable(items) {
       : `<span class="badge-status-pill active"><span style="width: 6px; height: 6px; border-radius: 50%; background-color: #10b981;"></span> Hoạt động</span>`;
 
     // Action buttons
+    const viewBtn = `
+      <button type="button" class="btn-user-action view" title="Xem chi tiết nhân viên" onclick="openStaffDetailModal(${id})">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    `;
+
     const lockActionBtn = isLocked
       ? `
         <button type="button" class="btn-user-action unlock" title="Mở khóa tài khoản" onclick="openConfirmStatusModal(${id}, '${escapeHtml(name)}', 'ACTIVE')">
@@ -276,6 +321,7 @@ function renderStaffTable(items) {
         <td>${statusPillHtml}</td>
         <td style="text-align: center;">
           <div class="user-actions-row">
+            ${viewBtn}
             ${editBtn}
             ${lockActionBtn}
             ${deleteBtn}
@@ -287,39 +333,66 @@ function renderStaffTable(items) {
 }
 
 /**
- * Render thanh phân trang
+ * Phân trang truyền thống theo số trang (Classic Pagination)
  */
-function renderPagination() {
+function renderPagination(total = totalItems) {
   const container = document.getElementById("staff-pagination");
   if (!container) return;
 
-  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+  const totalPages = Math.ceil(total / pageSize) || 1;
   if (totalPages <= 1) {
     container.innerHTML = "";
     return;
   }
 
-  let html = "";
-  html += `
-    <button type="button" class="page-btn" ${currentPage === 1 ? "disabled" : ""} onclick="changePage(${currentPage - 1})">
+  let html = `
+    <button type="button" class="page-btn prev-btn" ${currentPage === 1 ? "disabled" : ""} onclick="changePage(${currentPage - 1})" title="Trang trước">
       &laquo;
     </button>
   `;
 
-  for (let i = 1; i <= totalPages; i++) {
-    if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) {
       html += `
-        <button type="button" class="page-btn ${i === currentPage ? "active" : ""}" onclick="changePage(${i})">
+        <button type="button" class="page-btn ${i === currentPage ? "active" : ""}" ${i === currentPage ? "disabled" : ""} onclick="changePage(${i})">
           ${i}
         </button>
       `;
-    } else if (i === currentPage - 2 || i === currentPage + 2) {
-      html += `<span style="padding: 0 4px; color: #94a3b8;">...</span>`;
     }
+  } else {
+    html += `
+      <button type="button" class="page-btn ${currentPage === 1 ? "active" : ""}" ${currentPage === 1 ? "disabled" : ""} onclick="changePage(1)">
+        1
+      </button>
+    `;
+
+    if (currentPage > 3) {
+      html += `<span class="page-ellipsis">...</span>`;
+    }
+
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    for (let i = start; i <= end; i++) {
+      html += `
+        <button type="button" class="page-btn ${i === currentPage ? "active" : ""}" ${i === currentPage ? "disabled" : ""} onclick="changePage(${i})">
+          ${i}
+        </button>
+      `;
+    }
+
+    if (currentPage < totalPages - 2) {
+      html += `<span class="page-ellipsis">...</span>`;
+    }
+
+    html += `
+      <button type="button" class="page-btn ${currentPage === totalPages ? "active" : ""}" ${currentPage === totalPages ? "disabled" : ""} onclick="changePage(${totalPages})">
+        ${totalPages}
+      </button>
+    `;
   }
 
   html += `
-    <button type="button" class="page-btn ${currentPage === totalPages ? "disabled" : ""} onclick="changePage(${currentPage + 1})">
+    <button type="button" class="page-btn next-btn" ${currentPage === totalPages ? "disabled" : ""} onclick="changePage(${currentPage + 1})" title="Trang sau">
       &raquo;
     </button>
   `;
@@ -327,12 +400,14 @@ function renderPagination() {
   container.innerHTML = html;
 }
 
-window.changePage = function (p) {
+async function changePage(p) {
   const totalPages = Math.ceil(totalItems / pageSize) || 1;
   if (p < 1 || p > totalPages || p === currentPage) return;
   currentPage = p;
-  loadStaffList();
-};
+  await loadStaffList();
+  window.scrollTo({ top: 120, behavior: "smooth" });
+}
+window.changePage = changePage;
 
 /**
  * Khởi tạo Bộ lọc & Tìm kiếm
@@ -536,6 +611,196 @@ function initForms() {
     });
   }
 }
+
+/**
+ * Mở modal xem chi tiết thông tin & hồ sơ nhân viên
+ */
+window.openStaffDetailModal = async function (id) {
+  const content = document.getElementById("staff-detail-content");
+  if (!content) return;
+
+  content.innerHTML = `
+    <div style="text-align: center; padding: 36px 16px; color: var(--admin-text-muted);">
+      <span class="btn-op-spinner" style="width: 22px; height: 22px; border-width: 2.5px; margin-bottom: 10px;"></span>
+      <div style="font-size: 13px;">Đang tải hồ sơ nhân viên...</div>
+    </div>
+  `;
+
+  const btnEditShortcut = document.getElementById("btn-detail-edit-shortcut");
+  if (btnEditShortcut) btnEditShortcut.style.display = "none";
+
+  openModal("modal-staff-detail");
+
+  try {
+    const data = await api.get(`/customers/${id}`);
+    const name = data.full_name || "Chưa đặt tên";
+    const email = data.email || "---";
+    const phone = data.phone || "---";
+    const roleStr = String(data.role?.name || data.role || "STAFF").toUpperCase();
+    const statusStr = normalizeStatus(data.status);
+    const isLocked = statusStr === "LOCKED";
+    const isAdmin = roleStr === "ADMIN";
+    const initials = getInitials(name);
+    const codeDisplay = `NV-${String(id).padStart(4, "0")}`;
+    const createdAtStr = data.created_at ? formatDateTime(data.created_at) : "---";
+
+    // Gán hành động cho nút Sửa nhanh từ modal Chi tiết
+    if (btnEditShortcut) {
+      btnEditShortcut.style.display = "inline-flex";
+      btnEditShortcut.onclick = () => {
+        closeModal("modal-staff-detail");
+        openEditStaffModal(id, name, email, phone, roleStr);
+      };
+    }
+
+    const avatarClass = isAdmin ? "user-avatar-circle admin-avatar" : "user-avatar-circle";
+
+    const roleBadgeHtml = isAdmin
+      ? `<span class="badge-role admin" style="font-size: 12px; padding: 4px 10px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> Quản trị viên hệ thống (ADMIN)</span>`
+      : `<span class="badge-role staff" style="font-size: 12px; padding: 4px 10px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Nhân viên vận hành (STAFF)</span>`;
+
+    const statusBadgeHtml = isLocked
+      ? `<span class="badge-status-pill locked" style="font-size: 12px; padding: 4px 10px;"><span style="width: 7px; height: 7px; border-radius: 50%; background-color: #dc2626;"></span> Tài khoản Đã khóa</span>`
+      : `<span class="badge-status-pill active" style="font-size: 12px; padding: 4px 10px;"><span style="width: 7px; height: 7px; border-radius: 50%; background-color: #10b981;"></span> Đang hoạt động</span>`;
+
+    // Quyền hạn hiển thị theo vai trò
+    const permissionsHtml = isAdmin
+      ? `
+        <div style="background: #faf5ff; border: 1px solid #f3e8ff; border-radius: 8px; padding: 12px 14px;">
+          <div style="font-size: 12.5px; font-weight: 700; color: #7e22ce; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <span>Quyền hạn Quản trị viên cấp cao (ADMIN)</span>
+          </div>
+          <ul style="margin: 0; padding-left: 20px; font-size: 12px; color: #581c87; line-height: 1.6;">
+            <li>Toàn quyền quản trị hệ thống, thêm/sửa/khóa/xóa tài khoản nhân sự.</li>
+            <li>Quản trị danh mục, sản phẩm, quản lý kho hàng và cập nhật đơn giá.</li>
+            <li>Tiếp nhận, duyệt đơn, xác nhận chuyển khoản ngân hàng và điều phối vận chuyển.</li>
+            <li>Xem báo cáo tài chính, biểu đồ doanh thu và phân tích hiệu suất kinh doanh.</li>
+          </ul>
+        </div>
+      `
+      : `
+        <div style="background: #f0f9ff; border: 1px solid #e0f2fe; border-radius: 8px; padding: 12px 14px;">
+          <div style="font-size: 12.5px; font-weight: 700; color: #0369a1; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+            <span>Quyền hạn Nhân viên vận hành (STAFF)</span>
+          </div>
+          <ul style="margin: 0; padding-left: 20px; font-size: 12px; color: #0c4a6e; line-height: 1.6;">
+            <li>Quản lý danh mục & danh sách sản phẩm (thêm, cập nhật hình ảnh, mô tả).</li>
+            <li>Xử lý và vận hành đơn hàng (duyệt đơn, chuyển giao hàng, xác nhận hoàn thành).</li>
+            <li>Tra cứu hồ sơ khách hàng, hỗ trợ giải đáp khiếu nại và đơn hàng.</li>
+            <li><em>Giới hạn:</em> Không có quyền xóa tài khoản hoặc can thiệp cấu hình hệ thống.</li>
+          </ul>
+        </div>
+      `;
+
+    // Sổ địa chỉ nếu có
+    const addresses = data.addresses || [];
+    let addressHtml = `<div style="color: var(--admin-text-muted); font-size: 12.5px; font-style: italic;">Chưa thiết lập sổ địa chỉ</div>`;
+    if (addresses.length > 0) {
+      addressHtml = addresses.map((a) => {
+        const fullAddr = a.address || [a.street_detail, a.ward, a.province].filter(Boolean).join(", ");
+        return `
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 6px; font-size: 12.5px;">
+            <div><strong>${escapeHtml(a.receiver_name || name)}</strong> - ${escapeHtml(a.phone || phone)} ${a.is_default ? '<span style="font-size: 10px; color: #10b981; font-weight: 600; margin-left: 6px;">[Mặc định]</span>' : ''}</div>
+            <div style="color: #475569; margin-top: 2px;">${escapeHtml(fullAddr || "Chưa có địa chỉ chi tiết")}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    content.innerHTML = `
+      <!-- Header Hồ sơ Nhân viên -->
+      <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px; padding-bottom: 18px; border-bottom: 1px solid var(--admin-border);">
+        <div class="${avatarClass}" style="width: 54px; height: 54px; font-size: 18px;">${initials}</div>
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: var(--admin-text-main);">${escapeHtml(name)}</h3>
+            <span style="font-size: 12px; font-weight: 700; color: var(--admin-primary-dark); background: #eff6ff; padding: 2px 8px; border-radius: 4px; border: 1px solid #bfdbfe;">${codeDisplay}</span>
+          </div>
+          <div style="font-size: 12.5px; color: var(--admin-text-muted); margin-top: 4px;">
+            ${escapeHtml(email)} · ID người dùng: #${id}
+          </div>
+        </div>
+        <div>
+          ${statusBadgeHtml}
+        </div>
+      </div>
+
+      <!-- Quick KPI 3 cột -->
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
+        <div style="background: #f8fafc; border: 1px solid var(--admin-border); border-radius: 8px; padding: 10px 14px; text-align: center;">
+          <div style="font-size: 11.5px; color: var(--admin-text-muted); font-weight: 600; text-transform: uppercase;">Vai trò tài khoản</div>
+          <div style="margin-top: 6px;">${roleBadgeHtml}</div>
+        </div>
+
+        <div style="background: #f8fafc; border: 1px solid var(--admin-border); border-radius: 8px; padding: 10px 14px; text-align: center;">
+          <div style="font-size: 11.5px; color: var(--admin-text-muted); font-weight: 600; text-transform: uppercase;">Số điện thoại</div>
+          <div style="font-size: 13.5px; font-weight: 700; color: var(--admin-text-main); margin-top: 6px;">${escapeHtml(phone)}</div>
+        </div>
+
+        <div style="background: #f8fafc; border: 1px solid var(--admin-border); border-radius: 8px; padding: 10px 14px; text-align: center;">
+          <div style="font-size: 11.5px; color: var(--admin-text-muted); font-weight: 600; text-transform: uppercase;">Ngày tham gia</div>
+          <div style="font-size: 13px; font-weight: 600; color: var(--admin-text-main); margin-top: 6px;">${escapeHtml(createdAtStr)}</div>
+        </div>
+      </div>
+
+      <!-- Chi tiết thông tin tài khoản -->
+      <div style="background: #ffffff; border: 1px solid var(--admin-border); border-radius: 10px; padding: 14px 16px; margin-bottom: 18px;">
+        <div style="font-size: 13px; font-weight: 700; color: var(--admin-text-main); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.3px; display: flex; align-items: center; gap: 6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Thông tin cá nhân & Liên hệ</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">
+          <div>
+            <span style="color: var(--admin-text-muted); font-size: 12px;">Họ và tên:</span>
+            <div style="font-weight: 600; color: var(--admin-text-main);">${escapeHtml(name)}</div>
+          </div>
+          <div>
+            <span style="color: var(--admin-text-muted); font-size: 12px;">Email đăng nhập:</span>
+            <div style="font-weight: 600; color: var(--admin-text-main);">${escapeHtml(email)}</div>
+          </div>
+          <div>
+            <span style="color: var(--admin-text-muted); font-size: 12px;">Số điện thoại:</span>
+            <div style="font-weight: 600; color: var(--admin-text-main);">${escapeHtml(phone)}</div>
+          </div>
+          <div>
+            <span style="color: var(--admin-text-muted); font-size: 12px;">Mã nhân viên nội bộ:</span>
+            <div style="font-weight: 700; color: var(--admin-primary-dark);">${codeDisplay}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quyền hạn hệ thống -->
+      <div style="margin-bottom: 18px;">
+        <div style="font-size: 13px; font-weight: 700; color: var(--admin-text-main); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.3px; display: flex; align-items: center; gap: 6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>Phạm vi quyền hạn trong hệ thống</span>
+        </div>
+        ${permissionsHtml}
+      </div>
+
+      <!-- Sổ địa chỉ -->
+      <div>
+        <div style="font-size: 13px; font-weight: 700; color: var(--admin-text-main); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.3px; display: flex; align-items: center; gap: 6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span>Địa chỉ thường trú / liên hệ</span>
+        </div>
+        ${addressHtml}
+      </div>
+    `;
+
+  } catch (err) {
+    console.error("[Admin Staff] Lỗi tải chi tiết nhân viên:", err);
+    content.innerHTML = `
+      <div style="text-align: center; color: #dc2626; padding: 28px 16px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="margin-bottom: 8px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div style="font-weight: 600;">Không thể tải chi tiết nhân sự</div>
+        <div style="font-size: 12px; color: var(--admin-text-muted); margin-top: 4px;">${escapeHtml(err.message || "Vui lòng thử lại sau.")}</div>
+      </div>
+    `;
+  }
+};
 
 /**
  * Mở modal chỉnh sửa thông tin nhân viên

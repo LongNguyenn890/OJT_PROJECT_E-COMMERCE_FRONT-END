@@ -10,7 +10,11 @@
 
 document.addEventListener("DOMContentLoaded", async () => {
   // 1. Luôn đảm bảo phiên làm việc Quản trị viên hợp lệ với JWT Token
-  await ensureAdminSession();
+  try {
+    await ensureAdminSession();
+  } catch (err) {
+    console.warn("[Admin Categories] Lỗi phiên quản trị:", err);
+  }
 
   // 2. Khởi tạo các sự kiện giao diện (Modal, Bộ lọc, Form)
   initModalTriggers();
@@ -25,7 +29,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 let rawCategories = [];
 let filteredCategories = [];
 let currentDeletingCategory = null;
-let currentPage = 1;
+let displayedCatLimit = 10;
 const pageSize = 10;
 
 /**
@@ -254,9 +258,10 @@ function renderCategoriesTable() {
   }
 
   const total = filteredCategories.length;
+  const totalPages = Math.ceil(total / pageSize) || 1;
+  if (currentPage > totalPages) currentPage = 1;
   const startIdx = (currentPage - 1) * pageSize;
-  const endIdx = Math.min(startIdx + pageSize, total);
-  const pagedItems = filteredCategories.slice(startIdx, endIdx);
+  const pagedItems = filteredCategories.slice(startIdx, startIdx + pageSize);
 
   tbody.innerHTML = pagedItems.map((cat) => {
     const code = `DM-${String(cat.id).padStart(3, "0")}`;
@@ -323,7 +328,13 @@ function renderCategoriesTable() {
   }).join("");
 
   if (summaryLbl) {
-    summaryLbl.textContent = `Hiển thị ${startIdx + 1} - ${endIdx} trong tổng số ${total} danh mục`;
+    const startItem = total === 0 ? 0 : startIdx + 1;
+    const endItem = Math.min(startIdx + pageSize, total);
+    if (total === 0) {
+      summaryLbl.textContent = "Hiển thị 0 danh mục";
+    } else {
+      summaryLbl.textContent = `Hiển thị ${startItem} - ${endItem} trong tổng số ${total} danh mục (Trang ${currentPage}/${totalPages})`;
+    }
   }
 
   renderPagination(total);
@@ -342,50 +353,83 @@ function getCategoryInitials(name) {
 }
 
 /**
- * Phân trang danh mục
+ * Phân trang truyền thống theo số trang (Classic Pagination)
  */
 function renderPagination(total) {
   const container = document.getElementById("cat-pagination");
   if (!container) return;
 
-  const totalPages = Math.ceil(total / pageSize);
+  const totalPages = Math.ceil(total / pageSize) || 1;
   if (totalPages <= 1) {
     container.innerHTML = "";
     return;
   }
 
   let html = `
-    <button type="button" class="btn-page-nav" ${currentPage === 1 ? "disabled" : ""} onclick="changeCategoryPage(${currentPage - 1})">
-      &lsaquo; Trước
+    <button type="button" class="page-btn prev-btn" ${currentPage === 1 ? "disabled" : ""} onclick="changePage(${currentPage - 1})" title="Trang trước">
+      &laquo;
     </button>
   `;
 
-  for (let i = 1; i <= totalPages; i++) {
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) {
+      html += `
+        <button type="button" class="page-btn ${i === currentPage ? "active" : ""}" ${i === currentPage ? "disabled" : ""} onclick="changePage(${i})">
+          ${i}
+        </button>
+      `;
+    }
+  } else {
     html += `
-      <button type="button" class="btn-page-number ${i === currentPage ? "active" : ""}" onclick="changeCategoryPage(${i})">
-        ${i}
+      <button type="button" class="page-btn ${currentPage === 1 ? "active" : ""}" ${currentPage === 1 ? "disabled" : ""} onclick="changePage(1)">
+        1
+      </button>
+    `;
+
+    if (currentPage > 3) {
+      html += `<span class="page-ellipsis">...</span>`;
+    }
+
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    for (let i = start; i <= end; i++) {
+      html += `
+        <button type="button" class="page-btn ${i === currentPage ? "active" : ""}" ${i === currentPage ? "disabled" : ""} onclick="changePage(${i})">
+          ${i}
+        </button>
+      `;
+    }
+
+    if (currentPage < totalPages - 2) {
+      html += `<span class="page-ellipsis">...</span>`;
+    }
+
+    html += `
+      <button type="button" class="page-btn ${currentPage === totalPages ? "active" : ""}" ${currentPage === totalPages ? "disabled" : ""} onclick="changePage(${totalPages})">
+        ${totalPages}
       </button>
     `;
   }
 
   html += `
-    <button type="button" class="btn-page-nav" ${currentPage === totalPages ? "disabled" : ""} onclick="changeCategoryPage(${currentPage + 1})">
-      Sau &rsaquo;
+    <button type="button" class="page-btn next-btn" ${currentPage === totalPages ? "disabled" : ""} onclick="changePage(${currentPage + 1})" title="Trang sau">
+      &raquo;
     </button>
   `;
 
   container.innerHTML = html;
 }
 
-function changeCategoryPage(page) {
-  currentPage = page;
+function changePage(p) {
+  const totalPages = Math.ceil(filteredCategories.length / pageSize) || 1;
+  if (p < 1 || p > totalPages || p === currentPage) return;
+  currentPage = p;
   renderCategoriesTable();
-  const table = document.getElementById("categories-table");
-  if (table) table.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  window.scrollTo({ top: 120, behavior: "smooth" });
 }
 
 /**
- * Khởi tạo sự kiện tìm kiếm & bộ lọc
+ * Khởi tạo sự kiện tìm kiếm và lọc danh mục
  */
 function initSearchAndFilters() {
   const searchInput = document.getElementById("cat-search-input");
@@ -766,6 +810,6 @@ async function openDeleteCategoryModal(id) {
 
 // Gắn các hàm gọi từ thuộc tính onclick của HTML ra phạm vi toàn cục window
 window.loadCategoriesData = loadCategoriesData;
-window.changeCategoryPage = changeCategoryPage;
+window.changePage = changePage;
 window.openEditCategoryModal = openEditCategoryModal;
 window.openDeleteCategoryModal = openDeleteCategoryModal;

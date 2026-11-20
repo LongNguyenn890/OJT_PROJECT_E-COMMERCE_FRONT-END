@@ -61,21 +61,32 @@ function getItemImageUrl(path) {
 // 2. KHỞI TẠO TRANG KHI TẢI XONG DOM
 // ==========================================================
 document.addEventListener("DOMContentLoaded", async () => {
-  initModals();
-  initFilterControls();
-  initActionButtons();
+  try {
+    initModals();
+    initFilterControls();
+    initActionButtons();
+  } catch (err) {
+    console.warn("[Admin Orders] Lỗi khởi tạo sự kiện UI:", err);
+  }
 
-  // Đảm bảo phiên làm việc quản trị viên hợp lệ
-  await ensureAdminSession();
+  try {
+    await ensureAdminSession();
+  } catch (err) {
+    console.warn("[Admin Orders] Lỗi phiên quản trị:", err);
+  }
 
-  // Tải dữ liệu ban đầu
-  await loadOrdersData();
+  try {
+    await loadOrdersData();
+  } catch (err) {
+    console.error("[Admin Orders] Lỗi tải dữ liệu đơn hàng:", err);
+  }
 
-  // Kiểm tra tham số URL (?id=...) để mở modal chi tiết nếu được điều hướng từ dashboard
-  checkUrlParamsForDetail();
-
-  // Kết nối WebSocket để cập nhật danh sách đơn theo thời gian thực
-  initRealtimeWebSocket();
+  try {
+    checkUrlParamsForDetail();
+    initRealtimeWebSocket();
+  } catch (err) {
+    console.warn("[Admin Orders] Lỗi realtime WebSocket / URL Params:", err);
+  }
 });
 
 /**
@@ -270,7 +281,6 @@ async function fetchOrdersTable() {
     cachedOrdersList = items;
     renderOrdersTable(items);
     renderPagination(totalOrders);
-
   } catch (err) {
     console.error("[Admin Orders] Lỗi khi tải bảng đơn hàng:", err);
     tbody.innerHTML = `
@@ -278,6 +288,7 @@ async function fetchOrdersTable() {
         <td colspan="8" style="text-align: center; padding: 36px 16px; color: var(--admin-danger);">
           <div style="font-weight: 600; margin-bottom: 6px;">Không thể tải danh sách đơn hàng</div>
           <div style="font-size: 12px; color: var(--admin-text-muted);">${escapeHtml(err.message || "Vui lòng kiểm tra kết nối mạng và thử lại")}</div>
+          <button type="button" class="btn-admin-action secondary" onclick="fetchOrdersTable()" style="margin-top: 10px;">Thử lại</button>
         </td>
       </tr>
     `;
@@ -390,7 +401,7 @@ function renderOrdersTable(orders) {
       </button>
     `;
 
-    // 2. Nút Thao tác nghiệp vụ theo luồng
+    // 2. Nút Thao tác nghiệp vụ theo luồng (Giữ nguyên các nút, vô hiệu hóa khi Đã duyệt hoặc Hoàn thành)
     if (isPending) {
       if (isBankTransfer) {
         // Nút riêng: Xác nhận đã nhận tiền chuyển khoản -> chuyển sang CONFIRMED
@@ -401,16 +412,16 @@ function renderOrdersTable(orders) {
           </button>
         `;
       } else {
-        // COD: Nút Xác nhận đơn
+        // COD: Nút Duyệt đơn
         actionButtonsHtml += `
-          <button type="button" class="btn-table-action confirm-flow" title="Xác nhận đơn hàng" onclick="promptStatusChange(${order.id}, '${escapeHtml(code)}', 'CONFIRMED', 'PENDING')">
+          <button type="button" class="btn-table-action confirm-flow" title="Duyệt đơn hàng này" onclick="promptStatusChange(${order.id}, '${escapeHtml(code)}', 'CONFIRMED', 'PENDING')">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             <span>Duyệt đơn</span>
           </button>
         `;
       }
     } else if (isConfirmed) {
-      // Chuyển sang Giao hàng
+      // Đã duyệt đơn -> Bước tiếp theo: Bàn giao vận chuyển (CONFIRMED -> SHIPPING)
       actionButtonsHtml += `
         <button type="button" class="btn-table-action ship-flow" title="Bàn giao vận chuyển" onclick="promptStatusChange(${order.id}, '${escapeHtml(code)}', 'SHIPPING', 'CONFIRMED')">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
@@ -418,19 +429,59 @@ function renderOrdersTable(orders) {
         </button>
       `;
     } else if (isShipping) {
-      // Chuyển sang Hoàn thành
+      // Đang giao hàng: Nút Hoàn thành
       actionButtonsHtml += `
-        <button type="button" class="btn-table-action complete-flow" title="Hoàn thành đơn hàng" onclick="promptStatusChange(${order.id}, '${escapeHtml(code)}', 'COMPLETED', 'SHIPPING')">
+        <button type="button" class="btn-table-action complete-flow" title="Xác nhận hoàn thành đơn hàng" onclick="promptStatusChange(${order.id}, '${escapeHtml(code)}', 'COMPLETED', 'SHIPPING')">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           <span>Hoàn thành</span>
         </button>
       `;
+    } else if (isCompleted) {
+      // Khi đã hoàn thành: nút Hoàn thành bị vô hiệu hóa
+      actionButtonsHtml += `
+        <button type="button" class="btn-table-action complete-flow disabled" disabled title="Đơn hàng đã hoàn thành">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span>Hoàn thành</span>
+        </button>
+      `;
+    } else {
+      // Đã hủy (CANCELLED): nút chuyển trạng thái bị vô hiệu hóa
+      actionButtonsHtml += `
+        <button type="button" class="btn-table-action disabled" disabled style="background:#f1f5f9; color:#94a3b8; border-color:#e2e8f0;" title="Đơn hàng đã hủy">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          <span>Đã hủy</span>
+        </button>
+      `;
     }
 
-    // 3. Nút Hủy đơn (chỉ cho phép khi PENDING hoặc CONFIRMED)
-    if (isPending || isConfirmed) {
+    // 3. Nút Hủy đơn (Luôn giữ nguyên, chỉ hoạt động khi Chờ xác nhận, bị vô hiệu hóa khi Đã duyệt / Giao hàng / Hoàn thành)
+    if (isPending) {
       actionButtonsHtml += `
         <button type="button" class="btn-table-action cancel-btn" title="Hủy đơn hàng này" onclick="openCancelOrderModal(${order.id}, '${escapeHtml(code)}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        </button>
+      `;
+    } else if (isConfirmed) {
+      actionButtonsHtml += `
+        <button type="button" class="btn-table-action cancel-btn disabled" disabled title="Đơn hàng đã duyệt, không thể hủy">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        </button>
+      `;
+    } else if (isShipping) {
+      actionButtonsHtml += `
+        <button type="button" class="btn-table-action cancel-btn disabled" disabled title="Đơn hàng đang giao, không thể hủy">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        </button>
+      `;
+    } else if (isCompleted) {
+      actionButtonsHtml += `
+        <button type="button" class="btn-table-action cancel-btn disabled" disabled title="Đơn hàng đã hoàn thành, không thể hủy">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        </button>
+      `;
+    } else {
+      actionButtonsHtml += `
+        <button type="button" class="btn-table-action cancel-btn disabled" disabled title="Không thể hủy đơn hàng ở trạng thái này">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
         </button>
       `;
@@ -488,13 +539,19 @@ function renderOrdersTable(orders) {
 function renderPagination(total) {
   const container = document.getElementById("orders-pagination-controls");
   const info = document.getElementById("orders-pagination-info");
-  if (!container || !info) return;
+  if (!container) return;
 
   const totalPages = Math.ceil(total / pageSize) || 1;
   const startItem = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const endItem = Math.min(currentPage * pageSize, total);
 
-  info.textContent = `Hiển thị ${startItem} - ${endItem} trên tổng số ${total} đơn hàng (Trang ${currentPage}/${totalPages})`;
+  if (info) {
+    if (total === 0) {
+      info.textContent = "Hiển thị 0 đơn hàng";
+    } else {
+      info.textContent = `Hiển thị ${startItem} - ${endItem} trên tổng số ${total} đơn hàng (Trang ${currentPage}/${totalPages})`;
+    }
+  }
 
   if (totalPages <= 1) {
     container.innerHTML = "";
@@ -502,25 +559,53 @@ function renderPagination(total) {
   }
 
   let html = `
-    <button type="button" class="btn-page" ${currentPage === 1 ? "disabled" : ""} onclick="changePage(${currentPage - 1})">
+    <button type="button" class="btn-page prev-btn" ${currentPage === 1 ? "disabled" : ""} onclick="changePage(${currentPage - 1})" title="Trang trước">
       &laquo;
     </button>
   `;
 
-  for (let i = 1; i <= totalPages; i++) {
-    if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) {
       html += `
-        <button type="button" class="btn-page ${i === currentPage ? "active" : ""}" onclick="changePage(${i})">
+        <button type="button" class="btn-page ${i === currentPage ? "active" : ""}" ${i === currentPage ? "disabled" : ""} onclick="changePage(${i})">
           ${i}
         </button>
       `;
-    } else if (i === currentPage - 3 || i === currentPage + 3) {
-      html += `<span style="padding: 0 4px; color: var(--admin-text-muted);">...</span>`;
     }
+  } else {
+    html += `
+      <button type="button" class="btn-page ${currentPage === 1 ? "active" : ""}" ${currentPage === 1 ? "disabled" : ""} onclick="changePage(1)">
+        1
+      </button>
+    `;
+
+    if (currentPage > 3) {
+      html += `<span class="page-ellipsis">...</span>`;
+    }
+
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    for (let i = start; i <= end; i++) {
+      html += `
+        <button type="button" class="btn-page ${i === currentPage ? "active" : ""}" ${i === currentPage ? "disabled" : ""} onclick="changePage(${i})">
+          ${i}
+        </button>
+      `;
+    }
+
+    if (currentPage < totalPages - 2) {
+      html += `<span class="page-ellipsis">...</span>`;
+    }
+
+    html += `
+      <button type="button" class="btn-page ${currentPage === totalPages ? "active" : ""}" ${currentPage === totalPages ? "disabled" : ""} onclick="changePage(${totalPages})">
+        ${totalPages}
+      </button>
+    `;
   }
 
   html += `
-    <button type="button" class="btn-page" ${currentPage === totalPages ? "disabled" : ""} onclick="changePage(${currentPage + 1})">
+    <button type="button" class="btn-page next-btn" ${currentPage === totalPages ? "disabled" : ""} onclick="changePage(${currentPage + 1})" title="Trang sau">
       &raquo;
     </button>
   `;
@@ -528,11 +613,14 @@ function renderPagination(total) {
   container.innerHTML = html;
 }
 
-window.changePage = async function(page) {
+async function changePage(page) {
+  const totalPages = Math.ceil(totalOrders / pageSize) || 1;
+  if (page < 1 || page > totalPages || page === currentPage) return;
   currentPage = page;
   await fetchOrdersTable();
-  window.scrollTo({ top: 200, behavior: "smooth" });
-};
+  window.scrollTo({ top: 120, behavior: "smooth" });
+}
+window.changePage = changePage;
 
 // ==========================================================
 // 5. BỘ LỌC & TÌM KIẾM ĐƠN HÀNG
@@ -583,33 +671,8 @@ function initFilterControls() {
     });
   }
 
-  // Lọc theo khoảng ngày
-  const fromDateInput = document.getElementById("filter-order-from-date");
-  const toDateInput = document.getElementById("filter-order-to-date");
-
-  if (fromDateInput) {
-    fromDateInput.addEventListener("change", (e) => {
-      currentFromDate = e.target.value;
-      if (currentToDate && currentFromDate > currentToDate) {
-        showToast("Ngày bắt đầu không được lớn hơn ngày kết thúc!", "warning");
-        return;
-      }
-      currentPage = 1;
-      fetchOrdersTable();
-    });
-  }
-
-  if (toDateInput) {
-    toDateInput.addEventListener("change", (e) => {
-      currentToDate = e.target.value;
-      if (currentFromDate && currentFromDate > currentToDate) {
-        showToast("Ngày kết thúc không được nhỏ hơn ngày bắt đầu!", "warning");
-        return;
-      }
-      currentPage = 1;
-      fetchOrdersTable();
-    });
-  }
+  // Khởi tạo Popover chọn khoảng ngày thông minh cho đơn hàng
+  initOrderDatePopover();
 
   // Nút xóa bộ lọc
   const btnResetFilters = document.getElementById("btn-reset-order-filters");
@@ -624,8 +687,10 @@ function initFilterControls() {
 
       if (searchInput) searchInput.value = "";
       if (paymentSelect) paymentSelect.value = "";
-      if (fromDateInput) fromDateInput.value = "";
-      if (toDateInput) toDateInput.value = "";
+
+      if (typeof window.resetOrderDatePicker === "function") {
+        window.resetOrderDatePicker();
+      }
 
       tabButtons.forEach(b => {
         if (b.dataset.status === "") b.classList.add("active");
@@ -652,6 +717,232 @@ function initFilterControls() {
   if (btnExport) {
     btnExport.addEventListener("click", exportOrdersToCsv);
   }
+}
+
+/**
+ * ==========================================================
+ * BỘ CHỌN KHOẢNG NGÀY THÔNG MINH CHO ĐƠN HÀNG (POPOVER DATE PICKER)
+ * ==========================================================
+ */
+function initOrderDatePopover() {
+  const wrap = document.querySelector(".order-date-picker-wrap");
+  if (!wrap) return;
+
+  const trigger = document.getElementById("btn-order-date-trigger");
+  const popover = document.getElementById("order-date-popover");
+  const btnClose = document.getElementById("btn-close-order-date-popover");
+  const btnCancel = document.getElementById("btn-cancel-order-date");
+  const btnApply = document.getElementById("btn-apply-order-date");
+  const btnClearInline = document.getElementById("btn-order-date-clear-inline");
+  const fromInput = document.getElementById("filter-order-from-date");
+  const toInput = document.getElementById("filter-order-to-date");
+  const label = document.getElementById("order-date-display-label");
+  const presets = popover.querySelectorAll(".order-preset-pill");
+
+  const formatDisplayDate = (dStr) => {
+    if (!dStr) return "";
+    const parts = dStr.split("-");
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return dStr;
+  };
+
+  const updateTriggerDisplay = (fromVal, toVal, presetText = "") => {
+    if (presetText && presetText !== "Tất cả") {
+      label.textContent = `${presetText} (${formatDisplayDate(fromVal)} - ${formatDisplayDate(toVal)})`;
+      trigger.classList.add("has-value");
+      if (btnClearInline) btnClearInline.style.display = "inline-flex";
+    } else if (fromVal && toVal) {
+      if (fromVal === toVal) {
+        label.textContent = `Ngày: ${formatDisplayDate(fromVal)}`;
+      } else {
+        label.textContent = `${formatDisplayDate(fromVal)} ➔ ${formatDisplayDate(toVal)}`;
+      }
+      trigger.classList.add("has-value");
+      if (btnClearInline) btnClearInline.style.display = "inline-flex";
+    } else if (fromVal) {
+      label.textContent = `Từ: ${formatDisplayDate(fromVal)}`;
+      trigger.classList.add("has-value");
+      if (btnClearInline) btnClearInline.style.display = "inline-flex";
+    } else if (toVal) {
+      label.textContent = `Đến: ${formatDisplayDate(toVal)}`;
+      trigger.classList.add("has-value");
+      if (btnClearInline) btnClearInline.style.display = "inline-flex";
+    } else {
+      label.textContent = "Khoảng ngày tạo đơn";
+      trigger.classList.remove("has-value");
+      if (btnClearInline) btnClearInline.style.display = "none";
+    }
+  };
+
+  const openPopover = () => {
+    // Đóng mọi dropdown custom select đang mở trước
+    document.querySelectorAll(".agy-custom-select.is-open").forEach((el) => {
+      el.classList.remove("is-open");
+      const tr = el.querySelector(".agy-select-trigger");
+      if (tr) tr.setAttribute("aria-expanded", "false");
+    });
+
+    popover.classList.add("show");
+    trigger.setAttribute("aria-expanded", "true");
+    const rect = popover.getBoundingClientRect();
+    const winWidth = window.innerWidth || document.documentElement.clientWidth;
+    if (rect.right > winWidth - 10) {
+      popover.style.left = "auto";
+      popover.style.right = "0";
+    } else {
+      popover.style.left = "0";
+      popover.style.right = "auto";
+    }
+  };
+
+  const closePopover = () => {
+    popover.classList.remove("show");
+    trigger.setAttribute("aria-expanded", "false");
+  };
+
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (popover.classList.contains("show")) {
+      closePopover();
+    } else {
+      openPopover();
+    }
+  });
+
+  if (btnClose) btnClose.addEventListener("click", closePopover);
+
+  document.addEventListener("click", (e) => {
+    if (!wrap.contains(e.target) && popover.classList.contains("show")) {
+      closePopover();
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && popover.classList.contains("show")) {
+      closePopover();
+    }
+  });
+
+  // Hỗ trợ tính toán ngày chuẩn ISO (YYYY-MM-DD)
+  const formatDateISO = (d) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  presets.forEach((pill) => {
+    pill.addEventListener("click", () => {
+      presets.forEach((p) => p.classList.remove("active"));
+      pill.classList.add("active");
+
+      const pType = pill.getAttribute("data-preset");
+      const today = new Date();
+
+      if (pType === "all") {
+        fromInput.value = "";
+        toInput.value = "";
+      } else if (pType === "today") {
+        const s = formatDateISO(today);
+        fromInput.value = s;
+        toInput.value = s;
+      } else if (pType === "yesterday") {
+        const y = new Date(today);
+        y.setDate(today.getDate() - 1);
+        const s = formatDateISO(y);
+        fromInput.value = s;
+        toInput.value = s;
+      } else if (pType === "7days") {
+        const d = new Date(today);
+        d.setDate(today.getDate() - 6);
+        fromInput.value = formatDateISO(d);
+        toInput.value = formatDateISO(today);
+      } else if (pType === "30days") {
+        const d = new Date(today);
+        d.setDate(today.getDate() - 29);
+        fromInput.value = formatDateISO(d);
+        toInput.value = formatDateISO(today);
+      } else if (pType === "this_month") {
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        fromInput.value = formatDateISO(firstDay);
+        toInput.value = formatDateISO(today);
+      } else if (pType === "last_month") {
+        const firstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
+        fromInput.value = formatDateISO(firstDay);
+        toInput.value = formatDateISO(lastDay);
+      }
+    });
+  });
+
+  // Khi người dùng trực tiếp sửa ô input
+  fromInput.addEventListener("input", () => {
+    presets.forEach((p) => p.classList.remove("active"));
+  });
+  toInput.addEventListener("input", () => {
+    presets.forEach((p) => p.classList.remove("active"));
+  });
+
+  // Áp dụng khoảng ngày
+  btnApply.addEventListener("click", () => {
+    const fVal = fromInput.value;
+    const tVal = toInput.value;
+    if (fVal && tVal && fVal > tVal) {
+      showToast("Ngày bắt đầu không được lớn hơn ngày kết thúc!", "warning");
+      return;
+    }
+
+    currentFromDate = fVal;
+    currentToDate = tVal;
+
+    const activePreset = popover.querySelector(".order-preset-pill.active");
+    const pText = (activePreset && activePreset.getAttribute("data-preset") !== "all") ? activePreset.textContent.trim() : "";
+    updateTriggerDisplay(fVal, tVal, pText);
+
+    closePopover();
+    currentPage = 1;
+    fetchOrdersTable();
+  });
+
+  // Xóa khoảng ngày
+  const clearDateRange = () => {
+    fromInput.value = "";
+    toInput.value = "";
+    currentFromDate = "";
+    currentToDate = "";
+    presets.forEach((p) => {
+      if (p.getAttribute("data-preset") === "all") p.classList.add("active");
+      else p.classList.remove("active");
+    });
+    updateTriggerDisplay("", "");
+    currentPage = 1;
+    fetchOrdersTable();
+  };
+
+  btnCancel.addEventListener("click", () => {
+    clearDateRange();
+    closePopover();
+  });
+
+  if (btnClearInline) {
+    btnClearInline.addEventListener("click", (e) => {
+      e.stopPropagation();
+      clearDateRange();
+    });
+  }
+
+  // Cung cấp hàm toàn cục để nút Reset toàn bộ bộ lọc có thể gọi
+  window.resetOrderDatePicker = () => {
+    fromInput.value = "";
+    toInput.value = "";
+    presets.forEach((p) => {
+      if (p.getAttribute("data-preset") === "all") p.classList.add("active");
+      else p.classList.remove("active");
+    });
+    updateTriggerDisplay("", "");
+  };
 }
 
 // ==========================================================
@@ -810,15 +1101,37 @@ window.openOrderDetailModal = async function(orderId) {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
           <span>Bàn giao vận chuyển</span>
         </button>
-        <button type="button" class="btn-admin-action" style="color: #dc2626; border-color: #fecaca; background: #fef2f2; height: 36px;" onclick="closeAllModals(); openCancelOrderModal(${order.id}, '${escapeHtml(code)}')">
+        <button type="button" class="btn-admin-action disabled" disabled style="color: #94a3b8; border-color: #e2e8f0; background: #f8fafc; height: 36px; cursor: not-allowed; opacity: 0.7;" title="Đơn hàng đã duyệt, không thể hủy">
           Hủy đơn hàng
         </button>
       `;
     } else if (statusKey === "SHIPPING") {
       modalActionHtml += `
-        <button type="button" class="btn-table-action complete-flow" style="height: 36px; padding: 0 14px;" onclick="closeAllModals(); promptStatusChange(${order.id}, '${escapeHtml(code)}', 'COMPLETED', 'SHIPPING')">
+        <button type="button" class="btn-table-action complete-flow" style="height: 36px; padding: 0 14px; margin-right: 8px;" onclick="closeAllModals(); promptStatusChange(${order.id}, '${escapeHtml(code)}', 'COMPLETED', 'SHIPPING')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           <span>Xác nhận giao thành công</span>
+        </button>
+        <button type="button" class="btn-admin-action disabled" disabled style="color: #94a3b8; border-color: #e2e8f0; background: #f8fafc; height: 36px; cursor: not-allowed; opacity: 0.7;" title="Đơn hàng đang giao, không thể hủy">
+          Hủy đơn hàng
+        </button>
+      `;
+    } else if (statusKey === "COMPLETED") {
+      modalActionHtml += `
+        <button type="button" class="btn-table-action complete-flow disabled" disabled style="height: 36px; padding: 0 14px; margin-right: 8px;" title="Đơn hàng đã hoàn thành">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span>Đã hoàn thành</span>
+        </button>
+        <button type="button" class="btn-admin-action disabled" disabled style="color: #94a3b8; border-color: #e2e8f0; background: #f8fafc; height: 36px; cursor: not-allowed; opacity: 0.7;" title="Đơn hàng đã hoàn thành, không thể hủy">
+          Hủy đơn hàng
+        </button>
+      `;
+    } else if (statusKey === "CANCELLED") {
+      modalActionHtml += `
+        <button type="button" class="btn-table-action disabled" disabled style="height: 36px; padding: 0 14px; margin-right: 8px; background: #f1f5f9; color: #94a3b8; border-color: #e2e8f0;" title="Đơn hàng đã hủy">
+          <span>Đơn hàng đã hủy</span>
+        </button>
+        <button type="button" class="btn-admin-action disabled" disabled style="color: #94a3b8; border-color: #e2e8f0; background: #f8fafc; height: 36px; cursor: not-allowed; opacity: 0.7;" title="Đơn hàng đã hủy">
+          Hủy đơn hàng
         </button>
       `;
     }
