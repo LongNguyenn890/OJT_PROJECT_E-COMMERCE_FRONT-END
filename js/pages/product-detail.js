@@ -729,7 +729,7 @@ async function executeAddToCart(productId, isBuyNow = false) {
     if (isBuyNow) {
       showToast("Đã thêm vào giỏ! Đang chuyển hướng đến giỏ hàng…", "success");
       setTimeout(() => {
-        window.location.href = "my_orders.html";
+        window.location.href = "cart.html";
       }, 600);
     } else {
       showToast(`Đã thêm ${quantity} sản phẩm vào giỏ hàng thành công!`, "success");
