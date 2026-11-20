@@ -430,6 +430,10 @@ function renderLayout() {
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
               <span>Sổ địa chỉ</span>
             </a>
+            <a href="${root}pages/cart.html" class="user-dropdown-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+              <span>Giỏ hàng của tôi</span>
+            </a>
             <a href="${root}pages/my_orders.html" class="user-dropdown-item">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3.75h8.5L20 8.2v11.05A1.75 1.75 0 0 1 18.25 21h-11A1.75 1.75 0 0 1 5.5 19.25v-13A2.5 2.5 0 0 1 8 3.75Z"/><path d="M15 4v4.5h4.5M8.5 12h7M8.5 15.5h7"/></svg>
               <span>Đơn mua của tôi</span>
@@ -779,25 +783,40 @@ function renderLayout() {
       const currentToken = localStorage.getItem("token");
       const countElem = document.getElementById("cart-count");
       const countLabelElem = document.getElementById("cart-count-label");
-      if (!currentToken) {
-        if (countElem) countElem.textContent = "0";
-        if (countLabelElem) countLabelElem.textContent = "0 món";
-        return 0;
-      }
-      try {
-        if (typeof api !== "undefined" && api.get) {
+
+      if (currentToken && typeof api !== "undefined" && api.get) {
+        try {
           const cart = await api.get("/cart");
           const count = (cart?.cart_items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
           if (countElem) countElem.textContent = count;
           if (countLabelElem) countLabelElem.textContent = `${count} món`;
           return count;
-        }
+        } catch (_) {}
+      }
+
+      // Fallback sang giỏ hàng local demo nếu chưa đăng nhập hoặc offline
+      try {
+        const demoCart = JSON.parse(localStorage.getItem("shopease_demo_cart_v1") || "[]");
+        const count = demoCart.reduce((sum, item) => sum + Number(item.quantity || item.qty || 1), 0);
+        if (countElem) countElem.textContent = count;
+        if (countLabelElem) countLabelElem.textContent = `${count} món`;
+        return count;
       } catch (_) {}
+
+      if (countElem) countElem.textContent = "0";
+      if (countLabelElem) countLabelElem.textContent = "0 món";
       return 0;
     };
 
-    if (token) {
-      window.refreshCartCount();
+    window.refreshCartCount();
+
+    // Gắn sự kiện click mở trang giỏ hàng
+    const shopCartBtn = document.getElementById("shop-cart-btn");
+    if (shopCartBtn) {
+      shopCartBtn.style.cursor = "pointer";
+      shopCartBtn.addEventListener("click", () => {
+        window.location.href = `${root}pages/cart.html`;
+      });
     }
 
     // 6. Xử lý Tra cứu đơn mua hiển thị dạng dropdown Thông báo đơn hàng (Order Notification Dropdown)
