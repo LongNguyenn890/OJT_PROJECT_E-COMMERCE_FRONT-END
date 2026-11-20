@@ -59,6 +59,27 @@ let currentCartState = {
 // Tập hợp các ID sản phẩm (product_id) đang được người dùng tích chọn để mua
 let selectedProductIds = new Set();
 
+// Cấu hình tài khoản ngân hàng nhận thanh toán Chuyển khoản VietQR
+const BANK_ACCOUNT_CONFIG = {
+  bankName: "Techcombank",
+  bankFullName: "Ngân hàng TMCP Kỹ Thương Việt Nam",
+  accountName: "NGUYEN QUANG MINH",
+  accountNumber: "19075419390012",
+  accountNumberFormatted: "1907 5419 3900 12",
+  bankBin: "970407", // Mã BIN Techcombank Napas 247
+  localQrSquare: "../assets/images/qr_techcombank_square.png", // Mã QR ma trận vuông đã crop gọn
+  localQrCard: "../assets/images/qr_techcombank_card_clean.png" // Thẻ QR Techcombank sạch đẹp
+};
+
+// Quản lý phiên đếm ngược và đơn hàng đang chờ thanh toán QR
+let qrCountdownInterval = null;
+let currentPendingQrOrder = null;
+
+// Quản lý voucher giảm giá (Chỉ dùng voucher người dùng đã đổi bằng điểm thưởng)
+let appliedVoucher = null;
+let userVouchersList = [];
+let userRewardPoints = 0;
+
 /**
  * Đồng bộ danh sách selectedProductIds với các sản phẩm hiện có trong giỏ
  */
@@ -94,6 +115,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupPhoneValidation();
   setupEventListeners();
   await loadCartData();
+  await loadUserVouchers();
 });
 
 /**
@@ -389,7 +411,49 @@ function renderSummarySidebar() {
   if (selectedLines > 0) {
     selectedShipping = selectedSubtotal >= 500000 ? 0 : 30000;
   }
-  const selectedTotal = selectedSubtotal + selectedShipping;
+
+  // Tính giảm giá từ Voucher đã áp dụng
+  let actualDiscount = 0;
+  if (appliedVoucher && selectedLines > 0) {
+    if (selectedSubtotal >= (appliedVoucher.min_order_value || 0)) {
+      if (appliedVoucher.type === "freeship") {
+        actualDiscount = Math.min(selectedShipping, appliedVoucher.discount_amount || 30000);
+      } else if (appliedVoucher.type === "percent") {
+        const pctDiscount = Math.round(selectedSubtotal * (appliedVoucher.percent / 100));
+        actualDiscount = Math.min(appliedVoucher.max_discount || 50000, pctDiscount);
+      } else {
+        actualDiscount = Math.min(selectedSubtotal, appliedVoucher.discount_amount || 0);
+      }
+    }
+  }
+
+  const selectedTotal = Math.max(0, selectedSubtotal + selectedShipping - actualDiscount);
+
+  // Cập nhật thông số tính toán vào currentCartState
+  currentCartState.subtotal = selectedSubtotal;
+  currentCartState.shipping_fee = selectedShipping;
+  currentCartState.discount_amount = actualDiscount;
+  currentCartState.total_amount = selectedTotal;
+
+  // Cập nhật dòng Giảm giá voucher trong bảng tóm tắt
+  const discountRow = document.getElementById("summary-discount-row");
+  const discountVoucherCode = document.getElementById("discount-voucher-code");
+  const discountVal = document.getElementById("discount-val");
+  if (discountRow) {
+    if (actualDiscount > 0 && appliedVoucher) {
+      discountRow.style.display = "flex";
+      if (discountVoucherCode) {
+        discountVoucherCode.textContent = appliedVoucher.code;
+        discountVoucherCode.title = `Mã voucher: ${appliedVoucher.code}`;
+      }
+      if (discountVal) discountVal.textContent = `-${formatMoney(actualDiscount)}`;
+    } else {
+      discountRow.style.display = "none";
+    }
+  }
+
+  // Đồng bộ giao diện Khối Voucher ngay trên nút Đặt hàng
+  syncVoucherSectionUI(selectedSubtotal, actualDiscount);
 
   if (subtotalLabel) {
     subtotalLabel.textContent = `Tạm tính (${selectedQty} món)`;
@@ -434,6 +498,7 @@ function renderSummarySidebar() {
 
   // Trạng thái nút Đặt hàng ngay
   if (btnPlaceOrder) {
+    const isBank = document.getElementById("payment-radio-bank")?.checked;
     if (selectedLines === 0) {
       btnPlaceOrder.disabled = true;
       btnPlaceOrder.style.opacity = "0.6";
@@ -443,7 +508,11 @@ function renderSummarySidebar() {
       btnPlaceOrder.disabled = false;
       btnPlaceOrder.style.opacity = "1";
       btnPlaceOrder.style.cursor = "pointer";
-      if (btnOrderText) btnOrderText.textContent = `Đặt hàng ngay (${selectedLines} món)`;
+      if (btnOrderText) {
+        btnOrderText.textContent = isBank
+          ? `Thanh toán chuyển khoản QR (${selectedLines} món)`
+          : `Đặt hàng ngay (${selectedLines} món)`;
+      }
     }
   }
 }
@@ -581,6 +650,15 @@ function setupEventListeners() {
   if (btnPlaceOrder) {
     btnPlaceOrder.addEventListener("click", handlePlaceOrder);
   }
+
+  // Sự kiện chuyển đổi phương thức thanh toán (COD vs VietQR)
+  setupPaymentMethodSwitch();
+
+  // Sự kiện Modal Thanh toán QR
+  setupQRPaymentModalEvents();
+
+  // Sự kiện Khối Voucher giảm giá & Modal Voucher
+  setupVoucherEvents();
 
   // Sự kiện đóng modal đặt hàng thành công
   const modalCloseBtn = document.getElementById("modal-close-btn");
@@ -1122,9 +1200,9 @@ async function handlePlaceOrder() {
   const btnPlaceOrder = document.getElementById("btn-place-order");
   const btnOrderText = document.getElementById("btn-order-text");
 
-  // Hiển thị loading
-  if (btnPlaceOrder) btnPlaceOrder.disabled = true;
-  if (btnOrderText) btnOrderText.textContent = "Đang xử lý đặt hàng...";
+  // Kiểm tra phương thức thanh toán được chọn (COD hay Chuyển khoản VietQR)
+  const isBankPayment = document.getElementById("payment-radio-bank")?.checked;
+  const paymentMethod = isBankPayment ? "chuyển khoản" : "COD";
 
   const selectedList = Array.from(selectedProductIds);
 
@@ -1133,9 +1211,58 @@ async function handlePlaceOrder() {
     receiver_phone: phone,
     shipping_address: address,
     note: note,
-    payment_method: "COD",
-    selected_product_ids: selectedList
+    payment_method: paymentMethod,
+    selected_product_ids: selectedList,
+    voucher_code: appliedVoucher ? appliedVoucher.code : null
   };
+
+  // =========================================================================
+  // NẾU KHÁCH CHỌN CHUYỂN KHOẢN VIETQR:
+  // QUY TẮC QUAN TRỌNG: CHƯA ĐƯỢC GỌI API TẠO ĐƠN VÀ CHƯA ĐƯỢC XÓA GIỎ HÀNG!
+  // Vì nếu gọi API tạo đơn bây giờ, Backend sẽ commit xóa các sản phẩm khỏi giỏ hàng.
+  // Khi đó nếu khách không quét hoặc bấm "Chọn lại phương thức thanh toán", giỏ hàng sẽ bị trống trơn.
+  // GIẢI PHÁP: Chỉ tạo thông tin đơn hàng tạm (preview) để hiển thị mã QR có số tiền và mã thanh toán.
+  // Giỏ hàng và toàn bộ sản phẩm vẫn được GIỮ NGUYÊN 100%!
+  // =========================================================================
+  if (isBankPayment) {
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, "");
+    const randomCode = Math.floor(1000 + Math.random() * 9000);
+    const previewOrderCode = `SE-${dateStr}-${randomCode}`;
+
+    // Lấy đúng số tiền của các sản phẩm đang được tích chọn
+    const previewTotal = currentCartState.total_amount || 0;
+
+    const previewOrder = {
+      order_code: previewOrderCode,
+      total_amount: previewTotal,
+      shipping_name: name,
+      shipping_phone: phone,
+      shipping_address: address,
+      payment_method: "chuyển khoản"
+    };
+
+    currentPendingQrOrder = {
+      payload: orderPayload,
+      previewOrder: previewOrder,
+      name: name,
+      phone: phone,
+      address: address,
+      isBackend: currentCartState.isBackend
+    };
+
+    // Mở popup Modal Quét mã QR thanh toán (Sản phẩm trong giỏ vẫn còn nguyên 100%)
+    showQRPaymentModal(previewOrder, name, phone, address);
+    return;
+  }
+
+  // =========================================================================
+  // NẾU KHÁCH CHỌN PHƯƠNG THỨC COD: TIẾN HÀNH ĐẶT HÀNG TRỰC TIẾP
+  // =========================================================================
+  if (btnPlaceOrder) btnPlaceOrder.disabled = true;
+  if (btnOrderText) {
+    btnOrderText.textContent = "Đang xử lý đặt hàng...";
+  }
 
   try {
     let orderResult = null;
@@ -1147,7 +1274,7 @@ async function handlePlaceOrder() {
       // Cập nhật trạng thái Stepper sang Bước 3 Hoàn tất
       setStepperCompleted();
 
-      // Hiển thị modal đặt hàng thành công
+      // Hiển thị modal đặt hàng COD thành công
       showOrderSuccessModal(orderResult, name, phone, address);
 
       // Xóa các ID đã đặt khỏi selectedProductIds
@@ -1174,16 +1301,23 @@ async function handlePlaceOrder() {
 
       const orderedSubtotal = orderedItems.reduce((s, it) => s + (it.price * it.quantity), 0);
       const orderedShipping = orderedSubtotal >= 500000 ? 0 : 30000;
-      const orderedTotal = orderedSubtotal + orderedShipping;
+      const discount = currentCartState.discount_amount || 0;
+      const orderedTotal = Math.max(0, orderedSubtotal + orderedShipping - discount);
 
       orderResult = {
         order_code: generatedOrderCode,
         shipping_name: name,
         shipping_phone: phone,
         shipping_address: address,
+        payment_method: paymentMethod,
+        subtotal_amount: orderedSubtotal,
+        shipping_fee: orderedShipping,
+        discount_amount: discount,
+        voucher_code: appliedVoucher ? appliedVoucher.code : null,
         total_amount: orderedTotal,
         items: orderedItems,
-        created_at: now.toISOString()
+        created_at: now.toISOString(),
+        status: "PENDING"
       };
 
       // 1. Lưu vào danh sách đơn demo
@@ -1191,19 +1325,19 @@ async function handlePlaceOrder() {
       savedOrders.unshift(orderResult);
       localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(savedOrders));
 
-      // 2. Chỉ lưu lại các sản phẩm CHƯA ĐƯỢC CHỌN trong giỏ hàng
+      // Cập nhật trạng thái Stepper sang Bước 3 Hoàn tất
+      setStepperCompleted();
+
+      // Chỉ lưu lại các sản phẩm CHƯA ĐƯỢC CHỌN trong giỏ hàng
       localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(remainingItems));
 
-      // 3. Cập nhật state giỏ hàng hiện tại với các món còn lại
+      // Cập nhật state giỏ hàng hiện tại với các món còn lại
       currentCartState.items = remainingItems;
       selectedProductIds = new Set(remainingItems.map(it => it.product_id));
       recalculateState();
       renderCart();
 
-      // 4. Cập nhật trạng thái Stepper sang Bước 3 Hoàn tất
-      setStepperCompleted();
-
-      // 5. Hiển thị modal đặt hàng thành công
+      // Hiển thị modal đặt hàng COD thành công
       showOrderSuccessModal(orderResult, name, phone, address);
 
       if (typeof showToast === "function") {
@@ -1226,8 +1360,355 @@ async function handlePlaceOrder() {
     if (btnPlaceOrder) btnPlaceOrder.disabled = false;
     if (btnOrderText) {
       const selectedCount = selectedProductIds.size;
-      btnOrderText.textContent = selectedCount > 0 ? `Đặt hàng ngay (${selectedCount} món)` : "Đặt hàng ngay";
+      const isBank = document.getElementById("payment-radio-bank")?.checked;
+      btnOrderText.textContent = selectedCount > 0
+        ? (isBank ? `Thanh toán chuyển khoản QR (${selectedCount} món)` : `Đặt hàng ngay (${selectedCount} món)`)
+        : "Đặt hàng ngay";
     }
+  }
+}
+
+// ==========================================================
+// 6. XỬ LÝ CHUYỂN ĐỔI PHƯƠNG THỨC THANH TOÁN (COD VS VIETQR)
+// ==========================================================
+function setupPaymentMethodSwitch() {
+  const radioCod = document.getElementById("payment-radio-cod");
+  const radioBank = document.getElementById("payment-radio-bank");
+  const labelCod = document.getElementById("payment-label-cod");
+  const labelBank = document.getElementById("payment-label-bank");
+
+  function updatePaymentMethodUI() {
+    const isBank = radioBank && radioBank.checked;
+    if (labelCod) labelCod.classList.toggle("active", !isBank);
+    if (labelBank) labelBank.classList.toggle("active", isBank);
+
+    const btnOrderText = document.getElementById("btn-order-text");
+    const selectedCount = selectedProductIds.size;
+    if (btnOrderText && selectedCount > 0) {
+      btnOrderText.textContent = isBank
+        ? `Thanh toán chuyển khoản QR (${selectedCount} món)`
+        : `Đặt hàng ngay (${selectedCount} món)`;
+    }
+  }
+
+  if (radioCod) radioCod.addEventListener("change", updatePaymentMethodUI);
+  if (radioBank) radioBank.addEventListener("change", updatePaymentMethodUI);
+}
+
+// ==========================================================
+// 7. XỬ LÝ MODAL QUÉT MÃ QR THANH TOÁN CHUYỂN KHOẢN (VIETQR)
+// ==========================================================
+/**
+ * Gắn các sự kiện cho Modal Thanh toán QR
+ */
+function setupQRPaymentModalEvents() {
+  const modal = document.getElementById("qr-payment-modal");
+  const btnCloseModal = document.getElementById("btn-close-qr-modal");
+  const btnChangePayment = document.getElementById("btn-qr-change-payment");
+  const btnConfirmPaid = document.getElementById("btn-qr-confirm-paid");
+
+  // Sự kiện nút đóng & nút "Chọn lại phương thức thanh toán"
+  if (btnCloseModal) {
+    btnCloseModal.addEventListener("click", () => closeQRPaymentModal(true));
+  }
+  if (btnChangePayment) {
+    btnChangePayment.addEventListener("click", () => closeQRPaymentModal(true));
+  }
+
+  // Đóng khi click vào vùng nền ngoài modal (backdrop)
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        closeQRPaymentModal(true);
+      }
+    });
+  }
+
+  // Đóng khi bấm phím Escape
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal && modal.classList.contains("active")) {
+      closeQRPaymentModal(true);
+    }
+  });
+
+  // Sự kiện nút "Tôi đã thanh toán thành công"
+  if (btnConfirmPaid) {
+    btnConfirmPaid.addEventListener("click", handleConfirmPaidQR);
+  }
+
+  // Sự kiện cho các nút Sao chép (STK, Số tiền, Nội dung CK)
+  document.querySelectorAll(".btn-copy-chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const textToCopy = btn.getAttribute("data-copy") || "";
+      if (textToCopy) {
+        copyToClipboard(textToCopy, btn);
+      }
+    });
+  });
+}
+
+/**
+ * Hiển thị Modal Quét mã QR thanh toán chuyển khoản
+ */
+function showQRPaymentModal(order, name, phone, address) {
+  const modal = document.getElementById("qr-payment-modal");
+  if (!modal) return;
+
+  const orderCode = order.order_code || order.code || "SE-20261120-8888";
+  const totalAmount = order.total_amount || 0;
+
+  // 1. Tạo URL mã QR động chuẩn VietQR có nhúng số tiền và mã đơn hàng
+  // Khi quét trong App ngân hàng (Techcombank, VCB, MB, Momo...) sẽ TỰ ĐỘNG ĐIỀN ĐÚNG SỐ TIỀN & NỘI DUNG!
+  const vietQrUrl = `https://img.vietqr.io/image/${BANK_ACCOUNT_CONFIG.bankBin}-${BANK_ACCOUNT_CONFIG.accountNumber}-qr_only.png?amount=${totalAmount}&addInfo=${encodeURIComponent(orderCode)}&accountName=${encodeURIComponent(BANK_ACCOUNT_CONFIG.accountName)}`;
+
+  const qrImage = document.getElementById("qr-payment-image");
+  if (qrImage) {
+    qrImage.src = vietQrUrl;
+    // Fallback: nếu lỗi mạng hoặc offline, hiển thị ảnh mã QR gốc đã crop gọn gàng
+    qrImage.onerror = () => {
+      qrImage.src = BANK_ACCOUNT_CONFIG.localQrSquare;
+    };
+  }
+
+  // 2. Điền thông tin vào các trường
+  const accNameElem = document.getElementById("qr-account-name");
+  const accNoElem = document.getElementById("qr-account-no");
+  const amountElem = document.getElementById("qr-amount-val");
+  const memoElem = document.getElementById("qr-memo-val");
+
+  if (accNameElem) accNameElem.textContent = BANK_ACCOUNT_CONFIG.accountName;
+  if (accNoElem) accNoElem.textContent = BANK_ACCOUNT_CONFIG.accountNumberFormatted;
+  if (amountElem) amountElem.textContent = formatMoney(totalAmount);
+  if (memoElem) memoElem.textContent = orderCode;
+
+  // 3. Gán giá trị sao chép cho các nút copy
+  const btnCopyAcc = document.getElementById("btn-copy-acc");
+  const btnCopyAmount = document.getElementById("btn-copy-amount");
+  const btnCopyMemo = document.getElementById("btn-copy-memo");
+
+  if (btnCopyAcc) btnCopyAcc.setAttribute("data-copy", BANK_ACCOUNT_CONFIG.accountNumber);
+  if (btnCopyAmount) btnCopyAmount.setAttribute("data-copy", String(totalAmount));
+  if (btnCopyMemo) btnCopyMemo.setAttribute("data-copy", orderCode);
+
+  // 4. Bắt đầu bộ đếm ngược 15 phút (900 giây)
+  startQRCountdown(15 * 60);
+
+  // 5. Hiển thị modal nổi lên
+  modal.classList.add("active");
+}
+
+/**
+ * Đếm ngược thời gian hết hạn mã QR
+ */
+function startQRCountdown(seconds) {
+  if (qrCountdownInterval) clearInterval(qrCountdownInterval);
+
+  let remaining = seconds;
+  const timerElem = document.getElementById("qr-countdown-timer");
+
+  function updateDisplay() {
+    if (!timerElem) return;
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    timerElem.textContent = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+
+  updateDisplay();
+
+  qrCountdownInterval = setInterval(() => {
+    remaining--;
+    if (remaining <= 0) {
+      clearInterval(qrCountdownInterval);
+      if (timerElem) timerElem.textContent = "00:00 (Hết hạn)";
+      if (typeof showToast === "function") {
+        showToast("Mã QR đã hết hạn thanh toán. Vui lòng thử lại hoặc chọn phương thức khác.", "warning");
+      }
+    } else {
+      updateDisplay();
+    }
+  }, 1000);
+}
+
+/**
+ * Xử lý khi khách hàng bấm "Tôi đã thanh toán thành công"
+ */
+async function handleConfirmPaidQR() {
+  if (!currentPendingQrOrder) {
+    closeQRPaymentModal(false);
+    return;
+  }
+
+  const btnConfirm = document.getElementById("btn-qr-confirm-paid");
+  const btnSpinner = document.getElementById("qr-btn-spinner");
+  const checkIcon = document.getElementById("qr-check-icon");
+  const confirmText = document.getElementById("qr-confirm-text");
+
+  // Hiển thị trạng thái kiểm tra giao dịch & hoàn tất đơn
+  if (btnConfirm) btnConfirm.disabled = true;
+  if (btnSpinner) btnSpinner.style.display = "inline-block";
+  if (checkIcon) checkIcon.style.display = "none";
+  if (confirmText) confirmText.textContent = "Đang kiểm tra & hoàn tất đơn hàng...";
+
+  try {
+    let finalOrderCode = currentPendingQrOrder.previewOrder?.order_code || "";
+
+    // CHỈ TẠO ĐƠN VÀ XÓA CÁC MÓN ĐÃ MUA KHỎI GIỎ KHI KHÁCH ĐÃ XÁC NHẬN THANH TOÁN THÀNH CÔNG
+    if (currentPendingQrOrder.isBackend && typeof api !== "undefined" && api.post) {
+      // 1. Gửi request tạo đơn hàng chính thức lên Backend API
+      const orderResult = await api.post("/orders", currentPendingQrOrder.payload);
+      finalOrderCode = orderResult.order_code || finalOrderCode;
+
+      // 2. Cập nhật trạng thái Stepper sang Bước 3 Hoàn tất
+      setStepperCompleted();
+
+      // 3. Xóa các ID đã mua khỏi danh sách chọn và tải lại giỏ hàng từ Backend
+      // (Backend chỉ xóa các món đã đặt mua, các món chưa chọn vẫn còn nguyên vẹn trong CSDL!)
+      selectedProductIds.clear();
+      await loadCartData();
+    } else {
+      // Chế độ Demo Cục bộ (Local Fallback)
+      await new Promise(r => setTimeout(r, 600));
+
+      const now = new Date();
+      const orderedItems = currentCartState.items.filter(it => selectedProductIds.has(it.product_id));
+      const remainingItems = currentCartState.items.filter(it => !selectedProductIds.has(it.product_id));
+
+      const orderedSubtotal = orderedItems.reduce((s, it) => s + (it.price * it.quantity), 0);
+      const orderedShipping = orderedSubtotal >= 500000 ? 0 : 30000;
+      const discount = currentCartState.discount_amount || 0;
+      const orderedTotal = Math.max(0, orderedSubtotal + orderedShipping - discount);
+
+      const orderResult = {
+        order_code: finalOrderCode,
+        shipping_name: currentPendingQrOrder.name,
+        shipping_phone: currentPendingQrOrder.phone,
+        shipping_address: currentPendingQrOrder.address,
+        payment_method: "chuyển khoản",
+        subtotal_amount: orderedSubtotal,
+        shipping_fee: orderedShipping,
+        discount_amount: discount,
+        voucher_code: appliedVoucher ? appliedVoucher.code : null,
+        total_amount: orderedTotal,
+        items: orderedItems,
+        created_at: now.toISOString(),
+        status: "PENDING"
+      };
+
+      // Lưu đơn vào danh sách đơn demo
+      const savedOrders = JSON.parse(localStorage.getItem(ORDERS_STORAGE_KEY) || "[]");
+      savedOrders.unshift(orderResult);
+      localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(savedOrders));
+
+      // Cập nhật trạng thái Stepper sang Bước 3 Hoàn tất
+      setStepperCompleted();
+
+      // Chỉ lưu lại các sản phẩm CHƯA ĐƯỢC CHỌN trong giỏ hàng
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(remainingItems));
+      currentCartState.items = remainingItems;
+      selectedProductIds = new Set(remainingItems.map(it => it.product_id));
+      recalculateState();
+      renderCart();
+    }
+
+    // Đóng modal và dừng đếm ngược (không chuyển về COD vì đã thanh toán thành công)
+    closeQRPaymentModal(false);
+
+    if (typeof showToast === "function") {
+      showToast(`Thanh toán thành công đơn hàng ${finalOrderCode}! Đang chuyển đến Đơn mua của bạn...`, "success");
+    }
+
+    // Chuyển hướng sang trang "Đơn mua của tôi" sau 600ms
+    setTimeout(() => {
+      window.location.href = `my_orders.html?order_code=${encodeURIComponent(finalOrderCode)}`;
+    }, 600);
+
+  } catch (err) {
+    const errorMsg = err.message || "Có lỗi xảy ra khi xác nhận thanh toán. Vui lòng thử lại.";
+    if (typeof showToast === "function") {
+      showToast(errorMsg, "error");
+    } else {
+      alert(errorMsg);
+    }
+  } finally {
+    if (btnConfirm) btnConfirm.disabled = false;
+    if (btnSpinner) btnSpinner.style.display = "none";
+    if (checkIcon) checkIcon.style.display = "inline-block";
+    if (confirmText) confirmText.textContent = "Tôi đã thanh toán thành công";
+  }
+}
+
+/**
+ * Đóng Modal QR và xử lý khi khách hàng chọn lại phương thức thanh toán
+ */
+function closeQRPaymentModal(switchBackToCod = false) {
+  const modal = document.getElementById("qr-payment-modal");
+  if (modal) modal.classList.remove("active");
+
+  if (qrCountdownInterval) {
+    clearInterval(qrCountdownInterval);
+    qrCountdownInterval = null;
+  }
+
+  // Hủy thông tin đơn hàng tạm đang chờ
+  currentPendingQrOrder = null;
+
+  // Nếu khách hàng bấm "Chọn lại phương thức thanh toán" hoặc đóng modal mà chưa thanh toán
+  if (switchBackToCod) {
+    // 1. Tự động chuyển radio chọn thanh toán về COD
+    const radioCod = document.getElementById("payment-radio-cod");
+    const radioBank = document.getElementById("payment-radio-bank");
+    const labelCod = document.getElementById("payment-label-cod");
+    const labelBank = document.getElementById("payment-label-bank");
+
+    if (radioCod) radioCod.checked = true;
+    if (radioBank) radioBank.checked = false;
+    if (labelCod) labelCod.classList.add("active");
+    if (labelBank) labelBank.classList.remove("active");
+
+    // 2. Cập nhật lại text nút đặt hàng chính
+    const btnOrderText = document.getElementById("btn-order-text");
+    const selectedCount = selectedProductIds.size;
+    if (btnOrderText && selectedCount > 0) {
+      btnOrderText.textContent = `Đặt hàng ngay (${selectedCount} món)`;
+    }
+
+    // 3. Thông báo rõ ràng cho khách hàng rằng các sản phẩm trong giỏ vẫn được giữ nguyên 100%
+    if (typeof showToast === "function") {
+      showToast("Đã giữ nguyên các sản phẩm trong giỏ hàng. Bạn có thể chọn phương thức COD hoặc thanh toán sau.", "info");
+    }
+  }
+}
+
+/**
+ * Tiện ích sao chép vào bộ nhớ tạm kèm hiệu ứng nút
+ */
+function copyToClipboard(text, btnElement) {
+  if (!navigator.clipboard) {
+    // Fallback cho trình duyệt cũ
+    const tempInput = document.createElement("input");
+    tempInput.value = text;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand("copy");
+    document.body.removeChild(tempInput);
+  } else {
+    navigator.clipboard.writeText(text);
+  }
+
+  // Hiệu ứng đổi text nút tạm thời
+  if (btnElement) {
+    const originalHtml = btnElement.innerHTML;
+    btnElement.innerHTML = `
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.8"><polyline points="20 6 9 17 4 12"/></svg>
+      <span style="color: #16a34a; font-weight: 700;">Đã chép!</span>
+    `;
+    setTimeout(() => {
+      btnElement.innerHTML = originalHtml;
+    }, 1500);
+  }
+
+  if (typeof showToast === "function") {
+    showToast(`Đã sao chép: "${text}"`, "success");
   }
 }
 
@@ -1286,4 +1767,316 @@ function showOrderSuccessModal(order, name, phone, address) {
   if (totalElem) totalElem.textContent = formatMoney(total);
 
   modal.classList.add("active");
+}
+
+// ==========================================================
+// 8. QUẢN LÝ VOUCHER GIẢM GIÁ (CHỈ DÙNG VOUCHER ĐỔI TỪ ĐIỂM THƯỞNG)
+// ==========================================================
+
+/**
+ * Lấy danh sách voucher hợp lệ người dùng thực sự sở hữu (chưa sử dụng)
+ */
+function getAllAvailableVouchers() {
+  return userVouchersList.filter(v => Number(v.is_used || 0) === 0);
+}
+
+/**
+ * Tải số điểm thưởng và danh sách voucher của người dùng từ Backend
+ */
+async function loadUserVouchers() {
+  const token = typeof Auth !== "undefined" ? Auth.getToken() : localStorage.getItem("token");
+  if (!token || typeof api === "undefined" || !api.get) return;
+
+  try {
+    const res = await api.get("/auth/me/reward-points");
+    if (res) {
+      userRewardPoints = Number(res.reward_points || 0);
+      const pointsElem = document.getElementById("user-points-val");
+      if (pointsElem) pointsElem.textContent = userRewardPoints;
+
+      if (Array.isArray(res.vouchers)) {
+        userVouchersList = res.vouchers
+          .filter(v => Number(v.is_used || 0) === 0)
+          .map(v => ({
+            code: String(v.code).toUpperCase(),
+            title: v.title || `Voucher giảm ${formatMoney(v.discount_amount)}`,
+            discount_amount: Number(v.discount_amount || 0),
+            min_order_value: Number(v.min_order_value || 0),
+            type: "fixed",
+            expiry: v.expires_at ? new Date(v.expires_at).toLocaleDateString("vi-VN") : "30 ngày sau khi đổi",
+            desc: v.min_order_value > 0 ? `Đơn tối thiểu ${formatMoney(v.min_order_value)}` : "Mọi giá trị đơn hàng"
+          }));
+      }
+    }
+  } catch (_) {
+    userVouchersList = [];
+    userRewardPoints = 0;
+  }
+}
+
+/**
+ * Đồng bộ giao diện Thanh Voucher nhỏ gọn ngay trên nút Đặt hàng
+ */
+function syncVoucherSectionUI(selectedSubtotal, actualDiscount) {
+  const unselectedBar = document.getElementById("voucher-bar-unselected");
+  const selectedBar = document.getElementById("voucher-bar-selected");
+  const appliedCodeElem = document.getElementById("applied-voucher-code");
+  const appliedDescElem = document.getElementById("applied-voucher-desc");
+
+  if (appliedVoucher) {
+    if (unselectedBar) unselectedBar.style.display = "none";
+    if (selectedBar) selectedBar.style.display = "flex";
+    if (appliedCodeElem) appliedCodeElem.textContent = appliedVoucher.code;
+    if (appliedDescElem) {
+      if (actualDiscount > 0) {
+        appliedDescElem.textContent = `Giảm ${formatMoney(actualDiscount)}`;
+      } else {
+        appliedDescElem.textContent = `Cần đơn từ ${formatMoney(appliedVoucher.min_order_value || 0)}`;
+      }
+    }
+  } else {
+    if (unselectedBar) unselectedBar.style.display = "flex";
+    if (selectedBar) selectedBar.style.display = "none";
+  }
+}
+
+/**
+ * Áp dụng một mã voucher
+ */
+function applyVoucher(code) {
+  if (!code || !code.trim()) {
+    if (typeof showToast === "function") {
+      showToast("Vui lòng nhập mã giảm giá!", "warning");
+    }
+    return;
+  }
+
+  const cleanCode = code.trim().toUpperCase();
+  const allVouchers = getAllAvailableVouchers();
+  const voucher = allVouchers.find(v => v.code.toUpperCase() === cleanCode);
+
+  if (!voucher) {
+    if (typeof showToast === "function") {
+      showToast(`Bạn chưa sở hữu mã voucher "${cleanCode}". Hãy đổi điểm thưởng để nhận voucher!`, "error");
+    } else {
+      alert(`Bạn chưa sở hữu mã voucher "${cleanCode}". Hãy đổi điểm thưởng để nhận voucher!`);
+    }
+    return;
+  }
+
+  // Lọc tổng tiền các món đang được tích chọn
+  const selectedItems = currentCartState.items.filter(it => selectedProductIds.has(it.product_id));
+  const selectedSubtotal = selectedItems.reduce((s, it) => s + (it.price * it.quantity), 0);
+
+  if (selectedSubtotal < (voucher.min_order_value || 0)) {
+    const diff = (voucher.min_order_value || 0) - selectedSubtotal;
+    if (typeof showToast === "function") {
+      showToast(`Mã ${voucher.code} áp dụng cho đơn từ ${formatMoney(voucher.min_order_value)}. Hãy mua thêm ${formatMoney(diff)} để sử dụng!`, "warning");
+    }
+  }
+
+  appliedVoucher = voucher;
+  renderSummarySidebar();
+
+  // Đóng modal voucher nếu đang mở
+  closeVoucherModal();
+
+  // Xóa trắng input
+  const inputModal = document.getElementById("modal-voucher-input");
+  if (inputModal) inputModal.value = "";
+
+  if (typeof showToast === "function") {
+    showToast(`Đã áp dụng mã giảm giá ${voucher.code}!`, "success");
+  }
+}
+
+/**
+ * Bỏ áp dụng mã voucher
+ */
+function removeVoucher() {
+  if (!appliedVoucher) return;
+  const oldCode = appliedVoucher.code;
+  appliedVoucher = null;
+  renderSummarySidebar();
+  if (typeof showToast === "function") {
+    showToast(`Đã hủy áp dụng mã ${oldCode}.`, "info");
+  }
+}
+
+/**
+ * Mở modal chọn voucher và render danh sách voucher
+ */
+function openVoucherModal() {
+  const modal = document.getElementById("voucher-select-modal");
+  if (!modal) return;
+
+  renderVoucherModalCards();
+  modal.classList.add("active");
+}
+
+/**
+ * Đóng modal chọn voucher
+ */
+function closeVoucherModal() {
+  const modal = document.getElementById("voucher-select-modal");
+  if (modal) modal.classList.remove("active");
+}
+
+/**
+ * Render danh sách thẻ Voucher trong Modal (Hiển thị trống nếu chưa có voucher nào)
+ */
+function renderVoucherModalCards() {
+  const container = document.getElementById("voucher-cards-list");
+  const noteElem = document.getElementById("voucher-eligible-note");
+  const pointsElem = document.getElementById("user-points-val");
+  if (!container) return;
+
+  if (pointsElem) pointsElem.textContent = userRewardPoints;
+
+  const selectedItems = currentCartState.items.filter(it => selectedProductIds.has(it.product_id));
+  const selectedSubtotal = selectedItems.reduce((s, it) => s + (it.price * it.quantity), 0);
+  const allVouchers = getAllAvailableVouchers();
+
+  if (noteElem) {
+    noteElem.textContent = `Tạm tính: ${formatMoney(selectedSubtotal)}`;
+  }
+
+  // TRƯỜNG HỢP 1: Tài khoản chưa có voucher nào (chưa đổi điểm)
+  if (allVouchers.length === 0) {
+    container.innerHTML = `
+      <div class="voucher-empty-state">
+        <div class="voucher-empty-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+            <line x1="7" y1="7" x2="7.01" y2="7"/>
+          </svg>
+        </div>
+        <div class="voucher-empty-title">Bạn chưa có voucher giảm giá nào</div>
+        <div class="voucher-empty-desc">Voucher giảm giá chỉ nhận được khi quy đổi bằng Điểm thưởng tích lũy.</div>
+
+        <div class="voucher-points-guide-box">
+          <div style="font-weight: 700; color: #9a3412; margin-bottom: 5px;">💡 Quy tắc tích lũy điểm thưởng:</div>
+          <div>• Đơn hàng có mức chi tiêu <strong>trên 500.000₫</strong> sẽ được tích điểm khi được <strong>Admin duyệt đơn</strong>.</div>
+          <div>• Với mỗi <strong>10.000₫</strong> vượt mức 500.000₫ sẽ nhận được <strong>1 điểm thưởng</strong>.</div>
+          <div style="margin-top: 5px; color: #64748b; font-style: italic;">(Ví dụ: Đơn 490k: 0 điểm | Đơn 510k: nhận 1 điểm | Đơn 600k: nhận 10 điểm).</div>
+        </div>
+
+        <div style="margin-top: 12px; font-size: 13px; color: #475569;">
+          Điểm thưởng hiện có: <strong style="color: #ea580c; font-size: 15px;">${userRewardPoints}</strong> điểm
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // TRƯỜNG HỢP 2: Đã có voucher do đổi điểm thưởng
+  container.innerHTML = allVouchers.map(v => {
+    const isApplied = appliedVoucher && appliedVoucher.code.toUpperCase() === v.code.toUpperCase();
+    const isEligible = selectedSubtotal >= (v.min_order_value || 0);
+
+    const discountDisplay = `-${formatMoney(v.discount_amount)}`;
+
+    let cardClass = "voucher-ticket-card";
+    if (isApplied) cardClass += " is-applied";
+    else if (!isEligible) cardClass += " is-disabled";
+
+    let btnHtml = "";
+    if (isApplied) {
+      btnHtml = `<button type="button" class="btn-ticket-action btn-applied" disabled>✓ Đang dùng</button>`;
+    } else if (isEligible) {
+      btnHtml = `<button type="button" class="btn-ticket-action btn-apply" data-apply-code="${escapeHtml(v.code)}">Áp dụng</button>`;
+    } else {
+      const diff = (v.min_order_value || 0) - selectedSubtotal;
+      btnHtml = `<button type="button" class="btn-ticket-action btn-disabled" title="Cần mua thêm ${formatMoney(diff)}" data-apply-code="${escapeHtml(v.code)}">Mua thêm</button>`;
+    }
+
+    return `
+      <div class="${cardClass}">
+        <div class="ticket-left-side">
+          <span class="ticket-badge-tag">${escapeHtml(v.code)}</span>
+          <span class="ticket-discount-text">${discountDisplay}</span>
+        </div>
+        <div class="ticket-right-side">
+          <div>
+            <div class="ticket-title">${escapeHtml(v.title)}</div>
+            <div class="ticket-condition">${escapeHtml(v.desc)}</div>
+          </div>
+          <div class="ticket-bottom-bar">
+            <span class="ticket-expiry">HSD: ${v.expiry || "30 ngày sau khi đổi"}</span>
+            ${btnHtml}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  // Gắn sự kiện click nút Áp dụng trên từng thẻ voucher
+  container.querySelectorAll(".btn-ticket-action[data-apply-code]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const code = btn.getAttribute("data-apply-code");
+      if (code) applyVoucher(code);
+    });
+  });
+}
+
+/**
+ * Gắn các sự kiện cho thanh Voucher nhỏ gọn và Modal Voucher
+ */
+function setupVoucherEvents() {
+  const compactBar = document.getElementById("cart-voucher-compact-bar");
+  const btnChangeVoucher = document.getElementById("btn-change-voucher");
+  const btnCloseModal = document.getElementById("btn-close-voucher-modal");
+  const btnFooterClose = document.getElementById("btn-footer-close-voucher");
+  const modal = document.getElementById("voucher-select-modal");
+
+  // Bấm vào thanh nhỏ gọn hoặc nút đổi mã -> mở popup
+  if (compactBar) {
+    compactBar.addEventListener("click", (e) => {
+      if (e.target.closest("#btn-remove-voucher")) return;
+      openVoucherModal();
+    });
+  }
+  if (btnChangeVoucher) {
+    btnChangeVoucher.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openVoucherModal();
+    });
+  }
+
+  // Đóng modal
+  if (btnCloseModal) {
+    btnCloseModal.addEventListener("click", closeVoucherModal);
+  }
+  if (btnFooterClose) {
+    btnFooterClose.addEventListener("click", closeVoucherModal);
+  }
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeVoucherModal();
+    });
+  }
+
+  // Nút xóa mã voucher
+  const btnRemove = document.getElementById("btn-remove-voucher");
+  if (btnRemove) {
+    btnRemove.addEventListener("click", (e) => {
+      e.stopPropagation();
+      removeVoucher();
+    });
+  }
+
+  // Nhập mã ở Modal
+  const btnApplyModal = document.getElementById("btn-modal-apply-code");
+  const inputModal = document.getElementById("modal-voucher-input");
+  if (btnApplyModal && inputModal) {
+    btnApplyModal.addEventListener("click", () => {
+      applyVoucher(inputModal.value);
+    });
+    inputModal.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        applyVoucher(inputModal.value);
+      }
+    });
+  }
 }

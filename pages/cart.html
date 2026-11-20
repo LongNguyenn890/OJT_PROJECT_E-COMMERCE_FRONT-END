@@ -256,14 +256,16 @@
             </div>
           </div>
 
-          <!-- 4. PHƯƠNG THỨC THANH TOÁN (COD THEO FIGMA) -->
-            <div class="payment-method-container">
-              <div class="payment-method-title">Phương thức thanh toán</div>
-              <label class="payment-option-card">
-                <input type="radio" name="payment_method" value="COD" checked class="payment-radio">
+          <!-- 4. PHƯƠNG THỨC THANH TOÁN (COD HOẶC CHUYỂN KHOẢN QR) -->
+          <div class="payment-method-container">
+            <div class="payment-method-title">Phương thức thanh toán</div>
+            <div class="payment-options-grid">
+              <!-- Lựa chọn 1: COD -->
+              <label class="payment-option-card active" id="payment-label-cod">
+                <input type="radio" name="payment_method" value="COD" checked class="payment-radio" id="payment-radio-cod">
                 <div class="payment-desc-box">
                   <b>
-                    <span class="payment-badge-pill">
+                    <span class="payment-badge-pill cod-pill">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
                       COD
                     </span>
@@ -272,7 +274,23 @@
                   <p>Khách hàng kiểm tra hàng trước khi thanh toán trực tiếp cho nhân viên giao hàng.</p>
                 </div>
               </label>
+
+              <!-- Lựa chọn 2: Chuyển khoản VietQR -->
+              <label class="payment-option-card" id="payment-label-bank">
+                <input type="radio" name="payment_method" value="chuyển khoản" class="payment-radio" id="payment-radio-bank">
+                <div class="payment-desc-box">
+                  <b>
+                    <span class="payment-badge-pill vietqr-pill">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="6" height="6" x="3" y="3" rx="1"/><rect width="6" height="6" x="15" y="3" rx="1"/><rect width="6" height="6" x="3" y="15" rx="1"/><path d="M15 15h.01"/><path d="M18 15h3v3"/></svg>
+                      VIETQR
+                    </span>
+                    Chuyển khoản ngân hàng qua mã QR (Techcombank)
+                  </b>
+                  <p>Quét mã QR bằng ứng dụng ngân hàng bất kỳ. Tự động điền số tiền cần thanh toán và nội dung đơn hàng.</p>
+                </div>
+              </label>
             </div>
+          </div>
           </section>
       </div>
 
@@ -299,10 +317,17 @@
           <!-- Thông báo tiến độ freeship -->
           <div class="shipping-progress-hint" id="freeship-hint" style="display: none;"></div>
 
-          <!-- Giảm giá ưu đãi -->
-          <div class="summary-row">
-            <span>Giảm giá ưu đãi</span>
-            <span style="color: #64748b; font-weight: 500;">0 ₫</span>
+          <!-- Giảm giá ưu đãi (Voucher) -->
+          <div class="summary-row discount-row" id="summary-discount-row" style="display: none;">
+            <div class="summary-discount-left">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                <line x1="7" y1="7" x2="7.01" y2="7"/>
+              </svg>
+              <span class="discount-title">Voucher giảm giá</span>
+              <span class="discount-code-badge" id="discount-voucher-code"></span>
+            </div>
+            <strong class="summary-discount-val" id="discount-val">-0 ₫</strong>
           </div>
 
           <hr class="summary-divider">
@@ -313,6 +338,40 @@
             <span class="summary-total-val" id="total-val">0 ₫</span>
           </div>
           <div class="summary-tax-note">Đã bao gồm VAT &amp; Phí thu hộ COD</div>
+
+          <!-- KHỐI CHỌN VOUCHER GIẢM GIÁ NHỎ GỌN (NGAY TRÊN NÚT ĐẶT HÀNG) -->
+          <div class="cart-voucher-compact-bar" id="cart-voucher-compact-bar" title="Nhấp để chọn mã giảm giá">
+            <!-- Trạng thái 1: Chưa chọn voucher -->
+            <div class="voucher-bar-unselected" id="voucher-bar-unselected">
+              <div class="voucher-bar-left">
+                <span class="voucher-bar-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                    <line x1="7" y1="7" x2="7.01" y2="7"/>
+                  </svg>
+                </span>
+                <span class="voucher-bar-label">Chọn voucher giảm giá</span>
+              </div>
+              <div class="voucher-bar-right">
+                <span class="voucher-bar-action" id="voucher-trigger-text">Chọn mã</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+            </div>
+
+            <!-- Trạng thái 2: Đã chọn voucher -->
+            <div class="voucher-bar-selected" id="voucher-bar-selected" style="display: none;">
+              <div class="voucher-bar-left">
+                <span class="voucher-tag-pill" id="applied-voucher-code">VOUCHER</span>
+                <span class="voucher-tag-desc" id="applied-voucher-desc">Giảm giá</span>
+              </div>
+              <div class="voucher-bar-right">
+                <span class="voucher-bar-change" id="btn-change-voucher">Đổi mã</span>
+                <button type="button" class="btn-clear-voucher" id="btn-remove-voucher" title="Bỏ áp dụng mã">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </div>
+            </div>
+          </div>
 
           <!-- Nút Đặt hàng ngay -->
           <button type="button" class="btn-place-order" id="btn-place-order">
@@ -415,6 +474,181 @@
         <a href="../pages/my_orders.html" class="modal-btn-secondary" id="modal-close-btn">
           Xem đơn mua
         </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. MODAL THANH TOÁN CHUYỂN KHOẢN QR (QR PAYMENT MODAL) -->
+  <div class="order-modal-backdrop" id="qr-payment-modal" role="dialog" aria-modal="true" aria-labelledby="qr-modal-title">
+    <div class="qr-payment-modal">
+      <!-- Header Modal -->
+      <div class="qr-modal-header">
+        <div class="qr-header-title-box">
+          <div class="qr-header-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="6" height="6" x="3" y="3" rx="1"/>
+              <rect width="6" height="6" x="15" y="3" rx="1"/>
+              <rect width="6" height="6" x="3" y="15" rx="1"/>
+              <path d="M15 15h.01"/><path d="M18 15h3v3"/><path d="M15 18v3"/>
+            </svg>
+          </div>
+          <div>
+            <h2 id="qr-modal-title">Quét mã QR để thanh toán</h2>
+            <p class="qr-modal-subtitle">Sử dụng App ngân hàng bất kỳ để quét mã (Tự động điền đúng số tiền)</p>
+          </div>
+        </div>
+        <button type="button" class="qr-modal-close-btn" id="btn-close-qr-modal" title="Đóng">&times;</button>
+      </div>
+
+      <!-- Body Modal: Bố cục 2 cột (Cột QR & Cột thông tin tài khoản) -->
+      <div class="qr-modal-body">
+        <!-- Cột trái: Mã QR thu gọn viền sắc nét -->
+        <div class="qr-code-column">
+          <div class="qr-image-wrapper">
+            <img id="qr-payment-image" 
+                 src="../assets/images/qr_techcombank_square.png" 
+                 alt="Mã QR Chuyển khoản Techcombank" 
+                 class="qr-screen-image"
+                 onerror="this.src='../assets/images/qr_techcombank_square.png'">
+            <div class="qr-scan-badge">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="20 6 9 17 4 12"/></svg>
+              Tự động điền số tiền khi quét
+            </div>
+          </div>
+          
+          <!-- Đếm ngược thời gian -->
+          <div class="qr-countdown-box">
+            <span class="qr-countdown-icon">⏱️</span>
+            <span>Hết hạn trong: <b id="qr-countdown-timer">15:00</b></span>
+          </div>
+        </div>
+
+        <!-- Cột phải: Thông tin tài khoản & nút copy tiện lợi -->
+        <div class="qr-info-column">
+          <div class="qr-bank-banner">
+            <div class="qr-bank-logo-text">TECHCOMBANK</div>
+            <div class="qr-bank-fullname">Ngân hàng TMCP Kỹ Thương Việt Nam</div>
+          </div>
+
+          <div class="qr-detail-list">
+            <!-- Chủ tài khoản -->
+            <div class="qr-detail-item">
+              <span class="qr-detail-label">Chủ tài khoản:</span>
+              <strong class="qr-detail-val" id="qr-account-name">NGUYEN QUANG MINH</strong>
+            </div>
+
+            <!-- Số tài khoản -->
+            <div class="qr-detail-item">
+              <span class="qr-detail-label">Số tài khoản:</span>
+              <div class="qr-copyable-box">
+                <strong class="qr-detail-val text-primary" id="qr-account-no">1907 5419 3900 12</strong>
+                <button type="button" class="btn-copy-chip" id="btn-copy-acc" data-copy="19075419390012" title="Sao chép số tài khoản">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                  <span>Sao chép</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Số tiền cần thanh toán -->
+            <div class="qr-detail-item highlight-item">
+              <span class="qr-detail-label">Số tiền:</span>
+              <div class="qr-copyable-box">
+                <strong class="qr-detail-val text-amount" id="qr-amount-val">0 ₫</strong>
+                <button type="button" class="btn-copy-chip" id="btn-copy-amount" title="Sao chép số tiền">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                  <span>Sao chép</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Nội dung chuyển khoản -->
+            <div class="qr-detail-item">
+              <span class="qr-detail-label">Nội dung CK:</span>
+              <div class="qr-copyable-box">
+                <strong class="qr-detail-val text-code" id="qr-memo-val">SE-XXXXXX</strong>
+                <button type="button" class="btn-copy-chip" id="btn-copy-memo" title="Sao chép nội dung">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                  <span>Sao chép</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="qr-note-alert">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" style="flex-shrink: 0; margin-top: 1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>Quý khách vui lòng <b>giữ nguyên nội dung chuyển khoản</b> để hệ thống tự động xác thực đơn hàng.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Modal: 2 nút quan trọng -->
+      <div class="qr-modal-footer">
+        <button type="button" class="btn-qr-back" id="btn-qr-change-payment">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m15 18-6-6 6-6"/></svg>
+          <span>Chọn lại phương thức thanh toán</span>
+        </button>
+
+        <button type="button" class="btn-qr-success" id="btn-qr-confirm-paid">
+          <span class="qr-btn-spinner" id="qr-btn-spinner" style="display: none;"></span>
+          <svg id="qr-check-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span id="qr-confirm-text">Tôi đã thanh toán thành công</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- MODAL CHỌN VOUCHER GIẢM GIÁ (SHOPEASE VOUCHER MODAL) -->
+  <!-- ========================================================== -->
+  <div class="modal-overlay voucher-modal-overlay" id="voucher-select-modal">
+    <div class="voucher-modal-container">
+      <div class="voucher-modal-header">
+        <div class="voucher-modal-header-left">
+          <div class="voucher-modal-icon-badge">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2.3">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+              <line x1="7" y1="7" x2="7.01" y2="7"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="voucher-modal-title">Chọn ShopEase Voucher</h3>
+            <p class="voucher-modal-desc">Áp dụng mã giảm giá để nhận thêm ưu đãi cho đơn hàng</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" id="btn-close-voucher-modal" title="Đóng">&times;</button>
+      </div>
+
+      <!-- Banner Điểm thưởng của khách hàng -->
+      <div class="voucher-points-banner" id="voucher-points-banner">
+        <div class="points-banner-left">
+          <span class="points-coin-icon">🪙</span>
+          <span>Điểm thưởng hiện có: <strong id="user-points-val" style="color: #ea580c; font-size: 14px;">0</strong> điểm</span>
+        </div>
+        <div class="points-banner-right">
+          <span class="points-policy-tooltip" title="Đơn hàng trên 500k: Cứ mỗi 10k vượt 500k nhận 1 điểm khi Admin duyệt đơn">ℹ️ Quy tắc tích điểm</span>
+        </div>
+      </div>
+
+      <div class="voucher-modal-search-bar">
+        <div class="modal-search-input-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="modal-voucher-input" placeholder="Nhập mã voucher giảm giá..." autocomplete="off" spellcheck="false">
+        </div>
+        <button type="button" id="btn-modal-apply-code" class="btn-modal-apply">Áp dụng</button>
+      </div>
+
+      <div class="voucher-modal-body">
+        <div class="voucher-list-header">
+          <span class="voucher-list-title">Mã giảm giá có thể áp dụng</span>
+          <span class="voucher-eligible-note" id="voucher-eligible-note"></span>
+        </div>
+        <div class="voucher-cards-list" id="voucher-cards-list">
+          <!-- Danh sách thẻ voucher sẽ được render động bằng JavaScript -->
+        </div>
+      </div>
+
+      <div class="voucher-modal-footer">
+        <button type="button" class="btn-modal-close" id="btn-footer-close-voucher">Đóng</button>
       </div>
     </div>
   </div>
