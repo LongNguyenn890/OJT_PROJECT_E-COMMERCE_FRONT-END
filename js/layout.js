@@ -105,10 +105,10 @@ function renderLayout() {
             <small>Tổng đài CSKH<br><b>1900 6868</b></small>
           </span>
           ${userSectionHtml}
-          <button class="cart-tool" aria-label="Giỏ hàng">
+          <a href="${root}pages/cart.html" class="cart-tool" aria-label="Giỏ hàng" style="text-decoration: none; cursor: pointer;">
             <img src="${root}assets/images/giỏ hàng.svg" alt="">
             <i id="cart-count">0</i>
-          </button>
+          </a>
         </div>
       </div>`;
 
@@ -269,6 +269,28 @@ function checkPendingToast() {
   }
 }
 
+// Tự động đồng bộ số lượng sản phẩm trên icon giỏ hàng
+async function syncGlobalCartCount() {
+  const badge = document.getElementById("cart-count");
+  if (!badge) return;
+  const token = localStorage.getItem("token");
+  if (token && typeof api !== "undefined") {
+    try {
+      const cartData = await api.get("/cart");
+      const totalQty = (cartData.cart_items || []).reduce((sum, item) => sum + item.quantity, 0);
+      badge.textContent = totalQty;
+      return;
+    } catch (_) {}
+  }
+  try {
+    const demoCart = JSON.parse(localStorage.getItem("shopease_demo_cart_v1") || "[]");
+    badge.textContent = demoCart.reduce((s, x) => s + (x.qty || x.quantity || 1), 0);
+  } catch (_) {
+    badge.textContent = "0";
+  }
+}
+
 // Tự động render layout và kích hoạt toast chờ
 renderLayout();
 checkPendingToast();
+syncGlobalCartCount();

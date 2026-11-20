@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Giỏ hàng & Thanh toán COD | ShopEase</title>
+  <link rel="icon" href="../assets/images/logo_shop.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/items.css">
+  <link rel="stylesheet" href="../css/cart.css">
+</head>
+<body class="shop-page" data-root="../">
+  <!-- TOPLINE THEO FIGMA -->
+  <div class="shop-topline">
+    <span>
+      <img src="../assets/images/giao hàng.svg" alt="" style="width: 14px; height: 14px; vertical-align: -2px; margin-right: 4px;">
+      Miễn phí giao hàng cho đơn hàng nội thành · Thanh toán khi nhận hàng COD thuận tiện
+    </span>
+    <span>
+      <span style="margin-right: 18px; opacity: 0.9;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: -1px; margin-right: 3px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Cam kết 100% chính hãng
+      </span>
+      <span>
+        <img src="../assets/images/tổng đài.svg" alt="" style="width: 13px; height: 13px; vertical-align: -2px; margin-right: 3px;">
+        Hotline: 1900 6868
+      </span>
+    </span>
+  </div>
+
+  <!-- HEADER NẠP TỰ ĐỘNG QUA LAYOUT.JS -->
+  <header id="app-header"></header>
+
+  <!-- NAVIGATION BAR THEO FIGMA -->
+  <nav class="shop-nav">
+    <a href="../pages/customer-home.html">Trang chủ</a>
+    <a href="../pages/customer-home.html#products">Sản phẩm</a>
+    <a href="../pages/customer-home.html#categories">Danh mục</a>
+    <a href="#">Về chúng tôi</a>
+    <a href="#">Khuyến mãi</a>
+    <span class="nav-spacer"></span>
+    <a href="#"><img src="../assets/images/COD.svg" alt=""> COD Toàn quốc</a>
+    <a href="#"><img src="../assets/images/đổi trả.svg" alt=""> Đổi trả 7 ngày</a>
+  </nav>
+
+  <!-- SUB-NAV: NGÀNH HÀNG THEO THIẾT KẾ FIGMA -->
+  <div class="cart-subnav-categories">
+    <div class="cart-subnav-inner">
+      <span class="subnav-label">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: -2px; margin-right: 4px;"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        Ngành hàng:
+      </span>
+      <a href="../pages/customer-home.html?cat=Thời trang">Thời trang & May mặc</a>
+      <span class="cat-sep">|</span>
+      <a href="../pages/customer-home.html?cat=Công nghệ">Thiết bị & Phụ kiện Công nghệ</a>
+      <span class="cat-sep">|</span>
+      <a href="../pages/customer-home.html?cat=Đồ gia dụng">Đồ gia dụng & Đời sống</a>
+      <span class="cat-sep">|</span>
+      <a href="../pages/customer-home.html?cat=Balo">Balo & Túi xách</a>
+      <span class="cat-sep">|</span>
+      <a href="../pages/customer-home.html?cat=Quà tặng">Quà tặng & Văn phòng phẩm</a>
+      <span class="cat-sep">|</span>
+      <a href="../pages/customer-home.html?cat=Dã ngoại">Dụng cụ Dã ngoại</a>
+    </div>
+  </div>
+
+  <main class="cart-main">
+    <!-- 1. BỘ TIẾN TRÌNH 3 BƯỚC (STEPPER) -->
+    <div class="cart-stepper-container">
+      <div class="cart-stepper" id="cart-stepper">
+        <!-- Bước 1: Giỏ hàng -->
+        <div class="stepper-item completed" id="step-1">
+          <div class="stepper-circle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="8" cy="21" r="1"></circle>
+              <circle cx="19" cy="21" r="1"></circle>
+              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
+            </svg>
+          </div>
+          <div class="stepper-text">
+            <span class="stepper-step">Bước 1</span>
+            <span class="stepper-title">Giỏ hàng</span>
+          </div>
+        </div>
+
+        <!-- Line 1-2 -->
+        <div class="stepper-line active" id="line-1-2"></div>
+
+        <!-- Bước 2: Thông tin & Thanh toán -->
+        <div class="stepper-item active" id="step-2">
+          <div class="stepper-circle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="3" width="15" height="13"></rect>
+              <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+              <circle cx="5.5" cy="18.5" r="2.5"></circle>
+              <circle cx="18.5" cy="18.5" r="2.5"></circle>
+            </svg>
+          </div>
+          <div class="stepper-text">
+            <span class="stepper-step">Bước 2</span>
+            <span class="stepper-title">Thông tin & Thanh toán</span>
+          </div>
+        </div>
+
+        <!-- Line 2-3 -->
+        <div class="stepper-line" id="line-2-3"></div>
+
+        <!-- Bước 3: Hoàn tất -->
+        <div class="stepper-item pending" id="step-3">
+          <div class="stepper-circle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 14 14"></polyline>
+            </svg>
+          </div>
+          <div class="stepper-text">
+            <span class="stepper-step">Bước 3</span>
+            <span class="stepper-title">Hoàn tất</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. BỐ CỤC 2 CỘT (CART & CHECKOUT LAYOUT) -->
+    <div class="cart-layout">
+      <!-- CỘT TRÁI: DANH SÁCH SẢN PHẨM & FORM NHẬN HÀNG -->
+      <div class="cart-left-col">
+        <!-- BANNER CẢNH BÁO TOÀN GIỎ (NẾU CÓ THAY ĐỔI GIÁ HOẶC TỒN KHO) -->
+        <div id="cart-warnings-container"></div>
+
+        <!-- CARD 1: GIỎ HÀNG CỦA BẠN -->
+        <section class="cart-card" id="cart-card-section">
+          <div class="cart-card-header">
+            <div class="card-header-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="20" height="16" x="2" y="4" rx="2"/>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="cart-card-title">Giỏ hàng của bạn</h2>
+              <div class="cart-card-subtitle" id="cart-items-meta">Đang tải giỏ hàng...</div>
+            </div>
+          </div>
+
+          <!-- Danh sách hàng trong giỏ -->
+          <div class="cart-items-list" id="cart-items-container">
+            <!-- Nạp động qua JS -->
+          </div>
+        </section>
+
+        <!-- CARD 2: THÔNG TIN NHẬN HÀNG & PHƯƠNG THỨC THANH TOÁN -->
+        <section class="cart-card" id="shipping-card-section">
+          <div class="cart-card-header">
+            <div class="card-header-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="cart-card-title">Thông tin nhận hàng</h2>
+              <div class="cart-card-subtitle">Vui lòng điền thông tin để giao nhận chính xác</div>
+            </div>
+          </div>
+
+          <form id="shipping-form" novalidate onsubmit="return false;">
+            <div class="shipping-form-grid">
+              <!-- Họ và tên -->
+              <div class="form-field-wrapper">
+                <label class="form-field-label" for="shipping-name">Họ và tên người nhận <span class="required">*</span></label>
+                <div class="form-input-container">
+                  <span class="input-left-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  </span>
+                  <input type="text" id="shipping-name" class="custom-input" placeholder="Ví dụ: Nguyễn Văn An" required>
+                </div>
+                <div class="field-error-msg" id="name-error"></div>
+              </div>
+
+              <!-- Số điện thoại người nhận (BR-19: 10 số bắt đầu bằng 0, có tick xanh) -->
+              <div class="form-field-wrapper">
+                <label class="form-field-label" for="shipping-phone">Số điện thoại người nhận <span class="required">*</span></label>
+                <div class="form-input-container">
+                  <span class="input-left-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+                  </span>
+                  <input type="tel" id="shipping-phone" class="custom-input" placeholder="0912345678" maxlength="11" required>
+                  <span class="input-right-status" id="phone-valid-icon" title="Số điện thoại hợp lệ">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  </span>
+                </div>
+                <div class="field-error-msg" id="phone-error"></div>
+              </div>
+
+              <!-- Địa chỉ giao hàng tận nơi -->
+              <div class="form-field-wrapper form-group-full">
+                <label class="form-field-label" for="shipping-address">Địa chỉ giao hàng nhận hàng tận nơi <span class="required">*</span></label>
+                <div class="form-input-container">
+                  <span class="input-left-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                  </span>
+                  <input type="text" id="shipping-address" class="custom-input" placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố" required>
+                </div>
+                <div class="field-error-msg" id="address-error"></div>
+              </div>
+
+              <!-- Ghi chú cho shipper -->
+              <div class="form-field-wrapper form-group-full">
+                <label class="form-field-label" for="shipping-note">Ghi chú cho shipper &amp; đơn vị vận chuyển</label>
+                <div class="form-input-container">
+                  <span class="input-left-icon" style="top: 12px; align-items: flex-start;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                  </span>
+                  <textarea id="shipping-note" class="custom-textarea" rows="2" placeholder="Giao trong giờ hành chính, vui lòng gọi trước khi tới..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Phương thức thanh toán (COD theo Figma) -->
+            <div class="payment-method-container">
+              <div class="payment-method-title">Phương thức thanh toán</div>
+              <label class="payment-option-card">
+                <input type="radio" name="payment_method" value="COD" checked class="payment-radio">
+                <div class="payment-desc-box">
+                  <b>
+                    <span class="payment-badge-pill">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                      COD
+                    </span>
+                    Thanh toán tiền mặt khi nhận hàng (COD)
+                  </b>
+                  <p>Khách hàng kiểm tra hàng trước khi thanh toán trực tiếp cho nhân viên giao hàng.</p>
+                </div>
+              </label>
+            </div>
+          </form>
+        </section>
+      </div>
+
+      <!-- CỘT PHẢI: TÓM TẮT ĐƠN HÀNG & CAM KẾT -->
+      <aside class="order-summary-sidebar">
+        <div class="summary-card">
+          <h3 class="summary-title">Tóm tắt đơn hàng</h3>
+
+          <!-- Tạm tính -->
+          <div class="summary-row">
+            <span id="subtotal-label">Tạm tính (0 món)</span>
+            <strong id="subtotal-val" style="color: #0f172a; font-size: 15px;">0 ₫</strong>
+          </div>
+
+          <!-- Phí vận chuyển -->
+          <div class="summary-row shipping-fee">
+            <span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" style="vertical-align: -3px; margin-right: 4px;"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+              Phí vận chuyển
+            </span>
+            <span id="shipping-fee-val" class="free-badge">0 ₫ (Miễn phí)</span>
+          </div>
+
+          <!-- Thông báo tiến độ freeship -->
+          <div class="shipping-progress-hint" id="freeship-hint" style="display: none;">
+            <!-- Hiển thị "Mua thêm xxx đ để được Miễn phí giao hàng toàn quốc!" -->
+          </div>
+
+          <!-- Giảm giá ưu đãi -->
+          <div class="summary-row">
+            <span>Giảm giá ưu đãi</span>
+            <span style="color: #64748b; font-weight: 500;">0 ₫</span>
+          </div>
+
+          <hr class="summary-divider">
+
+          <!-- Tổng thanh toán -->
+          <div class="summary-total-row">
+            <span class="summary-total-label">Tổng thanh toán</span>
+            <span class="summary-total-val" id="total-val">0 ₫</span>
+          </div>
+          <div class="summary-tax-note">Đã bao gồm VAT &amp; Phí thu hộ COD</div>
+
+          <!-- Nút Đặt hàng ngay -->
+          <button type="button" class="btn-place-order" id="btn-place-order">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="m9 12 2 2 4-4"/>
+            </svg>
+            <span id="btn-order-text">Đặt hàng ngay</span>
+          </button>
+
+          <!-- Khối Cam kết an tâm (Trust badges) -->
+          <div class="trust-badges-list">
+            <div class="trust-badge-item">
+              <span class="badge-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </span>
+              <span><strong>Kiểm tra hàng trước khi thanh toán:</strong> Đồng kiểm cùng nhân viên giao hàng.</span>
+            </div>
+            <div class="trust-badge-item">
+              <span class="badge-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+              </span>
+              <span><strong>Đổi trả miễn phí 7 ngày:</strong> Đổi trả linh hoạt nếu phát sinh lỗi từ nhà sản xuất.</span>
+            </div>
+            <div class="trust-badge-item">
+              <span class="badge-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#092d9d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </span>
+              <span><strong>Bảo mật thông tin:</strong> Cam kết an toàn và bảo mật thông tin đơn hàng.</span>
+            </div>
+          </div>
+
+          <div class="ssl-secure-text">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Mã hóa đường truyền an toàn SSL 256-bit
+          </div>
+        </div>
+
+        <!-- Khối Hỗ trợ đặt hàng -->
+        <div class="support-box">
+          <div class="support-info">
+            <div class="support-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </div>
+            <div class="support-text">
+              <strong>Cần hỗ trợ đặt hàng?</strong>
+              <small>Tổng đài 1900 6868 (Miễn phí cước)</small>
+            </div>
+          </div>
+          <a href="tel:19006868" class="btn-call-support">Gọi ngay</a>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- 3. MODAL ĐẶT HÀNG THÀNH CÔNG (ORDER SUCCESS MODAL) -->
+  <div class="order-modal-backdrop" id="order-success-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="order-success-modal">
+      <div class="success-badge-icon">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+
+      <h2 id="modal-title">Đặt hàng thành công!</h2>
+      <p>Cảm ơn quý khách đã tin tưởng mua sắm tại <b>ShopEase</b>.<br>Đơn hàng của quý khách đang được chuyển đến bộ phận đóng gói.</p>
+
+      <div class="order-code-box">
+        <span>MÃ ĐƠN HÀNG CỦA BẠN</span>
+        <strong id="modal-order-code">SE-20261120-XXXX</strong>
+      </div>
+
+      <div class="modal-info-list">
+        <div class="modal-info-item">
+          <span>Người nhận:</span>
+          <b id="modal-recipient-name">Nguyễn Văn An</b>
+        </div>
+        <div class="modal-info-item">
+          <span>Số điện thoại:</span>
+          <b id="modal-recipient-phone">0912345678</b>
+        </div>
+        <div class="modal-info-item">
+          <span>Địa chỉ giao hàng:</span>
+          <b id="modal-recipient-address" style="max-width: 260px; text-align: right; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">124 Lê Lợi, Bến Nghé, Q.1, HCM</b>
+        </div>
+        <div class="modal-info-item">
+          <span>Phương thức thanh toán:</span>
+          <b style="color: #059669;">COD (Thanh toán khi nhận hàng)</b>
+        </div>
+        <div class="modal-info-item" style="border-top: 1px dashed #cbd5e1; padding-top: 8px; margin-top: 8px;">
+          <span style="font-weight: 600; color: #0f172a;">Tổng tiền cần thanh toán:</span>
+          <b id="modal-total-amount" style="font-size: 16px; color: #092d9d;">2.075.000 ₫</b>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <a href="../pages/customer-home.html" class="modal-btn-primary">
+          Tiếp tục mua sắm
+        </a>
+        <button type="button" class="modal-btn-secondary" id="modal-close-btn">
+          Đóng thông báo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER NẠP TỰ ĐỘNG QUA LAYOUT.JS -->
+  <footer id="app-footer"></footer>
+
+  <!-- SCRIPTS -->
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/pages/cart.js"></script>
+</body>
+</html>
