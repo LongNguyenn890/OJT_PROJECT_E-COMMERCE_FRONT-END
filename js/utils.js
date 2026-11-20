@@ -226,12 +226,12 @@ function showConfirmModal({
 
   const overlay = document.createElement("div");
   overlay.id = "se-confirm-modal";
-  overlay.className = "modal-overlay";
+  overlay.className = "modal-overlay active";
   overlay.style.cssText = `
     position: fixed;
     inset: 0;
-    z-index: 10000;
-    display: flex;
+    z-index: 100000;
+    display: flex !important;
     justify-content: center;
     align-items: center;
     padding: 16px;
@@ -239,6 +239,7 @@ function showConfirmModal({
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     opacity: 0;
+    visibility: visible !important;
     transition: opacity 0.22s ease;
   `;
 
@@ -323,6 +324,8 @@ function showConfirmModal({
 
   // Animation xuất hiện mượt mà
   requestAnimationFrame(() => {
+    overlay.classList.add("active");
+    overlay.style.visibility = "visible";
     overlay.style.opacity = "1";
     const card = overlay.querySelector(".se-confirm-card");
     if (card) {
@@ -340,7 +343,9 @@ function showConfirmModal({
   confirmBtn.addEventListener("mouseleave", () => confirmBtn.style.background = currentCfg.btnBg);
 
   function destroyModal() {
+    overlay.classList.remove("active");
     overlay.style.opacity = "0";
+    overlay.style.visibility = "hidden";
     const card = overlay.querySelector(".se-confirm-card");
     if (card) {
       card.style.transform = "scale(0.92) translateY(8px)";

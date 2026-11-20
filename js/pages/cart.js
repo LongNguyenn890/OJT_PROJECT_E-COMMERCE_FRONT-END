@@ -182,14 +182,21 @@ function loadDemoCartData() {
                         item;
 
     const qty = Number(item.quantity || item.qty || 1);
-    const price = Number(productInfo.price || 0);
+    const hasPromo = productInfo.promotional_price !== null &&
+                     productInfo.promotional_price !== undefined &&
+                     Number(productInfo.promotional_price) >= 0 &&
+                     Number(productInfo.promotional_price) < Number(productInfo.price);
+    const effectivePrice = hasPromo ? Number(productInfo.promotional_price) : Number(productInfo.price || 0);
+    const originalPrice = Number(productInfo.price || 0);
 
     return {
       id: item.id || productInfo.product_id || productInfo.id,
       product_id: productInfo.product_id || productInfo.id || item.id,
       name: productInfo.name || "Sản phẩm",
       variant: item.variant || productInfo.variant || (productInfo.tag ? `Phân loại: ${productInfo.tag}` : "Chính hãng"),
-      price: price,
+      price: effectivePrice,
+      original_price: originalPrice,
+      has_promo: hasPromo,
       quantity: qty,
       image: productInfo.image || getProductImageFallback(productInfo.id),
       stock_quantity: productInfo.stock_quantity ?? 50
@@ -254,16 +261,17 @@ function renderCart() {
       : "Giỏ hàng hiện đang trống";
   }
 
-  // 1. Render Cảnh báo (nếu có giá thay đổi hoặc thiếu tồn kho)
+  // 1. Render Cảnh báo (chỉ cảnh báo tồn kho, không hiển thị khi cập nhật giá)
   if (warningsContainer) {
-    if (currentCartState.warnings && currentCartState.warnings.length > 0) {
+    const validWarnings = (currentCartState.warnings || []).filter(w => !w.toLowerCase().includes("giá sản phẩm"));
+    if (validWarnings.length > 0) {
       warningsContainer.innerHTML = `
         <div class="cart-global-warnings">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" style="flex-shrink:0; margin-top:2px;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           <div>
             <strong>Thông báo cập nhật giỏ hàng:</strong>
             <ul>
-              ${currentCartState.warnings.map(w => `<li>${escapeHtml(w)}</li>`).join("")}
+              ${validWarnings.map(w => `<li>${escapeHtml(w)}</li>`).join("")}
             </ul>
           </div>
         </div>
@@ -319,9 +327,7 @@ function renderCart() {
     const isChecked = selectedProductIds.has(item.product_id);
 
     let warningHtml = "";
-    if (item.price_changed) {
-      warningHtml += `<span class="cart-item-warning">Giá đã thay đổi từ ${formatMoney(item.old_price)}</span>`;
-    }
+    // Không hiển thị cảnh báo thay đổi giá trên từng món hàng
     if (item.stock_warning) {
       warningHtml += `<span class="cart-item-warning danger">Số lượng vượt tồn kho hiện có (${item.stock_quantity})</span>`;
     }
@@ -351,7 +357,8 @@ function renderCart() {
           ` : ""}
           <h4 class="cart-item-name">${escapeHtml(item.name)}</h4>
           <div class="cart-item-unit-price">
-            Đơn giá: <b>${formatMoney(item.price)}</b>
+            Đơn giá: <strong class="price-current" style="font-weight: 800; color: #00288e;">${formatMoney(item.price)}</strong>
+            ${item.has_promo ? `<del class="cart-item-old-price" style="font-size: 11.5px; color: #94a3b8; text-decoration: line-through; margin-left: 6px; font-weight: 400;">${formatMoney(item.original_price)}</del>` : ""}
           </div>
           ${warningHtml}
         </div>

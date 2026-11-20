@@ -1084,9 +1084,11 @@ body.shop-page {
   transition: opacity 0.25s ease, visibility 0.25s ease;
 }
 
+#se-confirm-modal,
+#se-confirm-modal.modal-overlay,
 .modal-overlay.active {
-  opacity: 1;
-  visibility: visible;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .cancel-modal-card,

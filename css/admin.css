@@ -2551,6 +2551,12 @@ body.admin-page {
 }
 
 /* Base styling cho mọi dropdown select trong khu vực quản trị (fallback khi chưa kích hoạt custom select) */
+select,
+select:hover,
+select:focus {
+  background-repeat: no-repeat !important;
+}
+
 .admin-select-box select,
 .admin-select,
 .orders-filter-row select,
@@ -2625,20 +2631,12 @@ select.admin-form-input option,
    Thay thế dropdown mặc định thô của trình duyệt bằng UI hiện đại
    ========================================================== */
 
-/* Ẩn select gốc một cách chuẩn accessibility */
-select.agy-native-hidden {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  margin: -1px !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-  clip: rect(0, 0, 0, 0) !important;
-  white-space: nowrap !important;
-  border: 0 !important;
-  opacity: 0 !important;
+/* Ẩn select gốc một cách chuẩn accessibility và ngăn popup native đè lên */
+select.agy-native-hidden,
+select.realtime-interval-select {
+  display: none !important;
+  visibility: hidden !important;
   pointer-events: none !important;
-  z-index: -1 !important;
 }
 
 /* Khung chứa Custom Select */
@@ -2731,7 +2729,7 @@ select.agy-native-hidden {
   border-radius: 10px;
   box-shadow: 0 12px 30px -5px rgba(15, 23, 42, 0.15), 0 8px 12px -6px rgba(15, 23, 42, 0.06);
   padding: 6px;
-  z-index: 1050;
+  z-index: 2500 !important;
   display: none;
   max-height: 270px;
   overflow-y: auto;
@@ -2973,7 +2971,7 @@ select.realtime-interval-select:focus {
   border-radius: 12px;
   padding: 16px;
   box-shadow: 0 12px 30px -5px rgba(15, 23, 42, 0.15), 0 8px 12px -6px rgba(15, 23, 42, 0.08);
-  z-index: 1050;
+  z-index: 2500 !important;
   opacity: 0;
   transform: translateY(-6px);
   transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -3271,19 +3269,39 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   background: #dde1ff;
 }
 
-.orders-filter-card,
+/* Đảm bảo toàn bộ khung bộ lọc của admin luôn nổi lên trên bảng và không bị che khuất */
 .admin-filter-card,
-.orders-filter-row {
+.orders-filter-card {
+  position: relative !important;
+  z-index: 60 !important;
   overflow: visible !important;
 }
 
-/* Thẻ Bảng Dữ Liệu */
+.orders-filter-row,
+.admin-filter-inputs {
+  position: relative !important;
+  z-index: 61 !important;
+  overflow: visible !important;
+}
+
+.orders-filter-card:focus-within,
+.admin-filter-card:focus-within,
+.orders-filter-card:has(.is-open),
+.admin-filter-card:has(.is-open),
+.orders-filter-card:has([aria-expanded="true"]),
+.admin-filter-card:has([aria-expanded="true"]) {
+  z-index: 1500 !important;
+}
+
+/* Thẻ Bảng Dữ Liệu có z-index thấp để không bao giờ đè lên popup bộ lọc */
 .admin-table-card {
   background: var(--admin-card-bg);
   border-radius: var(--admin-radius);
   box-shadow: var(--admin-shadow);
   border: 1px solid var(--admin-border-subtle);
   overflow: hidden;
+  position: relative !important;
+  z-index: 1 !important;
 }
 
 .admin-table-footer {

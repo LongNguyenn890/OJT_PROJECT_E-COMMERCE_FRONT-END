@@ -202,9 +202,13 @@ function renderProducts() {
   } else {
     grid.innerHTML = state.products.map(product => {
       const shortDesc = productShortDesc(product);
-      const hasPromo = product.promotional_price && Number(product.promotional_price) < Number(product.price);
+      const hasPromo = product.promotional_price !== null &&
+                       product.promotional_price !== undefined &&
+                       Number(product.promotional_price) >= 0 &&
+                       Number(product.promotional_price) < Number(product.price);
       const catName = formatCategoryDisplayName(product.category);
       const categoryTag = catName ? `<span class="product-tag">${escapeHTML(catName)}</span>` : "";
+      const displayPrice = hasPromo ? Number(product.promotional_price) : Number(product.price);
       return `
         <article class="product-card">
           <div class="product-photo">
@@ -214,10 +218,10 @@ function renderProducts() {
           <div class="product-info">
             <h3 title="${escapeHTML(product.name)}">${escapeHTML(product.name)}</h3>
             <p class="product-desc" title="${escapeHTML(shortDesc)}">${escapeHTML(shortDesc)}</p>
-            <strong class="product-price">
-              ${formatPrice(product.promotional_price || product.price)}
+            <div class="product-price">
+              <strong class="price-current">${formatPrice(displayPrice)}</strong>
               ${hasPromo ? `<del class="product-old-price">${formatPrice(product.price)}</del>` : ""}
-            </strong>
+            </div>
             <div class="product-actions">
               <button class="light-button" data-action="details" data-id="${product.id}"><img src="${asset("chi tiết.svg")}" alt=""> Xem chi tiết</button>
               <button class="blue-button" data-action="cart" data-id="${product.id}"><img src="${asset("thêm giỏ hàng.svg")}" alt=""> <span class="action-label">Thêm giỏ</span></button>
@@ -529,6 +533,12 @@ async function showProductDetails(productId) {
     const modal = document.createElement("div");
     modal.className = "product-detail-modal";
     const primaryImg = productImage(product);
+    const hasPromo = product.promotional_price !== null &&
+                     product.promotional_price !== undefined &&
+                     Number(product.promotional_price) >= 0 &&
+                     Number(product.promotional_price) < Number(product.price);
+    const displayPrice = hasPromo ? Number(product.promotional_price) : Number(product.price);
+
     modal.innerHTML = `
       <div class="product-modal-backdrop"></div>
       <div class="product-modal-card">
@@ -541,8 +551,8 @@ async function showProductDetails(productId) {
             <span class="product-tag">${escapeHTML(product.category?.name || "Sản phẩm")}</span>
             <h2>${escapeHTML(product.name)}</h2>
             <div class="modal-price-wrap">
-              <strong class="product-price">${formatPrice(product.promotional_price || product.price)}</strong>
-              ${product.promotional_price && Number(product.promotional_price) < Number(product.price) ? `<del class="product-old-price">${formatPrice(product.price)}</del>` : ""}
+              <strong class="price-current">${formatPrice(displayPrice)}</strong>
+              ${hasPromo ? `<del class="product-old-price">${formatPrice(product.price)}</del>` : ""}
             </div>
             <p class="modal-desc">${escapeHTML(product.description || "Chưa có mô tả chi tiết.")}</p>
             <div class="modal-meta-grid">
