@@ -388,6 +388,9 @@ function renderOrdersTable(orders) {
       <button type="button" class="btn-table-action view" title="Xem chi tiết đơn hàng" onclick="openOrderDetailModal(${order.id})">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
+      <button type="button" class="btn-table-action" title="In hoá đơn (window.print)" onclick="window.printOrderInvoice ? window.printOrderInvoice(${order.id}) : window.print()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      </button>
     `;
 
     // 2. Nút Thao tác nghiệp vụ theo luồng
@@ -816,12 +819,20 @@ window.openOrderDetailModal = async function(orderId) {
       `;
     } else if (statusKey === "SHIPPING") {
       modalActionHtml += `
-        <button type="button" class="btn-table-action complete-flow" style="height: 36px; padding: 0 14px;" onclick="closeAllModals(); promptStatusChange(${order.id}, '${escapeHtml(code)}', 'COMPLETED', 'SHIPPING')">
+        <button type="button" class="btn-table-action complete-flow" style="height: 36px; padding: 0 14px; margin-right: 8px;" onclick="closeAllModals(); promptStatusChange(${order.id}, '${escapeHtml(code)}', 'COMPLETED', 'SHIPPING')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           <span>Xác nhận giao thành công</span>
         </button>
       `;
     }
+
+    // Luôn cung cấp nút in hoá đơn
+    modalActionHtml += `
+      <button type="button" class="btn-admin-action secondary" style="height: 36px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px;" onclick="window.printOrderInvoice ? window.printOrderInvoice(${order.id}) : window.print()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        <span>In hoá đơn</span>
+      </button>
+    `;
 
     dynamicActions.innerHTML = modalActionHtml;
 

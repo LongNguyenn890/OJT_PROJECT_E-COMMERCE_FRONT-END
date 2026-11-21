@@ -132,6 +132,7 @@ function renderAdminLayout() {
   const isProductsActive = currentPath.endsWith("/admin-products.html") || currentPath.endsWith("/items.html");
   const isCategoriesActive = currentPath.endsWith("/admin-categories.html");
   const isOrdersActive = currentPath.endsWith("/admin-orders.html");
+  const isPosActive = currentPath.endsWith("/admin-pos.html");
   const isInventoryActive = currentPath.endsWith("/admin-inventory.html");
   const isReportsActive = currentPath.endsWith("/admin-reports.html");
   const isProfileActive = currentPath.endsWith("/profile.html");
@@ -159,6 +160,11 @@ function renderAdminLayout() {
           <a href="${root}pages/admin-orders.html" class="admin-nav-item ${isOrdersActive ? "active" : ""}">
             <svg class="admin-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
             <span>Quản lý Đơn hàng</span>
+          </a>
+
+          <a href="${root}pages/admin-pos.html" class="admin-nav-item ${isPosActive ? "active" : ""}">
+            <svg class="admin-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/><line x1="12" y1="17" x2="12" y2="20"/></svg>
+            <span>Bán tại quầy (POS)</span>
           </a>
 
           <a href="${root}pages/admin-products.html" class="admin-nav-item ${isProductsActive ? "active" : ""}">

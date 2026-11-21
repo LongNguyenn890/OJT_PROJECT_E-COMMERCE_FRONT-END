@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShopEase - Bán hàng tại quầy (POS)</title>
+  <link rel="icon" href="../assets/images/logo_shop.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&family=Liberation+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <style>
+    /* Bố cục trang POS Bán tại quầy */
+    body.admin-page {
+      overflow-x: hidden;
+    }
+    .admin-main-wrap {
+      min-width: 0;
+      max-width: calc(100vw - var(--admin-sidebar-width));
+      overflow-x: hidden;
+    }
+    @media (max-width: 992px) {
+      .admin-main-wrap {
+        max-width: 100vw;
+      }
+    }
+
+    .pos-main-container {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 380px;
+      gap: 20px;
+      min-height: calc(100vh - 120px);
+      align-items: start;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+    @media (max-width: 1200px) {
+      .pos-main-container {
+        grid-template-columns: minmax(0, 1fr) 340px;
+        gap: 16px;
+      }
+      .pos-checkout-panel {
+        width: 340px;
+        min-width: 340px;
+      }
+    }
+    @media (max-width: 992px) {
+      .pos-main-container {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .pos-checkout-panel {
+        width: 100%;
+        min-width: 0;
+        position: static;
+        max-height: none;
+      }
+    }
+
+    /* Cột trái: Tìm kiếm, danh mục & lưới sản phẩm */
+    .pos-catalog-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-width: 0;
+      max-width: 100%;
+      width: 100%;
+    }
+
+    .pos-search-header-card {
+      background: #ffffff;
+      border: 1px solid var(--admin-border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: var(--admin-shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-width: 0;
+      max-width: 100%;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .pos-search-bar {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+    .pos-search-icon {
+      position: absolute;
+      left: 14px;
+      color: var(--admin-text-muted);
+      pointer-events: none;
+    }
+    .pos-search-input {
+      width: 100%;
+      height: 44px;
+      padding: 0 16px 0 42px;
+      border: 1px solid var(--admin-border);
+      border-radius: 8px;
+      font-size: 13.5px;
+      color: var(--admin-text-main);
+      background: #f8fafc;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+    .pos-search-input:focus {
+      background: #ffffff;
+      border-color: var(--admin-primary);
+      box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.12);
+    }
+    .pos-search-clear {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px;
+      display: none;
+    }
+
+    /* Thanh cuộn ngang danh mục */
+    .pos-category-tabs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding-bottom: 6px;
+      white-space: nowrap;
+      max-width: 100%;
+      width: 100%;
+      box-sizing: border-box;
+      -webkit-overflow-scrolling: touch;
+    }
+    .pos-category-tabs::-webkit-scrollbar {
+      height: 4px;
+    }
+    .pos-category-tabs::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+    .pos-category-tabs::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .pos-cat-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--admin-text-secondary);
+      background: #f1f5f9;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .pos-cat-pill:hover {
+      background: #e2e8f0;
+      color: var(--admin-text-main);
+    }
+    .pos-cat-pill.active {
+      background: var(--admin-primary);
+      color: #ffffff;
+    }
+
+    /* Lưới sản phẩm */
+    .pos-products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 14px;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+    @media (max-width: 640px) {
+      .pos-products-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+    }
+
+    .pos-product-card {
+      background: #ffffff;
+      border: 1px solid var(--admin-border);
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      position: relative;
+      user-select: none;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      box-sizing: border-box;
+    }
+    .pos-product-card:hover {
+      border-color: #93c5fd;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px -3px rgba(30, 64, 175, 0.12);
+    }
+    .pos-product-card.out-of-stock {
+      opacity: 0.6;
+      cursor: not-allowed;
+      border-color: #e2e8f0;
+    }
+    .pos-product-card.out-of-stock:hover {
+      transform: none;
+      box-shadow: none;
+    }
+
+    .pos-card-thumb-wrap {
+      width: 100%;
+      height: 110px;
+      border-radius: 6px;
+      background: #f8fafc;
+      overflow: hidden;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+    .pos-card-thumb {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      transition: transform 0.25s ease;
+    }
+    .pos-product-card:hover:not(.out-of-stock) .pos-card-thumb {
+      transform: scale(1.06);
+    }
+
+    .pos-card-info {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .pos-card-sku {
+      font-size: 11px;
+      color: #64748b;
+      font-family: 'Liberation Mono', monospace;
+      margin-bottom: 2px;
+    }
+    .pos-card-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--admin-text-main);
+      line-height: 1.35;
+      margin-bottom: 6px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      height: 35px;
+    }
+    .pos-card-price-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-top: auto;
+      gap: 4px;
+    }
+    .pos-card-price {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--admin-primary);
+    }
+    .pos-card-old-price {
+      font-size: 11px;
+      color: #94a3b8;
+      text-decoration: line-through;
+    }
+    .pos-card-stock-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      font-weight: 700;
+      width: fit-content;
+      margin-top: 6px;
+    }
+    .pos-card-stock-badge.in {
+      background: #ecfdf5;
+      color: #059669;
+    }
+    .pos-card-stock-badge.low {
+      background: #fef3c7;
+      color: #b45309;
+    }
+    .pos-card-stock-badge.out {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
+    /* ==========================================================
+       Cột phải: Hoá đơn & Thanh toán tại quầy (Checkout Box)
+       ========================================================== */
+    .pos-checkout-panel {
+      background: #ffffff;
+      border: 1px solid var(--admin-border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      position: sticky;
+      top: 80px;
+      width: 380px;
+      min-width: 380px;
+      max-width: 100%;
+      box-sizing: border-box;
+      max-height: calc(100vh - 100px);
+      overflow: hidden;
+    }
+
+    .pos-cart-header {
+      padding: 14px 16px;
+      background: #f8fafc;
+      border-bottom: 1px solid var(--admin-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .pos-cart-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--admin-text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+    }
+    .pos-btn-clear-cart {
+      background: none;
+      border: none;
+      color: #ef4444;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 6px;
+      border-radius: 4px;
+    }
+    .pos-btn-clear-cart:hover {
+      background: #fee2e2;
+    }
+
+    /* Thông tin khách tại quầy */
+    .pos-customer-box {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      background: #faf8ff;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .pos-cust-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .pos-cust-input {
+      height: 34px;
+      padding: 0 10px;
+      font-size: 12px;
+      border: 1px solid var(--admin-border);
+      border-radius: 6px;
+      background: #ffffff;
+      color: var(--admin-text-main);
+      outline: none;
+    }
+    .pos-cust-input:focus {
+      border-color: var(--admin-primary);
+    }
+
+    /* Danh sách mặt hàng trong giỏ POS */
+    .pos-cart-items-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 180px;
+      max-height: 280px;
+    }
+    .pos-cart-items-scroll::-webkit-scrollbar {
+      width: 4px;
+    }
+    .pos-cart-items-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    .pos-cart-empty-view {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 10px;
+      color: #94a3b8;
+      text-align: center;
+    }
+
+    .pos-cart-row {
+      display: grid;
+      grid-template-columns: 36px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed #e2e8f0;
+    }
+    .pos-cart-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .pos-cart-thumb {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      object-fit: cover;
+      border: 1px solid #e2e8f0;
+    }
+    .pos-cart-detail {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .pos-cart-name {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--admin-text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .pos-cart-price-line {
+      font-size: 11.5px;
+      color: var(--admin-text-muted);
+    }
+
+    .pos-cart-action-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pos-qty-spinner {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #ffffff;
+      overflow: hidden;
+    }
+    .pos-qty-btn {
+      width: 24px;
+      height: 24px;
+      background: #f8fafc;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pos-qty-btn:hover {
+      background: #e2e8f0;
+    }
+    .pos-qty-input {
+      width: 34px;
+      height: 24px;
+      border: none;
+      border-left: 1px solid #e2e8f0;
+      border-right: 1px solid #e2e8f0;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f172a;
+      outline: none;
+    }
+    .pos-btn-del-item {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      transition: color 0.15s ease;
+    }
+    .pos-btn-del-item:hover {
+      color: #dc2626;
+    }
+
+    /* Khung thanh toán & Tiền thối */
+    .pos-checkout-bottom {
+      padding: 16px;
+      background: #f8fafc;
+      border-top: 1px solid var(--admin-border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .pos-summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: var(--admin-text-secondary);
+    }
+    .pos-total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 6px;
+      border-top: 1px solid #e2e8f0;
+      margin-top: 2px;
+    }
+    .pos-total-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--admin-text-main);
+    }
+    .pos-total-val {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--admin-primary);
+      letter-spacing: -0.5px;
+    }
+
+    /* Phương thức thanh toán */
+    .pos-payment-mode-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .pos-pay-mode-btn {
+      height: 36px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #ffffff;
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .pos-pay-mode-btn.active {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #1d4ed8;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+    }
+
+    /* Tiền khách đưa & tiền thối */
+    .pos-cash-input-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .pos-cash-input-field {
+      height: 40px;
+      padding: 0 12px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f172a;
+      background: #ffffff;
+      outline: none;
+      text-align: right;
+    }
+    .pos-cash-input-field:focus {
+      border-color: var(--admin-primary);
+      box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.15);
+    }
+
+    /* Các nút tiền gợi ý nhanh */
+    .pos-cash-presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .pos-btn-preset {
+      padding: 4px 8px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .pos-btn-preset:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+    }
+
+    /* Hiển thị tiền thừa */
+    .pos-change-box {
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+    .pos-change-val {
+      font-size: 16px;
+      font-weight: 800;
+      color: #059669;
+    }
+    .pos-change-val.debt {
+      color: #dc2626;
+    }
+
+    /* Nút Thanh toán hoàn tất */
+    .pos-btn-submit-order {
+      height: 46px;
+      background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14.5px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 10px rgba(30, 64, 175, 0.25);
+      transition: all 0.2s ease;
+      width: 100%;
+    }
+    .pos-btn-submit-order:hover:not(:disabled) {
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(30, 64, 175, 0.35);
+    }
+    .pos-btn-submit-order:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+  </style>
+  <script>
+    // Đảm bảo có phiên làm việc Quản trị viên / Nhân viên
+    if (!localStorage.getItem("token") || !localStorage.getItem("user")) {
+      localStorage.setItem("token", "demo-admin-session-token");
+      localStorage.setItem("user", JSON.stringify({
+        id: 1,
+        name: "Quản Trị Viên",
+        full_name: "Quản Trị Viên",
+        username: "admin",
+        email: "admin@example.com",
+        role: "ADMIN"
+      }));
+    }
+  </script>
+</head>
+<body class="admin-page" data-root="../" data-auth="admin">
+  <div class="admin-layout">
+    <!-- Sidebar tự động render bởi layout.js -->
+    <aside id="admin-sidebar" class="admin-sidebar"></aside>
+
+    <!-- Khung nội dung chính -->
+    <div class="admin-main-wrap">
+      <!-- Topbar tự động render bởi layout.js -->
+      <header id="admin-topbar" class="admin-topbar"></header>
+
+      <main class="admin-content" style="max-width: 100%; box-sizing: border-box; overflow-x: hidden; padding: 20px;">
+        <!-- Header trang POS -->
+        <div class="admin-page-header-card" style="margin-bottom: 16px;">
+          <div class="admin-page-header-info">
+            <h1 class="admin-page-title" style="display: flex; align-items: center; gap: 8px;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/><line x1="12" y1="17" x2="12" y2="20"/></svg>
+              <span>Bán hàng tại quầy (POS)</span>
+            </h1>
+            <p class="admin-page-desc">Tạo đơn trực tiếp, tự động trừ kho sản phẩm, thu tiền mặt/chuyển khoản và in hoá đơn tức thì</p>
+          </div>
+          <div class="admin-header-actions">
+            <button type="button" class="btn-admin-action secondary" id="btn-reprint-last-order" style="padding: 9px 14px; display: none;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              <span>In hoá đơn đơn vừa tạo</span>
+            </button>
+            <a href="admin-orders.html" class="btn-admin-action secondary" style="padding: 9px 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+              <span>Danh sách đơn hàng</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Khung chính chia 2 cột: Sản phẩm (trái) - Giỏ POS & Thanh toán (phải) -->
+        <div class="pos-main-container">
+          <!-- Cột Trái: Tìm kiếm, Bộ lọc & Lưới sản phẩm -->
+          <div class="pos-catalog-panel">
+            <div class="pos-search-header-card">
+              <div class="pos-search-bar">
+                <svg class="pos-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="pos-search-input" class="pos-search-input" placeholder="Tìm sản phẩm theo tên, mã SKU hoặc quét barcode... (Phím tắt: / hoặc F4)" autocomplete="off">
+                <button type="button" id="pos-search-clear" class="pos-search-clear" title="Xóa tìm kiếm">&times;</button>
+              </div>
+
+              <!-- Thanh danh mục -->
+              <div class="pos-category-tabs" id="pos-category-tabs">
+                <button type="button" class="pos-cat-pill active" data-cat-id="">Tất cả</button>
+                <!-- Render động các danh mục -->
+              </div>
+            </div>
+
+            <!-- Lưới hiển thị sản phẩm -->
+            <div class="pos-products-grid" id="pos-products-grid">
+              <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--admin-text-muted);">
+                <span class="btn-op-spinner" style="width: 24px; height: 24px; border-width: 2px; margin-bottom: 8px;"></span>
+                <div>Đang tải danh mục sản phẩm...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cột Phải: Hoá đơn & Thanh toán tại quầy -->
+          <div class="pos-checkout-panel">
+            <div class="pos-cart-header">
+              <h2 class="pos-cart-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <span>Đơn hàng tại quầy (<span id="pos-cart-count">0</span>)</span>
+              </h2>
+              <button type="button" class="pos-btn-clear-cart" id="pos-btn-clear-cart" title="Xóa toàn bộ giỏ hàng">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                <span>Làm mới giỏ</span>
+              </button>
+            </div>
+
+            <!-- Thông tin khách hàng -->
+            <div class="pos-customer-box">
+              <div style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;">Thông tin khách hàng</div>
+              <div class="pos-cust-inputs">
+                <input type="text" id="pos-cust-name" class="pos-cust-input" placeholder="Tên khách (mặc định: Khách lẻ)" value="Khách lẻ tại quầy">
+                <input type="text" id="pos-cust-phone" class="pos-cust-input" placeholder="Số điện thoại" value="0900000000">
+              </div>
+            </div>
+
+            <!-- Danh sách mặt hàng trong giỏ -->
+            <div class="pos-cart-items-scroll" id="pos-cart-items-container">
+              <div class="pos-cart-empty-view">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+                <div style="font-size: 13px; font-weight: 600; margin-top: 8px;">Giỏ hàng đang trống</div>
+                <div style="font-size: 11.5px;">Nhấp vào sản phẩm bên trái để thêm vào đơn</div>
+              </div>
+            </div>
+
+            <!-- Khung tính tiền & Thanh toán -->
+            <div class="pos-checkout-bottom">
+              <div class="pos-summary-row">
+                <span>Tạm tính tiền hàng:</span>
+                <span style="font-weight: 600;" id="pos-subtotal-val">0 ₫</span>
+              </div>
+              <div class="pos-total-row">
+                <span class="pos-total-label">TỔNG THANH TOÁN:</span>
+                <span class="pos-total-val" id="pos-grand-total-val">0 ₫</span>
+              </div>
+
+              <!-- Phương thức thanh toán -->
+              <div style="margin-top: 4px;">
+                <div style="font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px;">PHƯƠNG THỨC THANH TOÁN:</div>
+                <div class="pos-payment-mode-tabs">
+                  <button type="button" class="pos-pay-mode-btn active" data-mode="CASH">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/></svg>
+                    <span>Tiền mặt (Cash)</span>
+                  </button>
+                  <button type="button" class="pos-pay-mode-btn" data-mode="BANK">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    <span>Chuyển khoản QR</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Tiền khách đưa & Tiền thối (Chỉ hiện khi chọn Tiền mặt) -->
+              <div class="pos-cash-input-wrap" id="pos-cash-section">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 11.5px; font-weight: 700; color: #475569;">TIỀN KHÁCH ĐƯA:</span>
+                  <button type="button" class="pos-btn-preset" id="pos-btn-exact-cash" style="color: #1e40af; border-color: #bfdbfe;">Đúng số tiền</button>
+                </div>
+                <input type="text" id="pos-cash-received-input" class="pos-cash-input-field" placeholder="0 ₫" value="">
+                
+                <!-- Gợi ý nhanh các mệnh giá tiền mặt -->
+                <div class="pos-cash-presets">
+                  <button type="button" class="pos-btn-preset" data-amount="50000">50k</button>
+                  <button type="button" class="pos-btn-preset" data-amount="100000">100k</button>
+                  <button type="button" class="pos-btn-preset" data-amount="200000">200k</button>
+                  <button type="button" class="pos-btn-preset" data-amount="500000">500k</button>
+                  <button type="button" class="pos-btn-preset" data-amount="1000000">1.000k</button>
+                  <button type="button" class="pos-btn-preset" data-amount="2000000">2.000k</button>
+                </div>
+
+                <div class="pos-change-box">
+                  <span style="font-weight: 600;" id="pos-change-label">Tiền trả lại khách:</span>
+                  <span class="pos-change-val" id="pos-change-val">0 ₫</span>
+                </div>
+              </div>
+
+              <!-- Nút Hoàn tất thanh toán -->
+              <button type="button" class="pos-btn-submit-order" id="pos-btn-submit" disabled>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>THANH TOÁN & HOÀN TẤT (F9)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ==========================================================
+       MODAL THÔNG BÁO THANH TOÁN THÀNH CÔNG & IN HOÁ ĐƠN
+       ========================================================== -->
+  <div class="admin-modal-overlay" id="modal-pos-success">
+    <div class="admin-modal-box" style="max-width: 440px; text-align: center;">
+      <div class="admin-modal-body" style="padding: 28px 24px;">
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: #ecfdf5; color: #10b981; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+
+        <h2 style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 0 0 6px 0;">Thanh toán thành công!</h2>
+        <p style="font-size: 13px; color: #64748b; margin: 0 0 16px 0;">
+          Đơn hàng <strong id="success-modal-order-code" style="color: #1e40af;">#POS...</strong> đã hoàn tất và trừ tồn kho tự động.
+        </p>
+
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; text-align: left; font-size: 13px; display: flex; flex-direction: column; gap: 6px;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: #64748b;">Tổng tiền đơn hàng:</span>
+            <strong style="color: #0f172a;" id="success-modal-total">0 ₫</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: #64748b;">Tiền khách đưa:</span>
+            <span style="font-weight: 600;" id="success-modal-cash-in">0 ₫</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-top: 1px dashed #cbd5e1; padding-top: 6px;">
+            <span style="font-weight: 700; color: #0f172a;">Tiền trả lại khách:</span>
+            <strong style="color: #059669; font-size: 15px;" id="success-modal-cash-change">0 ₫</strong>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button type="button" class="btn-admin-primary" id="btn-modal-print-invoice" style="width: 100%; height: 42px; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            <span>In hoá đơn ngay (Enter)</span>
+          </button>
+          <button type="button" class="btn-admin-action secondary" id="btn-modal-next-order" style="width: 100%; height: 38px;">
+            <span>Tạo đơn tiếp theo (F2)</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/invoice-printer.js"></script>
+  <script src="../js/pages/admin-pos.js"></script>
+</body>
+</html>
