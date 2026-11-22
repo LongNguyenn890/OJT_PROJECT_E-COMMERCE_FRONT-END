@@ -323,9 +323,13 @@ function renderProductsTable(products) {
 
     let priceHtml = "";
     if (promoVal !== null && promoVal >= 0 && promoVal < priceVal) {
+      const discountPercent = Math.round(((priceVal - promoVal) / priceVal) * 100);
       priceHtml = `
         <div class="price-display-wrap">
-          <span class="price-promo">${formatVND(promoVal)}</span>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span class="price-promo">${formatVND(promoVal)}</span>
+            <span style="display: inline-flex; align-items: center; padding: 1px 5px; background: #fee2e2; color: #dc2626; border-radius: 4px; font-size: 11px; font-weight: 700;">-${discountPercent}%</span>
+          </div>
           <span class="price-original-struck">${formatVND(priceVal)}</span>
         </div>
       `;
@@ -854,8 +858,8 @@ function initProductForm() {
     const name = (nameInput ? nameInput.value : "").trim();
     const sku = (skuInput ? skuInput.value : "").trim();
     const categoryId = catSelect && catSelect.value ? parseInt(catSelect.value, 10) : null;
-    const price = priceInput ? parseFloat(priceInput.value) : 0;
-    const promoPrice = (promoInput && promoInput.value !== "") ? parseFloat(promoInput.value) : null;
+    const price = priceInput ? Math.round(parseFloat(priceInput.value)) : 0;
+    const promoPrice = (promoInput && promoInput.value !== "") ? Math.round(parseFloat(promoInput.value)) : null;
     const stock = stockInput ? parseInt(stockInput.value, 10) : 0;
     const isVisible = visibilitySelect ? parseInt(visibilitySelect.value, 10) : 1;
     const description = (descInput ? descInput.value : "").trim();
@@ -983,6 +987,159 @@ function initProductForm() {
       }
     }
   });
+
+  // Kích hoạt bộ tính toán khuyến mãi 2 chiều (% <-> số tiền sau giảm)
+  setupPromoCalculator();
+}
+
+/**
+ * Quản lý tính toán và hiển thị khuyến mãi (Phần trăm % <-> Số tiền sau giảm)
+ */
+function setupPromoCalculator() {
+  const priceInput = document.getElementById("prod-price");
+  const percentInput = document.getElementById("prod-discount-percent");
+  const promoInput = document.getElementById("prod-promotional-price");
+  const clearBtn = document.getElementById("btn-clear-discount");
+  const previewBox = document.getElementById("promo-preview-summary");
+  const previewText = document.getElementById("promo-preview-text");
+  const quickBtns = document.querySelectorAll(".promo-quick-btn");
+
+  if (!priceInput || !promoInput || !percentInput) return;
+
+  function updatePreview() {
+    const price = parseFloat(priceInput.value) || 0;
+    const promo = promoInput.value !== "" ? parseFloat(promoInput.value) : null;
+    const percent = percentInput.value !== "" ? parseFloat(percentInput.value) : null;
+
+    // Highlight nút chọn nhanh tương ứng
+    quickBtns.forEach((btn) => {
+      const p = parseFloat(btn.dataset.percent);
+      if (percent !== null && Math.abs(percent - p) < 0.1) {
+        btn.classList.add("active");
+      } else {
+        btn.classList.remove("active");
+      }
+    });
+
+    if (promo !== null && promo >= 0 && price > 0 && promo < price) {
+      const saved = price - promo;
+      const pct = percent !== null ? percent : Math.round(((saved / price) * 100) * 10) / 10;
+      if (clearBtn) clearBtn.style.display = "inline-flex";
+      if (previewBox) previewBox.style.display = "flex";
+      if (previewText) {
+        previewText.innerHTML = `
+          <span style="color: #16a34a; font-weight: 700;">✓ Giảm ${pct}%</span>: 
+          Khách thanh toán <b>${formatVND(promo)}</b> 
+          <span style="color: #64748b;">(Tiết kiệm <b>${formatVND(saved)}</b>)</span>
+        `;
+      }
+    } else if (promo !== null && promo >= price && price > 0) {
+      if (clearBtn) clearBtn.style.display = "inline-flex";
+      if (previewBox) previewBox.style.display = "flex";
+      if (previewText) {
+        previewText.innerHTML = `<span style="color: #dc2626; font-weight: 600;">⚠ Số tiền sau khi giảm phải nhỏ hơn giá gốc (${formatVND(price)})</span>`;
+      }
+    } else {
+      if (clearBtn) clearBtn.style.display = "none";
+      if (previewBox) previewBox.style.display = "none";
+      if (previewText) previewText.textContent = "";
+    }
+  }
+
+  // 1. Khi nhập phần trăm (%)
+  percentInput.addEventListener("input", () => {
+    const price = parseFloat(priceInput.value) || 0;
+    const rawVal = percentInput.value.trim();
+
+    if (rawVal === "") {
+      promoInput.value = "";
+      updatePreview();
+      return;
+    }
+
+    let pct = parseFloat(rawVal);
+    if (isNaN(pct) || pct < 0) pct = 0;
+    if (pct > 99) pct = 99;
+
+    if (price > 0 && pct > 0) {
+      const finalPrice = Math.round(price * (1 - pct / 100));
+      promoInput.value = finalPrice;
+    } else if (pct === 0) {
+      promoInput.value = "";
+    }
+    updatePreview();
+  });
+
+  // 2. Khi nhập số tiền sau khi giảm (VNĐ)
+  promoInput.addEventListener("input", () => {
+    const price = parseFloat(priceInput.value) || 0;
+    const rawVal = promoInput.value.trim();
+
+    if (rawVal === "") {
+      percentInput.value = "";
+      updatePreview();
+      return;
+    }
+
+    const promo = parseFloat(rawVal);
+    if (price > 0 && !isNaN(promo) && promo >= 0 && promo < price) {
+      const pct = Math.round(((price - promo) / price) * 100 * 10) / 10;
+      percentInput.value = pct;
+    } else {
+      percentInput.value = "";
+    }
+    updatePreview();
+  });
+
+  // 3. Khi thay đổi giá gốc
+  priceInput.addEventListener("input", () => {
+    const price = parseFloat(priceInput.value) || 0;
+    const percentVal = percentInput.value.trim();
+
+    if (percentVal !== "" && price > 0) {
+      const pct = parseFloat(percentVal);
+      if (!isNaN(pct) && pct > 0 && pct < 100) {
+        promoInput.value = Math.round(price * (1 - pct / 100));
+      }
+    } else if (promoInput.value.trim() !== "" && price > 0) {
+      const promo = parseFloat(promoInput.value);
+      if (!isNaN(promo) && promo >= 0 && promo < price) {
+        const pct = Math.round(((price - promo) / price) * 100 * 10) / 10;
+        percentInput.value = pct;
+      }
+    }
+    updatePreview();
+  });
+
+  // 4. Các nút chọn nhanh mức giảm (%)
+  quickBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const pct = parseFloat(btn.dataset.percent);
+      const price = parseFloat(priceInput.value) || 0;
+
+      if (!price || price <= 0) {
+        showModalError("product-error-banner", "Vui lòng nhập Giá gốc trước khi chọn mức giảm giá");
+        priceInput.focus();
+        return;
+      }
+
+      hideModalError("product-error-banner");
+      percentInput.value = pct;
+      promoInput.value = Math.round(price * (1 - pct / 100));
+      updatePreview();
+    });
+  });
+
+  // 5. Nút xóa giảm giá
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      percentInput.value = "";
+      promoInput.value = "";
+      updatePreview();
+    });
+  }
+
+  window.updateProductPromoPreview = updatePreview;
 }
 
 /**
@@ -1011,6 +1168,14 @@ function openCreateProductModal() {
 
   const idInput = document.getElementById("product-id");
   if (idInput) idInput.value = "";
+
+  const percentInput = document.getElementById("prod-discount-percent");
+  if (percentInput) percentInput.value = "";
+
+  const promoInput = document.getElementById("prod-promotional-price");
+  if (promoInput) promoInput.value = "";
+
+  if (window.updateProductPromoPreview) window.updateProductPromoPreview();
 
   const existingSec = document.getElementById("existing-images-section");
   if (existingSec) existingSec.style.display = "none";
@@ -1041,6 +1206,7 @@ async function openEditProductModal(id) {
   const skuInput = document.getElementById("prod-sku");
   const catSelect = document.getElementById("prod-category");
   const priceInput = document.getElementById("prod-price");
+  const percentInput = document.getElementById("prod-discount-percent");
   const promoInput = document.getElementById("prod-promotional-price");
   const stockInput = document.getElementById("prod-stock");
   const visibilitySelect = document.getElementById("prod-visibility");
@@ -1056,8 +1222,27 @@ async function openEditProductModal(id) {
       if (nameInput) nameInput.value = product.name || "";
       if (skuInput) skuInput.value = product.sku || "";
       if (catSelect) catSelect.value = product.category_id || "";
-      if (priceInput) priceInput.value = product.price || "";
-      if (promoInput) promoInput.value = product.promotional_price !== null ? product.promotional_price : "";
+
+      const priceVal = (product.price !== null && product.price !== undefined && product.price !== "") 
+        ? Math.round(Number(product.price)) 
+        : 0;
+      const promoVal = (product.promotional_price !== null && product.promotional_price !== undefined && product.promotional_price !== "") 
+        ? Math.round(Number(product.promotional_price)) 
+        : null;
+
+      if (priceInput) priceInput.value = priceVal > 0 ? priceVal : "";
+      if (promoInput) promoInput.value = promoVal !== null ? promoVal : "";
+
+      if (percentInput) {
+        if (promoVal !== null && priceVal > 0 && promoVal < priceVal) {
+          percentInput.value = Math.round(((priceVal - promoVal) / priceVal) * 100 * 10) / 10;
+        } else {
+          percentInput.value = "";
+        }
+      }
+
+      if (window.updateProductPromoPreview) window.updateProductPromoPreview();
+
       if (stockInput) stockInput.value = product.stock_quantity || 0;
       if (visibilitySelect) visibilitySelect.value = product.is_visible !== undefined ? product.is_visible : 1;
       if (descInput) descInput.value = product.description || "";

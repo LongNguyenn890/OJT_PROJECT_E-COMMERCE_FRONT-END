@@ -428,7 +428,7 @@ function renderLayout() {
         <div class="user-tool-wrapper">
           <div class="user-tool" id="shop-user-profile" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false" title="Tài khoản cá nhân: ${escapeHtml(displayName)}">
             <img src="${escapeHtml(avatarSrc)}" alt="Avatar" onerror="this.src='${root}assets/images/avt người dùng.svg'">
-            <div class="user-tool-meta">
+            <div class="header-tool-meta">
               <small>Xin chào,</small>
               <span class="user-tool-name">${escapeHtml(displayName)}</span>
             </div>
@@ -446,6 +446,10 @@ function renderLayout() {
             <a href="${root}pages/cart.html" class="user-dropdown-item">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
               <span>Giỏ hàng của tôi</span>
+            </a>
+            <a href="${root}pages/wishlist.html" class="user-dropdown-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+              <span>Sản phẩm yêu thích</span>
             </a>
             <a href="${root}pages/my_orders.html" class="user-dropdown-item">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3.75h8.5L20 8.2v11.05A1.75 1.75 0 0 1 18.25 21h-11A1.75 1.75 0 0 1 5.5 19.25v-13A2.5 2.5 0 0 1 8 3.75Z"/><path d="M15 4v4.5h4.5M8.5 12h7M8.5 15.5h7"/></svg>
@@ -550,47 +554,64 @@ function renderLayout() {
               </div>
             </a>
 
-            <!-- 2. Tra cứu Đơn mua -->
-            <button class="orders-tool" id="shop-orders-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="shop-orders-panel" title="Đơn mua gần đây">
-              <div class="orders-icon-wrap">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.75h8.5L20 8.2v11.05A1.75 1.75 0 0 1 18.25 21h-11A1.75 1.75 0 0 1 5.5 19.25v-13A2.5 2.5 0 0 1 8 3.75Z"/><path d="M15 4v4.5h4.5M8.5 12h7M8.5 15.5h7"/></svg>
+            <!-- 2. Tra cứu Đơn mua kèm bảng thông báo đơn hàng trực tiếp bên dưới nút -->
+            <div class="orders-tool-wrapper">
+              <button class="orders-tool" id="shop-orders-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="shop-orders-panel" title="Đơn mua gần đây">
+                <div class="orders-icon-wrap">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.75h8.5L20 8.2v11.05A1.75 1.75 0 0 1 18.25 21h-11A1.75 1.75 0 0 1 5.5 19.25v-13A2.5 2.5 0 0 1 8 3.75Z"/><path d="M15 4v4.5h4.5M8.5 12h7M8.5 15.5h7"/></svg>
+                </div>
+                <div class="header-tool-meta">
+                  <small>Tra cứu</small>
+                  <b>Đơn mua</b>
+                </div>
+              </button>
+
+              <section class="orders-panel order-notify-panel" id="shop-orders-panel" hidden aria-label="Thông báo đơn hàng">
+                <div class="orders-panel-heading">
+                  <div class="notify-heading-title">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    <span>Cập nhật đơn hàng</span>
+                  </div>
+                  <a href="${root}pages/my_orders.html" class="notify-view-all-link">Xem tất cả ›</a>
+                </div>
+                <div class="orders-panel-content" id="shop-orders-content">
+                  <!-- Render động danh sách thông báo đơn hàng -->
+                </div>
+                <div class="orders-panel-footer">
+                  <a href="${root}pages/my_orders.html" class="btn-all-orders">Xem tất cả đơn mua của tôi</a>
+                </div>
+              </section>
+            </div>
+
+            <!-- 3. Danh sách Yêu thích -->
+            <a href="${root}pages/wishlist.html" class="wishlist-tool" id="shop-wishlist-btn" title="Danh sách sản phẩm yêu thích">
+              <div class="wishlist-icon-wrapper">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+                <i id="wishlist-count" style="display: none;">0</i>
               </div>
               <div class="header-tool-meta">
-                <small>Tra cứu</small>
-                <b>Đơn mua</b>
+                <small id="wishlist-count-label">0 sản phẩm</small>
+                <b>Yêu thích</b>
               </div>
-            </button>
+            </a>
 
-            <!-- 3. Tài khoản người dùng (Kèm menu dropdown) -->
+            <!-- 4. Tài khoản người dùng (Kèm menu dropdown) -->
             ${userSectionHtml}
 
-            <!-- 4. Giỏ hàng (Nổi bật góc ngoài cùng bên phải) -->
+            <!-- 5. Giỏ hàng (Nổi bật góc ngoài cùng bên phải) -->
             <button class="cart-tool" id="shop-cart-btn" aria-label="Giỏ hàng" title="Giỏ hàng của bạn">
               <div class="cart-icon-wrapper">
                 <img src="${root}assets/images/giỏ hàng.svg" alt="">
-                <i id="cart-count">0</i>
+                <i id="cart-count" style="display: none;">0</i>
               </div>
               <div class="header-tool-meta">
-                <small>Giỏ hàng</small>
-                <b id="cart-count-label">0 món</b>
+                <small id="cart-count-label">0 sản phẩm</small>
+                <b>Giỏ hàng</b>
               </div>
             </button>
           </div>
-          <section class="orders-panel order-notify-panel" id="shop-orders-panel" hidden aria-label="Thông báo đơn hàng">
-            <div class="orders-panel-heading">
-              <div class="notify-heading-title">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                <span>Cập nhật đơn hàng</span>
-              </div>
-              <a href="${root}pages/my_orders.html" class="notify-view-all-link">Xem tất cả ›</a>
-            </div>
-            <div class="orders-panel-content" id="shop-orders-content">
-              <!-- Render động danh sách thông báo đơn hàng -->
-            </div>
-            <div class="orders-panel-footer">
-              <a href="${root}pages/my_orders.html" class="btn-all-orders">Xem tất cả đơn mua của tôi</a>
-            </div>
-          </section>
         </div>
       </div>
       <div class="shop-nav-bar">
@@ -797,13 +818,20 @@ function renderLayout() {
       const countElem = document.getElementById("cart-count");
       const countLabelElem = document.getElementById("cart-count-label");
 
+      const applyCartCount = (count) => {
+        if (countElem) {
+          countElem.textContent = count;
+          countElem.style.display = count > 0 ? "inline-flex" : "none";
+        }
+        if (countLabelElem) countLabelElem.textContent = `${count} sản phẩm`;
+        return count;
+      };
+
       if (currentToken && typeof api !== "undefined" && api.get) {
         try {
           const cart = await api.get("/cart");
           const count = (cart?.cart_items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
-          if (countElem) countElem.textContent = count;
-          if (countLabelElem) countLabelElem.textContent = `${count} món`;
-          return count;
+          return applyCartCount(count);
         } catch (_) {}
       }
 
@@ -811,17 +839,16 @@ function renderLayout() {
       try {
         const demoCart = JSON.parse(localStorage.getItem("shopease_demo_cart_v1") || "[]");
         const count = demoCart.reduce((sum, item) => sum + Number(item.quantity || item.qty || 1), 0);
-        if (countElem) countElem.textContent = count;
-        if (countLabelElem) countLabelElem.textContent = `${count} món`;
-        return count;
+        return applyCartCount(count);
       } catch (_) {}
 
-      if (countElem) countElem.textContent = "0";
-      if (countLabelElem) countLabelElem.textContent = "0 món";
-      return 0;
+      return applyCartCount(0);
     };
 
     window.refreshCartCount();
+    if (typeof Wishlist !== "undefined" && typeof Wishlist.updateBadges === "function") {
+      Wishlist.updateBadges();
+    }
 
     // Gắn sự kiện click mở trang giỏ hàng
     const shopCartBtn = document.getElementById("shop-cart-btn");
@@ -966,6 +993,7 @@ function renderLayout() {
         if (!isHidden) {
           shopOrdersPanel.hidden = true;
           shopOrdersBtn.setAttribute("aria-expanded", "false");
+          shopOrdersBtn.classList.remove("active");
           return;
         }
 
@@ -976,6 +1004,7 @@ function renderLayout() {
         // Mở panel
         shopOrdersPanel.hidden = false;
         shopOrdersBtn.setAttribute("aria-expanded", "true");
+        shopOrdersBtn.classList.add("active");
 
         const currentToken = localStorage.getItem("token");
         if (!currentToken) {
@@ -1026,6 +1055,7 @@ function renderLayout() {
       shopOrdersPanel.querySelector("[data-close-orders]")?.addEventListener("click", () => {
         shopOrdersPanel.hidden = true;
         shopOrdersBtn.setAttribute("aria-expanded", "false");
+        shopOrdersBtn.classList.remove("active");
       });
 
       // Đóng panel khi click ra ngoài
@@ -1033,6 +1063,7 @@ function renderLayout() {
         if (!shopOrdersPanel.contains(e.target) && !shopOrdersBtn.contains(e.target)) {
           shopOrdersPanel.hidden = true;
           shopOrdersBtn.setAttribute("aria-expanded", "false");
+          shopOrdersBtn.classList.remove("active");
         }
       });
     }

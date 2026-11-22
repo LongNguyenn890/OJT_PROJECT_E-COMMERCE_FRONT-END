@@ -177,15 +177,27 @@
               </div>
             </div>
 
-            <!-- Nút Thêm vào giỏ hàng & Mua ngay -->
+            <!-- Nút Thêm vào giỏ hàng & Mua ngay & Yêu thích -->
             <div class="cta-buttons-row">
               <button type="button" class="btn-add-cart" id="btn-add-to-cart">
-                <img src="../assets/images/thêm giỏ hàng.svg" alt="">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="8" cy="21" r="1"></circle>
+                  <circle cx="19" cy="21" r="1"></circle>
+                  <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
+                  <line x1="12" y1="5" x2="12" y2="11"></line>
+                  <line x1="9" y1="8" x2="15" y2="8"></line>
+                </svg>
                 <span>Thêm vào giỏ hàng</span>
               </button>
               <button type="button" class="btn-buy-now" id="btn-buy-now">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
                 <span>Mua ngay</span>
+              </button>
+              <button type="button" class="btn-wishlist-detail" id="btn-wishlist-toggle" aria-label="Lưu vào yêu thích" title="Lưu vào yêu thích">
+                <svg viewBox="0 0 24 24" class="wishlist-heart-icon" width="20" height="20">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+                <span id="btn-wishlist-text">Yêu thích</span>
               </button>
             </div>
           </div>
@@ -442,6 +454,7 @@
   <script src="../js/config.js"></script>
   <script src="../js/api.js"></script>
   <script src="../js/utils.js"></script>
+  <script src="../js/wishlist.js"></script>
   <script src="../js/layout.js"></script>
   <script src="../js/pages/product-detail.js"></script>
 </body>

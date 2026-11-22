@@ -209,10 +209,16 @@ function renderProducts() {
       const catName = formatCategoryDisplayName(product.category);
       const categoryTag = catName ? `<span class="product-tag">${escapeHTML(catName)}</span>` : "";
       const displayPrice = hasPromo ? Number(product.promotional_price) : Number(product.price);
+      const isWishlisted = (typeof Wishlist !== "undefined") ? Wishlist.isWishlisted(product.id) : false;
       return `
-        <article class="product-card">
+        <article class="product-card" data-product-id="${product.id}">
           <div class="product-photo">
             ${categoryTag}
+            <button type="button" class="product-wishlist-btn ${isWishlisted ? "active" : ""}" data-id="${product.id}" aria-label="${isWishlisted ? "Bỏ yêu thích" : "Lưu vào yêu thích"}" title="${isWishlisted ? "Bỏ yêu thích" : "Lưu vào yêu thích"}">
+              <svg viewBox="0 0 24 24" class="wishlist-heart-icon" width="18" height="18">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+            </button>
             <img src="${escapeHTML(productImage(product))}" alt="${escapeHTML(product.name)}" loading="lazy" onerror="this.src='${asset("logo_shop.svg")}'">
           </div>
           <div class="product-info">
@@ -561,7 +567,8 @@ async function showProductDetails(productId) {
             </div>
             <div class="modal-actions">
               <button class="blue-button modal-cart-btn" type="button" data-id="${product.id}" ${product.stock_quantity <= 0 ? "disabled" : ""}>
-                <img src="${asset("thêm giỏ hàng.svg")}" alt=""> Thêm vào giỏ hàng
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right: 6px;"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path><line x1="12" y1="5" x2="12" y2="11"></line><line x1="9" y1="8" x2="15" y2="8"></line></svg>
+                <span>Thêm vào giỏ hàng</span>
               </button>
             </div>
           </div>
@@ -744,6 +751,28 @@ document.getElementById("pagination")?.addEventListener("click", event => {
 });
 
 document.getElementById("product-grid")?.addEventListener("click", event => {
+  // 1. Bấm vào nút yêu thích (Trái tim)
+  const wishlistBtn = event.target.closest(".product-wishlist-btn");
+  if (wishlistBtn) {
+    event.preventDefault();
+    event.stopPropagation();
+    const pid = Number(wishlistBtn.dataset.id);
+    const prod = state.products.find(p => p.id === pid);
+    if (prod && typeof Wishlist !== "undefined") {
+      Wishlist.toggle({
+        id: prod.id,
+        name: prod.name,
+        price: prod.price,
+        promotional_price: prod.promotional_price,
+        image_url: productImage(prod),
+        category_name: formatCategoryDisplayName(prod.category),
+        short_description: productShortDesc(prod),
+        stock_quantity: prod.stock_quantity
+      });
+    }
+    return;
+  }
+
   const button = event.target.closest("[data-action]");
   if (button) {
     if (button.dataset.action === "details") {
@@ -757,6 +786,7 @@ document.getElementById("product-grid")?.addEventListener("click", event => {
   }
 
   // Bấm vào ảnh hoặc tên sản phẩm cũng điều hướng sang trang chi tiết
+  if (event.target.closest(".product-wishlist-btn")) return;
   const clickableHeader = event.target.closest(".product-photo, .product-info h3");
   if (clickableHeader) {
     const card = clickableHeader.closest(".product-card");
@@ -780,6 +810,11 @@ async function initCustomerHome() {
   }
 
   initPriceSlider();
+  window.addEventListener("wishlist:updated", () => {
+    if (typeof Wishlist !== "undefined") {
+      Wishlist.syncButtons();
+    }
+  });
   await Promise.all([loadCategories(), refreshCartCount()]);
   await loadProducts();
   updateActiveFilterBar();
