@@ -217,47 +217,91 @@
             <!-- CỘT 1: THÔNG TIN CƠ BẢN -->
             <div class="product-form-col">
               <div class="admin-form-group" style="margin-bottom: 14px;">
-                <label class="admin-label" for="prod-name" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Tên sản phẩm <span class="required" style="color: #dc2626;">*</span></label>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; min-height: 20px;">
+                  <label class="admin-label" for="prod-name" style="font-size: 13px; font-weight: 600; margin: 0;">Tên sản phẩm <span class="required" style="color: #dc2626;">*</span></label>
+                </div>
                 <input type="text" id="prod-name" class="admin-form-input" placeholder="Ví dụ: iPhone 15 Pro Max 256GB" required maxlength="200">
               </div>
 
-              <div class="form-row-2col" style="margin-bottom: 14px;">
-                <div class="admin-form-group">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <div class="form-row-2col" style="margin-bottom: 14px; align-items: start;">
+                <div class="admin-form-group" style="margin-bottom: 0;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; min-height: 20px;">
                     <label class="admin-label" for="prod-sku" style="font-size: 13px; font-weight: 600; margin: 0;">Mã SKU <span class="required" style="color: #dc2626;">*</span></label>
-                    <button type="button" id="btn-auto-sku" style="background: none; border: none; font-size: 11px; color: var(--admin-primary); cursor: pointer; text-decoration: underline;">Tự sinh</button>
+                    <button type="button" id="btn-auto-sku" style="background: none; border: none; font-size: 11px; color: var(--admin-primary); cursor: pointer; text-decoration: underline; padding: 0;">Tự sinh</button>
                   </div>
                   <input type="text" id="prod-sku" class="admin-form-input" placeholder="IP15PM-256-BLK" required maxlength="100" style="font-family: 'Liberation Mono', monospace;">
                 </div>
 
-                <div class="admin-form-group">
-                  <label class="admin-label" for="prod-category" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Danh mục <span class="required" style="color: #dc2626;">*</span></label>
+                <div class="admin-form-group" style="margin-bottom: 0;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; min-height: 20px;">
+                    <label class="admin-label" for="prod-category" style="font-size: 13px; font-weight: 600; margin: 0;">Danh mục <span class="required" style="color: #dc2626;">*</span></label>
+                  </div>
                   <select id="prod-category" class="admin-form-input" required>
                     <option value="">-- Chọn danh mục --</option>
                   </select>
                 </div>
               </div>
 
-              <div class="form-row-2col" style="margin-bottom: 14px;">
-                <div class="admin-form-group">
-                  <label class="admin-label" for="prod-price" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Giá gốc (VNĐ) <span class="required" style="color: #dc2626;">*</span></label>
-                  <input type="number" id="prod-price" class="admin-form-input" placeholder="29990000" min="1" step="1000" required>
+              <div class="form-row-2col" style="margin-bottom: 14px; align-items: start;">
+                <div class="admin-form-group" style="margin-bottom: 0;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; min-height: 20px;">
+                    <label class="admin-label" for="prod-price" style="font-size: 13px; font-weight: 600; margin: 0;">Giá gốc (VNĐ) <span class="required" style="color: #dc2626;">*</span></label>
+                  </div>
+                  <input type="number" id="prod-price" class="admin-form-input" placeholder="Ví dụ: 320000" min="0" step="any" required>
                 </div>
 
-                <div class="admin-form-group">
-                  <label class="admin-label" for="prod-promotional-price" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Giá khuyến mãi (VNĐ)</label>
-                  <input type="number" id="prod-promotional-price" class="admin-form-input" placeholder="Nhỏ hơn giá gốc" min="0" step="1000">
+                <div class="admin-form-group" style="margin-bottom: 0;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; min-height: 20px;">
+                    <label class="admin-label" for="prod-discount-percent" style="font-size: 13px; font-weight: 600; margin: 0;">Khuyến mãi (%)</label>
+                  </div>
+                  <div style="position: relative; display: flex; align-items: center;">
+                    <input type="number" id="prod-discount-percent" class="admin-form-input" placeholder="Ví dụ: 10, 20" min="0" max="99" step="any" style="padding-right: 32px;">
+                    <span style="position: absolute; right: 12px; font-weight: 700; color: #64748b; font-size: 13px; pointer-events: none;">%</span>
+                  </div>
                 </div>
               </div>
 
-              <div class="form-row-2col" style="margin-bottom: 14px;">
-                <div class="admin-form-group">
-                  <label class="admin-label" for="prod-stock" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Số lượng tồn kho <span class="required" style="color: #dc2626;">*</span></label>
+              <!-- Hộp tính toán và hiển thị giá khuyến mãi sau khi giảm -->
+              <div class="promo-calc-box" style="margin-bottom: 16px; padding: 12px 14px; background: #f8faff; border: 1.5px dashed #bfdbfe; border-radius: 10px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px;">
+                  <label class="admin-label" for="prod-promotional-price" style="font-size: 13px; font-weight: 600; color: #1e40af; margin-bottom: 0;">
+                    Số tiền sau khi giảm (VNĐ)
+                  </label>
+                  <button type="button" id="btn-clear-discount" class="btn-clear-discount" style="background: none; border: none; color: #dc2626; font-size: 12px; font-weight: 600; cursor: pointer; padding: 2px 8px; border-radius: 4px; display: none;">
+                    ✕ Xóa giảm giá
+                  </button>
+                </div>
+                <input type="number" id="prod-promotional-price" class="admin-form-input" placeholder="Tự động tính từ % hoặc nhập trực tiếp" min="0" step="any" style="font-weight: 700; color: #082e9e; background: #ffffff;">
+
+                <!-- Các mức phần trăm chọn nhanh -->
+                <div style="display: flex; gap: 6px; align-items: center; margin-top: 8px; flex-wrap: wrap;">
+                  <span style="font-size: 11.5px; color: #64748b; font-weight: 500;">Mức giảm nhanh:</span>
+                  <button type="button" class="promo-quick-btn" data-percent="5">5%</button>
+                  <button type="button" class="promo-quick-btn" data-percent="10">10%</button>
+                  <button type="button" class="promo-quick-btn" data-percent="15">15%</button>
+                  <button type="button" class="promo-quick-btn" data-percent="20">20%</button>
+                  <button type="button" class="promo-quick-btn" data-percent="30">30%</button>
+                  <button type="button" class="promo-quick-btn" data-percent="50">50%</button>
+                </div>
+
+                <!-- Dòng xem trước số tiền khách thanh toán & tiết kiệm -->
+                <div id="promo-preview-summary" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e2e8f0; font-size: 12.5px; color: #334155; display: none; align-items: center; gap: 6px;">
+                  <span id="promo-preview-text"></span>
+                </div>
+              </div>
+
+              <div class="form-row-2col" style="margin-bottom: 14px; align-items: start;">
+                <div class="admin-form-group" style="margin-bottom: 0;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; min-height: 20px;">
+                    <label class="admin-label" for="prod-stock" style="font-size: 13px; font-weight: 600; margin: 0;">Số lượng tồn kho <span class="required" style="color: #dc2626;">*</span></label>
+                  </div>
                   <input type="number" id="prod-stock" class="admin-form-input" placeholder="50" min="0" step="1" required>
                 </div>
 
-                <div class="admin-form-group">
-                  <label class="admin-label" for="prod-visibility" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Trạng thái kinh doanh</label>
+                <div class="admin-form-group" style="margin-bottom: 0;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; min-height: 20px;">
+                    <label class="admin-label" for="prod-visibility" style="font-size: 13px; font-weight: 600; margin: 0;">Trạng thái kinh doanh</label>
+                  </div>
                   <select id="prod-visibility" class="admin-form-input">
                     <option value="1">Đang kinh doanh (Hiển thị)</option>
                     <option value="0">Tạm ẩn (Không bán)</option>
@@ -266,7 +310,9 @@
               </div>
 
               <div class="admin-form-group">
-                <label class="admin-label" for="prod-description" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Mô tả chi tiết</label>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; min-height: 20px;">
+                  <label class="admin-label" for="prod-description" style="font-size: 13px; font-weight: 600; margin: 0;">Mô tả chi tiết</label>
+                </div>
                 <textarea id="prod-description" class="admin-form-input" rows="4" placeholder="Nhập các đặc điểm nổi bật, thông số kỹ thuật của sản phẩm..."></textarea>
               </div>
             </div>

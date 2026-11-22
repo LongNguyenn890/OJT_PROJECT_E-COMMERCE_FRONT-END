@@ -331,10 +331,16 @@ function renderRelatedProducts(related) {
       : asset("logo_shop.svg");
     const catName = item.category?.name || "Sản phẩm";
 
+    const isWishlisted = (typeof Wishlist !== "undefined") ? Wishlist.isWishlisted(item.id) : false;
     return `
-      <article class="product-card">
-        <div class="product-photo" style="cursor: pointer;" onclick="window.location.href='product-detail.html?id=${item.id}'">
+      <article class="product-card" data-product-id="${item.id}">
+        <div class="product-photo" style="cursor: pointer;" onclick="if (!event.target.closest('.product-wishlist-btn')) window.location.href='product-detail.html?id=${item.id}'">
           <span class="product-tag">${escapeHTML(catName)}</span>
+          <button type="button" class="product-wishlist-btn ${isWishlisted ? "active" : ""}" data-id="${item.id}" aria-label="${isWishlisted ? "Bỏ yêu thích" : "Lưu vào yêu thích"}" title="${isWishlisted ? "Bỏ yêu thích" : "Lưu vào yêu thích"}" onclick="event.stopPropagation(); toggleWishlistRelated(${item.id})">
+            <svg viewBox="0 0 24 24" class="wishlist-heart-icon" width="18" height="18">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+          </button>
           <img src="${escapeHTML(primaryImg)}" alt="${escapeHTML(item.name)}" loading="lazy" onerror="this.src='${asset("logo_shop.svg")}'">
         </div>
         <div class="product-info">
@@ -407,10 +413,16 @@ function renderRecentlyViewedSection(currentProductId) {
     grid.innerHTML = otherProducts.slice(0, 4).map(item => {
       const hasPromo = item.promotional_price && Number(item.promotional_price) < Number(item.price);
       const imgUrl = resolveImageUrl(item.image_url);
+      const isWishlisted = (typeof Wishlist !== "undefined") ? Wishlist.isWishlisted(item.id) : false;
       return `
-        <article class="product-card">
-          <div class="product-photo" style="cursor: pointer;" onclick="window.location.href='product-detail.html?id=${item.id}'">
+        <article class="product-card" data-product-id="${item.id}">
+          <div class="product-photo" style="cursor: pointer;" onclick="if (!event.target.closest('.product-wishlist-btn')) window.location.href='product-detail.html?id=${item.id}'">
             <span class="product-tag">${escapeHTML(item.category_name || "Sản phẩm")}</span>
+            <button type="button" class="product-wishlist-btn ${isWishlisted ? "active" : ""}" data-id="${item.id}" aria-label="${isWishlisted ? "Bỏ yêu thích" : "Lưu vào yêu thích"}" title="${isWishlisted ? "Bỏ yêu thích" : "Lưu vào yêu thích"}" onclick="event.stopPropagation(); toggleWishlistRelated(${item.id})">
+              <svg viewBox="0 0 24 24" class="wishlist-heart-icon" width="18" height="18">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+            </button>
             <img src="${escapeHTML(imgUrl)}" alt="${escapeHTML(item.name)}" loading="lazy" onerror="this.src='${asset("logo_shop.svg")}'">
           </div>
           <div class="product-info">
@@ -472,6 +484,39 @@ window.addRelatedToCart = async function (productId, button) {
   }
 };
 
+window.toggleWishlistRelated = function (productId) {
+  if (typeof Wishlist === "undefined") return;
+  const currentProd = detailState.product;
+  let target = null;
+  if (currentProd && currentProd.related_products) {
+    target = currentProd.related_products.find(p => p.id === productId);
+  }
+  if (!target) {
+    try {
+      const recent = JSON.parse(localStorage.getItem("shopease_recent_products_v1") || "[]");
+      target = recent.find(p => p.id === productId);
+    } catch (_) {}
+  }
+  if (target) {
+    const img = (target.product_images && target.product_images.length > 0)
+      ? resolveImageUrl(target.product_images[0].image_url)
+      : (target.image_url ? resolveImageUrl(target.image_url) : asset("logo_shop.svg"));
+    Wishlist.toggle({
+      id: target.id,
+      name: target.name,
+      price: target.price,
+      promotional_price: target.promotional_price,
+      image_url: img,
+      category_name: target.category?.name || target.category_name || "Sản phẩm",
+      short_description: target.description || "",
+      stock_quantity: target.stock_quantity
+    });
+  } else {
+    Wishlist.toggle({ id: productId });
+  }
+  Wishlist.syncButtons();
+};
+
 // ==========================================================
 // 7. XỬ LÝ SỰ KIỆN: TĂNG GIẢM SỐ LƯỢNG, MUA HÀNG, TABS
 // ==========================================================
@@ -524,6 +569,47 @@ function setupEventListeners(product) {
   btnBuyNow?.addEventListener("click", async () => {
     await executeAddToCart(product.id, true);
   });
+
+  // Nút "Yêu thích" ở trang chi tiết sản phẩm
+  const btnWishlist = document.getElementById("btn-wishlist-toggle");
+  if (btnWishlist) {
+    btnWishlist.dataset.productId = product.id;
+    const syncDetailWishlistBtn = () => {
+      const active = (typeof Wishlist !== "undefined") ? Wishlist.isWishlisted(product.id) : false;
+      const textElem = document.getElementById("btn-wishlist-text");
+      if (active) {
+        btnWishlist.classList.add("active");
+        if (textElem) textElem.textContent = "Đã yêu thích";
+        btnWishlist.title = "Bỏ khỏi danh sách yêu thích";
+      } else {
+        btnWishlist.classList.remove("active");
+        if (textElem) textElem.textContent = "Yêu thích";
+        btnWishlist.title = "Lưu vào yêu thích";
+      }
+    };
+    syncDetailWishlistBtn();
+
+    btnWishlist.addEventListener("click", () => {
+      if (typeof Wishlist !== "undefined") {
+        const primaryImg = (product.product_images && product.product_images.length > 0)
+          ? resolveImageUrl(product.product_images[0].image_url)
+          : (product.image_url || "");
+        Wishlist.toggle({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          promotional_price: product.promotional_price,
+          image_url: primaryImg,
+          category_name: product.category?.name || "",
+          short_description: product.description || "",
+          stock_quantity: product.stock_quantity
+        });
+        syncDetailWishlistBtn();
+      }
+    });
+
+    window.addEventListener("wishlist:updated", syncDetailWishlistBtn);
+  }
 
   // Sự kiện nhấp vào ảnh chính hoặc nút phóng to để mở Pop-up Lightbox
   const mainViewport = document.getElementById("gallery-main-viewport");

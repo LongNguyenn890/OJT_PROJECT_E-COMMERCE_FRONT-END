@@ -12,7 +12,7 @@
   --figma-bg-accent-blue: #c7d2fe;
   
   --figma-primary: #082e9e;
-  --figma-primary-hover: #042177;
+  --figma-primary-hover: #1d4ed8;
   
   --figma-text-dark: #0f172a;
   --figma-text-body: #334155;
@@ -982,7 +982,8 @@ body.shop-page {
 }
 
 .btn-action-reorder:hover {
-  background-color: #00563b;
+  background-color: #059669;
+  color: #ffffff;
 }
 
 .reorder-sub-actions {

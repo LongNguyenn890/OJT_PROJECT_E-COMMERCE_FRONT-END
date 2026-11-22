@@ -783,9 +783,10 @@
 }
 
 .btn-place-order:hover:not(:disabled) {
-  background: var(--color-primary-dark, #001f70);
+  background: #1d4ed8;
+  color: #ffffff;
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(0, 40, 142, 0.4);
+  box-shadow: 0 6px 18px rgba(29, 78, 216, 0.4);
 }
 
 .btn-place-order:active:not(:disabled) {
@@ -1028,7 +1029,8 @@
 }
 
 .modal-btn-primary:hover {
-  background: var(--color-primary-dark, #001f70);
+  background: #1d4ed8;
+  color: #ffffff;
 }
 
 .modal-btn-secondary {
@@ -1108,11 +1110,11 @@
 }
 
 .btn-change-address:hover {
-  background: #f0f4ff;
-  border-color: var(--color-primary-dark, #001f70);
-  color: var(--color-primary-dark, #001f70);
+  background: #eff6ff;
+  border-color: #1d4ed8;
+  color: #1d4ed8;
   transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(0, 40, 142, 0.12);
+  box-shadow: 0 3px 8px rgba(29, 78, 216, 0.15);
 }
 
 .btn-change-address.is-editing {
@@ -1264,7 +1266,8 @@
 }
 
 .btn-confirm-address:hover {
-  background: var(--color-primary-dark, #001f70);
+  background: #1d4ed8;
+  color: #ffffff;
   transform: translateY(-1px);
 }
 

@@ -5,7 +5,7 @@
 
 :root {
   --pd-primary: #082e9e;
-  --pd-primary-hover: #042177;
+  --pd-primary-hover: #1d4ed8;
   --pd-primary-light: #eff4ff;
   --pd-text-dark: #0f172a;
   --pd-text-body: #334155;
@@ -578,14 +578,64 @@
 /* Action CTA Buttons */
 .cta-buttons-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  grid-template-columns: 1.2fr 1.2fr auto;
+  gap: 12px;
 }
 
 @media (max-width: 640px) {
   .cta-buttons-row {
     grid-template-columns: 1fr;
   }
+}
+
+.btn-wishlist-detail {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 18px;
+  min-height: 48px;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-wishlist-detail:hover {
+  background: #fff1f2;
+  border-color: #fca5a5;
+  color: #e11d48;
+}
+
+.btn-wishlist-detail .wishlist-heart-icon {
+  width: 20px;
+  height: 20px;
+  fill: transparent;
+  stroke: currentColor;
+  stroke-width: 2;
+  transition: all 0.2s ease;
+}
+
+.btn-wishlist-detail:hover .wishlist-heart-icon {
+  stroke: #e11d48;
+}
+
+.btn-wishlist-detail.active {
+  background: #fff1f2;
+  border-color: #fda4af;
+  color: #e11d48;
+}
+
+.btn-wishlist-detail.active .wishlist-heart-icon {
+  fill: #e11d48;
+  stroke: #e11d48;
+  animation: heartPulse 0.35s ease;
 }
 
 .btn-add-cart,
@@ -606,20 +656,29 @@
 
 .btn-add-cart {
   background: #eff4ff;
-  color: var(--pd-primary);
+  color: #082e9e;
   border: 1.5px solid #bfdbfe;
+  font-weight: 700;
 }
 
 .btn-add-cart:hover:not(:disabled) {
   background: #dbeafe;
   border-color: #93c5fd;
+  color: #06247c;
   transform: translateY(-1px);
 }
 
-.btn-add-cart img,
 .btn-add-cart svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  flex-shrink: 0;
+}
+
+.btn-add-cart img {
   width: 18px;
   height: 18px;
+  filter: brightness(0) saturate(100%) invert(18%) sepia(85%) saturate(3000%) hue-rotate(222deg) brightness(85%);
 }
 
 .btn-buy-now {

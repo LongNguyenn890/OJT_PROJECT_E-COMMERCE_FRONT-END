@@ -1,11 +1,12 @@
 /**
  * ShopEase - Quản lý Nhân sự & Phân quyền (Admin Staff Management)
  * Xử lý toàn bộ logic cho trang admin-staff.html:
- *  - GET    /api/customers?role=INTERNAL   : Danh sách nhân viên & quản trị viên
- *  - POST   /api/customers/staff           : Tạo mới tài khoản nhân viên
- *  - PUT    /api/customers/staff/{id}      : Chỉnh sửa thông tin, phân quyền, đổi mật khẩu
- *  - PATCH  /api/customers/{id}/status     : Khóa hoặc mở khóa tài khoản
- *  - DELETE /api/customers/{id}            : Xóa tài khoản nhân viên
+ *  - GET    /api/staff                     : Danh sách nhân viên & quản trị viên
+ *  - POST   /api/staff                     : Tạo mới tài khoản nhân viên
+ *  - GET    /api/staff/{id}                : Xem chi tiết thông tin hồ sơ nhân viên
+ *  - PUT    /api/staff/{id}                : Chỉnh sửa thông tin, phân quyền, đổi mật khẩu
+ *  - PATCH  /api/staff/{id}/status         : Khóa hoặc mở khóa tài khoản
+ *  - DELETE /api/staff/{id}                : Xóa tài khoản nhân viên
  */
 
 // Bộ lọc & phân trang
@@ -129,7 +130,7 @@ async function ensureAdminSession() {
  */
 async function loadStaffKpis() {
   try {
-    const res = await api.get("/customers", {
+    const res = await api.get("/staff", {
       role: "INTERNAL",
       exclude_self: true,
       page_size: 100
@@ -189,7 +190,7 @@ async function loadStaffList() {
       params.status = currentStatusFilter;
     }
 
-    const res = await api.get("/customers", params);
+    const res = await api.get("/staff", params);
     const items = res?.items || [];
     totalItems = res?.total !== undefined ? res.total : items.length;
 
@@ -536,7 +537,7 @@ function initForms() {
         btn.disabled = true;
         btn.innerHTML = `<span class="btn-op-spinner"></span> <span>Đang tạo...</span>`;
 
-        await api.post("/customers/staff", {
+        await api.post("/staff", {
           full_name: fullName,
           email: email,
           phone: phone,
@@ -594,7 +595,7 @@ function initForms() {
         btn.disabled = true;
         btn.innerHTML = `<span class="btn-op-spinner"></span> <span>Đang lưu...</span>`;
 
-        await api.put(`/customers/staff/${id}`, payload);
+        await api.put(`/staff/${id}`, payload);
 
         showToast(`Đã cập nhật thông tin nhân viên "${fullName}" thành công!`, "success");
         closeModal("modal-edit-staff");
@@ -632,7 +633,7 @@ window.openStaffDetailModal = async function (id) {
   openModal("modal-staff-detail");
 
   try {
-    const data = await api.get(`/customers/${id}`);
+    const data = await api.get(`/staff/${id}`);
     const name = data.full_name || "Chưa đặt tên";
     const email = data.email || "---";
     const phone = data.phone || "---";
@@ -863,7 +864,7 @@ async function executeConfirmStatusAction() {
     btn.disabled = true;
     btn.querySelector("span").textContent = "Đang xử lý...";
 
-    await api.patch(`/customers/${id}/status`, { status: newStatus });
+    await api.patch(`/staff/${id}/status`, { status: newStatus });
 
     const actionText = newStatus === "LOCKED" ? "Khóa" : "Mở khóa";
     showToast(`Đã ${actionText.toLowerCase()} tài khoản "${name}" thành công!`, "success");
@@ -905,7 +906,7 @@ async function executeConfirmDeleteAction() {
     btn.disabled = true;
     btn.querySelector("span").textContent = "Đang xóa...";
 
-    const res = await api.delete(`/customers/${id}`);
+    const res = await api.delete(`/staff/${id}`);
     const msg = res?.message || `Đã xóa tài khoản "${name}" thành công!`;
     showToast(msg, "success");
 

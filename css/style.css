@@ -11,7 +11,7 @@
 
 :root {
   --color-primary: #00288e;
-  --color-primary-dark: #001f70;
+  --color-primary-dark: #1d4ed8;
   --color-primary-light: #eaedff;
 
   --color-danger: #dc2626;
@@ -489,6 +489,8 @@ input[type="radio"] {
 
 .btn-outline:hover {
   background: var(--color-primary-light);
+  color: #1d4ed8;
+  border-color: #2563eb;
 }
 
 .btn-small {
@@ -912,8 +914,9 @@ tbody tr:hover {
   width: 100%;
 }
 
+[hidden],
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 /* ==========================================================
