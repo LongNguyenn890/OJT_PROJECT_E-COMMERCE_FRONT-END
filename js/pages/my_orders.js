@@ -422,8 +422,8 @@ document.addEventListener("DOMContentLoaded", () => {
             <button type="button" class="btn-sub-action" onclick="showToast('Cảm ơn bạn! Hệ thống đánh giá sản phẩm sẽ mở khi kết thúc đợt kiểm định.', 'info')">
               ⭐ Đánh giá
             </button>
-            <button type="button" class="btn-sub-action btn-trigger-detail" data-id="${order.id}">
-              📄 Tải hóa đơn
+            <button type="button" class="btn-sub-action btn-trigger-print-invoice" data-id="${order.id}">
+              📄 In hóa đơn
             </button>
           </div>
         `;
@@ -566,6 +566,18 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
     }).join("");
 
+    // Gắn sự kiện in hoá đơn trực tiếp từ thẻ đơn hàng
+    document.querySelectorAll(".btn-trigger-print-invoice").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const orderId = btn.getAttribute("data-id");
+        if (typeof window.printOrderInvoice === "function") {
+          window.printOrderInvoice(orderId);
+        } else {
+          window.print();
+        }
+      });
+    });
+
     // Gắn sự kiện click xem chi tiết
     document.querySelectorAll(".btn-trigger-detail").forEach(btn => {
       btn.addEventListener("click", () => {
@@ -690,6 +702,18 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("modal-subtotal-price").textContent = typeof formatMoney === "function" ? formatMoney(subtotalVal) : `${subtotalVal} ₫`;
       document.getElementById("modal-shipping-fee").textContent = order.shipping_fee === 0 || order.total_amount >= 500000 ? "Miễn phí" : (typeof formatMoney === "function" ? formatMoney(order.shipping_fee) : `${order.shipping_fee} ₫`);
       document.getElementById("modal-total-price").textContent = typeof formatMoney === "function" ? formatMoney(order.total_amount) : `${order.total_amount} ₫`;
+
+      // Gắn sự kiện in hoá đơn trong Modal
+      const modalPrintBtn = document.getElementById("btn-modal-print-invoice-user");
+      if (modalPrintBtn) {
+        modalPrintBtn.onclick = () => {
+          if (typeof window.printOrderInvoice === "function") {
+            window.printOrderInvoice(order);
+          } else {
+            window.print();
+          }
+        };
+      }
 
       detailModal.classList.add("active");
     } catch (err) {

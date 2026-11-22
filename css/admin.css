@@ -1631,7 +1631,8 @@ body.admin-page {
     transform: translateX(-100%);
   }
 
-  .admin-sidebar.open {
+  .admin-sidebar.open,
+  .admin-sidebar.show {
     transform: translateX(0);
   }
 

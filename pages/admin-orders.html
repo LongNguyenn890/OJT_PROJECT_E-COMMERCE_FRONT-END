@@ -545,6 +545,10 @@
             <p class="admin-page-desc">Theo dõi danh sách đơn mua, kiểm tra thông tin giao nhận, chuyển đổi trạng thái đơn hàng theo luồng vận hành và xác nhận thanh toán chuyển khoản</p>
           </div>
           <div class="admin-header-actions">
+            <a href="admin-pos.html" class="btn-admin-primary" style="padding: 9px 16px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/><line x1="12" y1="17" x2="12" y2="20"/></svg>
+              <span>Bán tại quầy (POS)</span>
+            </a>
             <button type="button" class="btn-admin-action secondary" id="btn-refresh-orders" style="padding: 9px 16px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
               <span>Làm mới dữ liệu</span>
@@ -1017,6 +1021,7 @@
   <script src="../js/api.js"></script>
   <script src="../js/utils.js"></script>
   <script src="../js/layout.js"></script>
+  <script src="../js/invoice-printer.js"></script>
   <script src="../js/pages/admin-orders.js"></script>
 </body>
 </html>
