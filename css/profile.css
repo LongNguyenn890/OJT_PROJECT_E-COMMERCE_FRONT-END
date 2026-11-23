@@ -1252,27 +1252,76 @@
   margin: 12px 0 6px 0;
 }
 
+.redeem-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 14px 0 8px 0;
+}
+
+.voucher-filter-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-pill:hover,
+.filter-pill.active {
+  border-color: #00288e;
+  background: #eff6ff;
+  color: #00288e;
+}
+
 .redeem-tiers-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .tier-item-box {
   border: 1.5px solid #e2e8f0;
   border-radius: 12px;
-  padding: 14px 16px;
+  padding: 13px 15px;
   background: #ffffff;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   transition: all 0.2s;
+  position: relative;
 }
 
 .tier-item-box:hover {
   border-color: #00288e;
-  box-shadow: 0 4px 12px rgba(0, 40, 142, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 40, 142, 0.08);
+}
+
+.tier-vip-highlight {
+  border: 2px solid #f59e0b;
+  background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.15);
+}
+
+.tier-vip-highlight:hover {
+  border-color: #d97706;
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.25);
 }
 
 .tier-top-row {
@@ -1282,26 +1331,69 @@
   gap: 8px;
 }
 
+.tier-amount-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
 .tier-amount {
-  font-size: 16px;
+  font-size: 15.5px;
   font-weight: 800;
   color: #00288e;
   font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  white-space: nowrap;
+}
+
+.tier-vip-highlight .tier-amount {
+  color: #b45309;
+}
+
+.tier-type-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.tier-type-ship {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.tier-type-pct {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
+.tier-type-fixed {
+  background: #e0e7ff;
+  color: #3730a3;
+  border: 1px solid #a5b4fc;
 }
 
 .tier-points-pill {
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 700;
   background: #fef3c7;
   color: #b45309;
   padding: 3px 8px;
   border-radius: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .tier-min-order {
-  font-size: 12px;
+  font-size: 11.5px;
   color: #64748b;
   margin: 0;
+  line-height: 1.35;
 }
 
 .btn-redeem-action {

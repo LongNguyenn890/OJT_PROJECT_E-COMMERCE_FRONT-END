@@ -90,6 +90,48 @@ function initSelectedProductIds(items) {
   }
   const currentIds = new Set(items.map(it => it.product_id));
 
+  // Kiểm tra cờ "Mua ngay" từ URL query param hoặc sessionStorage
+  const urlParams = new URLSearchParams(window.location.search);
+  const buyNowParam = urlParams.get("buy_now") || sessionStorage.getItem("buy_now_product_id");
+  const buyNowQtyParam = urlParams.get("buy_qty") || sessionStorage.getItem("buy_now_qty");
+
+  if (buyNowParam) {
+    const buyNowId = Number(buyNowParam);
+    if (currentIds.has(buyNowId)) {
+      // 1. CHỈ TÍCH DUY NHẤT SẢN PHẨM MUA NGAY (không tích các sản phẩm khác đang có trong giỏ)
+      selectedProductIds.clear();
+      selectedProductIds.add(buyNowId);
+
+      // 2. Đảm bảo số lượng sản phẩm mua ngay khớp chính xác số lượng khách đã chọn trên trang chi tiết
+      if (buyNowQtyParam) {
+        const targetQty = Number(buyNowQtyParam);
+        const targetItem = items.find(it => it.product_id === buyNowId);
+        if (targetItem && targetQty > 0 && targetItem.quantity !== targetQty) {
+          targetItem.quantity = targetQty;
+          // Đồng bộ ngầm lên backend nếu đang online
+          if (currentCartState.isBackend && typeof api !== "undefined" && api.put) {
+            api.put(`/cart/items/${buyNowId}`, { quantity: targetQty }).catch(e => console.warn(e));
+          }
+        }
+      }
+
+      // 3. Xóa cờ khỏi sessionStorage và làm sạch URL để F5 hoặc thao tác lại không bị kẹt cờ
+      sessionStorage.removeItem("buy_now_product_id");
+      sessionStorage.removeItem("buy_now_qty");
+      if (urlParams.has("buy_now") || urlParams.has("buy_qty")) {
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+
+      if (typeof showToast === "function") {
+        setTimeout(() => {
+          showToast("Đã chọn đúng sản phẩm bạn muốn Mua ngay để thanh toán!", "info");
+        }, 300);
+      }
+      return;
+    }
+  }
+
   // Nếu chưa có món nào được chọn, mặc định chọn tất cả
   if (selectedProductIds.size === 0) {
     items.forEach(it => selectedProductIds.add(it.product_id));
@@ -426,8 +468,12 @@ function renderSummarySidebar() {
       if (appliedVoucher.type === "freeship") {
         actualDiscount = Math.min(selectedShipping, appliedVoucher.discount_amount || 30000);
       } else if (appliedVoucher.type === "percent") {
-        const pctDiscount = Math.round(selectedSubtotal * (appliedVoucher.percent / 100));
-        actualDiscount = Math.min(appliedVoucher.max_discount || 50000, pctDiscount);
+        const pctDiscount = Math.round(selectedSubtotal * ((appliedVoucher.percent || 0) / 100));
+        if (appliedVoucher.max_discount && appliedVoucher.max_discount > 0) {
+          actualDiscount = Math.min(appliedVoucher.max_discount, pctDiscount);
+        } else {
+          actualDiscount = pctDiscount;
+        }
       } else {
         actualDiscount = Math.min(selectedSubtotal, appliedVoucher.discount_amount || 0);
       }
@@ -1804,15 +1850,30 @@ async function loadUserVouchers() {
       if (Array.isArray(res.vouchers)) {
         userVouchersList = res.vouchers
           .filter(v => Number(v.is_used || 0) === 0)
-          .map(v => ({
-            code: String(v.code).toUpperCase(),
-            title: v.title || `Voucher giảm ${formatMoney(v.discount_amount)}`,
-            discount_amount: Number(v.discount_amount || 0),
-            min_order_value: Number(v.min_order_value || 0),
-            type: "fixed",
-            expiry: v.expires_at ? new Date(v.expires_at).toLocaleDateString("vi-VN") : "30 ngày sau khi đổi",
-            desc: v.min_order_value > 0 ? `Đơn tối thiểu ${formatMoney(v.min_order_value)}` : "Mọi giá trị đơn hàng"
-          }));
+          .map(v => {
+            const vtype = v.voucher_type || "fixed";
+            let descText = "";
+            if (vtype === "freeship") {
+              descText = `Miễn phí vận chuyển (tối đa ${formatMoney(v.discount_amount || 30000)}) cho đơn từ ${formatMoney(v.min_order_value || 0)}`;
+            } else if (vtype === "percent") {
+              const maxD = v.max_discount ? ` (Tối đa ${formatMoney(v.max_discount)})` : "";
+              descText = `Giảm ${v.percent}%${maxD} cho đơn từ ${formatMoney(v.min_order_value || 0)}`;
+            } else {
+              descText = v.min_order_value > 0 ? `Đơn tối thiểu ${formatMoney(v.min_order_value)}` : "Mọi giá trị đơn hàng";
+            }
+
+            return {
+              code: String(v.code).toUpperCase(),
+              title: v.title || `Voucher ${v.code}`,
+              discount_amount: Number(v.discount_amount || 0),
+              min_order_value: Number(v.min_order_value || 0),
+              type: vtype,
+              percent: Number(v.percent || 0),
+              max_discount: Number(v.max_discount || 0),
+              expiry: v.expires_at ? new Date(v.expires_at).toLocaleDateString("vi-VN") : "30 ngày sau khi đổi",
+              desc: descText
+            };
+          });
       }
     }
   } catch (_) {
@@ -1981,7 +2042,14 @@ function renderVoucherModalCards() {
     const isApplied = appliedVoucher && appliedVoucher.code.toUpperCase() === v.code.toUpperCase();
     const isEligible = selectedSubtotal >= (v.min_order_value || 0);
 
-    const discountDisplay = `-${formatMoney(v.discount_amount)}`;
+    let discountDisplay = "";
+    if (v.type === "freeship") {
+      discountDisplay = "FreeShip";
+    } else if (v.type === "percent") {
+      discountDisplay = `Giảm ${v.percent}%`;
+    } else {
+      discountDisplay = `-${formatMoney(v.discount_amount)}`;
+    }
 
     let cardClass = "voucher-ticket-card";
     if (isApplied) cardClass += " is-applied";

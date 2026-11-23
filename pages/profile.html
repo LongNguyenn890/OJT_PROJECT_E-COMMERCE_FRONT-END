@@ -540,7 +540,7 @@
   <!-- MODAL QUY ĐỔI ĐIỂM THƯỞNG LẤY MÃ GIẢM GIÁ -->
   <!-- ========================================== -->
   <div id="redeem-voucher-modal" class="profile-modal-overlay" style="display: none;">
-    <div class="profile-modal-dialog" style="max-width: 620px;">
+    <div class="profile-modal-dialog" style="max-width: 680px;">
       <div class="profile-modal-header">
         <div class="modal-header-text">
           <h3>Quy đổi điểm thưởng lấy mã giảm giá</h3>
@@ -566,9 +566,15 @@
           </div>
         </div>
 
-        <!-- Danh sách các gói đổi mã -->
-        <div class="redeem-section-title">
-          <h4>Chọn gói voucher muốn quy đổi:</h4>
+        <!-- Danh sách các gói đổi mã kèm bộ lọc phân loại -->
+        <div class="redeem-section-header">
+          <h4 style="margin: 0; font-size: 14.5px; font-weight: 700; color: #1e293b;">Chọn gói voucher muốn quy đổi:</h4>
+          <div class="voucher-filter-pills" id="voucher-tier-filters">
+            <button type="button" class="filter-pill active" data-filter="all">Tất cả</button>
+            <button type="button" class="filter-pill" data-filter="freeship">Freeship</button>
+            <button type="button" class="filter-pill" data-filter="percent">Giảm %</button>
+            <button type="button" class="filter-pill" data-filter="fixed">Giảm tiền</button>
+          </div>
         </div>
         <div id="redeem-tiers-container" class="redeem-tiers-grid">
           <!-- Render động từ API /auth/me/reward-points -->
