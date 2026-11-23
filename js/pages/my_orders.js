@@ -419,7 +419,7 @@ document.addEventListener("DOMContentLoaded", () => {
             Mua lại sản phẩm này
           </button>
           <div class="reorder-sub-actions">
-            <button type="button" class="btn-sub-action" onclick="showToast('Cảm ơn bạn! Hệ thống đánh giá sản phẩm sẽ mở khi kết thúc đợt kiểm định.', 'info')">
+            <button type="button" class="btn-sub-action btn-trigger-order-review" data-id="${order.id}">
               ⭐ Đánh giá
             </button>
             <button type="button" class="btn-sub-action btn-trigger-print-invoice" data-id="${order.id}">
@@ -602,6 +602,26 @@ document.addEventListener("DOMContentLoaded", () => {
         handleReorder(orderId);
       });
     });
+
+    document.querySelectorAll(".btn-trigger-order-review").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const orderId = btn.getAttribute("data-id");
+        const order = allOrders.find(item => String(item.id) === String(orderId));
+        const items = order?.items || [];
+        if (!items.length) {
+          showToast("Không tìm thấy sản phẩm trong đơn hàng này.", "warning");
+        } else if (items.length === 1 && items[0].product_id) {
+          openProductReview(items[0].product_id);
+        } else {
+          openOrderDetail(orderId);
+        }
+      });
+    });
+  }
+
+  function openProductReview(productId) {
+    const target = `product-detail.html?id=${encodeURIComponent(productId)}&review=1#tab-reviews`;
+    window.location.href = target;
   }
 
   // ==========================================================
@@ -675,6 +695,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Danh sách sản phẩm trong Modal
       const modalProductsContainer = document.getElementById("modal-products-container");
       const items = order.items || [];
+      const isDelivered = normalizeStatus(order.status) === "COMPLETED";
       if (items.length === 0) {
         modalProductsContainer.innerHTML = `<div style="font-size: 13px; color: var(--figma-text-muted);">Không có thông tin mặt hàng.</div>`;
       } else {
@@ -682,11 +703,12 @@ document.addEventListener("DOMContentLoaded", () => {
           const itemImg = getItemImageUrl(it.image_url);
           return `
             <div class="modal-product-item">
-              <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="modal-product-summary">
                 <img src="${itemImg}" style="width: 44px; height: 44px; border-radius: 6px; object-fit: cover;" onerror="this.src='../assets/images/logo_shop.svg';">
                 <div>
                   <strong style="color: var(--figma-text-dark);">${escapeHtml(it.product_name)}</strong>
                   <div style="font-size: 11.5px; color: var(--figma-text-muted);">Số lượng: ${it.quantity} x ${typeof formatMoney === "function" ? formatMoney(it.unit_price) : `${it.unit_price} ₫`}</div>
+                  ${isDelivered && it.product_id ? `<a class="order-review-link" href="product-detail.html?id=${encodeURIComponent(it.product_id)}&review=1#tab-reviews">⭐ Đánh giá sản phẩm</a>` : ""}
                 </div>
               </div>
               <strong style="color: var(--figma-primary); font-size: 14px;">

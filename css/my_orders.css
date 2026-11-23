@@ -744,6 +744,20 @@ body.shop-page {
   margin-top: 6px;
 }
 
+.order-review-link {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 5px;
+  color: var(--figma-primary);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.order-review-link:hover {
+  text-decoration: underline;
+}
+
 .product-qty-text {
   font-size: 12px;
   color: var(--figma-text-body);
@@ -1658,6 +1672,13 @@ body.shop-page {
   background-color: var(--figma-bg-soft);
   border-radius: 8px;
   font-size: 13px;
+}
+
+.modal-product-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
 }
 
 .modal-bill-summary {
