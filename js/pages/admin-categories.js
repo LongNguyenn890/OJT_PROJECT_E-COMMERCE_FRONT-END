@@ -438,8 +438,41 @@ function initSearchAndFilters() {
   const resetBtn = document.getElementById("btn-reset-filters");
   const refreshBtn = document.getElementById("btn-refresh-categories");
 
-  let debounceTimer = null;
-  if (searchInput) {
+  // Tìm kiếm theo từ khóa có Debounce 300ms, Lịch sử & Gợi ý danh mục
+  if (searchInput && typeof setupAdminSearchAutocomplete === "function") {
+    setupAdminSearchAutocomplete({
+      input: searchInput,
+      storageKey: "shopease_admin_search_history_categories",
+      debounceMs: 300,
+      onSelect: async (item) => {
+        if (item && item.id) {
+          await openEditCategoryModal(item.id);
+        }
+      },
+      onSearch: () => {
+        applyFiltersAndSort();
+      },
+      getSuggestions: async (query) => {
+        const q = query.toLowerCase();
+        const matches = (rawCategories || []).filter((cat) => {
+          const name = String(cat.name || "").toLowerCase();
+          const desc = String(cat.description || "").toLowerCase();
+          const code = `dm-${String(cat.id).padStart(3, "0")}`.toLowerCase();
+          return name.includes(q) || desc.includes(q) || code.includes(q);
+        }).slice(0, 6);
+
+        return matches.map((cat) => ({
+          id: cat.id,
+          title: cat.name,
+          subtitle: cat.description ? (cat.description.length > 40 ? cat.description.substring(0, 40) + "..." : cat.description) : `Mã danh mục: #DM-${String(cat.id).padStart(3, "0")}`,
+          badge: `${cat.product_count || 0} sản phẩm`,
+          value: cat.name,
+          item: cat,
+        }));
+      },
+    });
+  } else if (searchInput) {
+    let debounceTimer = null;
     searchInput.addEventListener("input", () => {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {

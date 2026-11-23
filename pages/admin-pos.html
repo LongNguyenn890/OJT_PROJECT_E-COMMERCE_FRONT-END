@@ -946,6 +946,33 @@
     </div>
   </div>
 
+  <!-- ==========================================================
+       MODAL: CHI TIẾT SẢN PHẨM TẠI QUẦY (POS)
+       ========================================================== -->
+  <div class="admin-modal-overlay" id="modal-pos-product-detail">
+    <div class="admin-modal-box" style="max-width: 580px;">
+      <div class="admin-modal-header">
+        <h2 class="admin-modal-title" style="display: flex; align-items: center; gap: 8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>Thông tin chi tiết sản phẩm</span>
+        </h2>
+        <button type="button" class="btn-modal-close" data-close="modal-pos-product-detail">&times;</button>
+      </div>
+
+      <div class="admin-modal-body" id="pos-product-detail-content" style="padding: 24px; max-height: 75vh; overflow-y: auto;">
+        <!-- Render động qua JS -->
+      </div>
+
+      <div class="admin-modal-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" class="btn-admin-action secondary" data-close="modal-pos-product-detail">Đóng</button>
+        <button type="button" class="btn-admin-primary" id="btn-pos-add-to-cart-from-detail" style="padding: 8px 22px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+          <span>Thêm vào đơn hàng</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
   <script src="../js/config.js"></script>

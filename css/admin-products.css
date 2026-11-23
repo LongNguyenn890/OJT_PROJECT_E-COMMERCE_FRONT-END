@@ -211,6 +211,12 @@
   transform: translateY(-1px);
 }
 
+.btn-prod-action.view:hover {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border-color: #93c5fd;
+}
+
 .btn-prod-action.edit:hover {
   background-color: #eff6ff;
   color: #1d4ed8;

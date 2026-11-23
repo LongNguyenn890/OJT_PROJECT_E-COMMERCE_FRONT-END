@@ -53,6 +53,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   initDateFilterToolbar();
   initDonutInteractions();
   initRealtimeControls();
+  initDashboardImportModal();
 
   // Mặc định nạp kỳ "Tháng này" tương ứng với nút active trên giao diện
   const defaultRange = getPeriodDateRange("month");
@@ -1271,9 +1272,12 @@ function renderPendingOrdersTable(orders, totalPending) {
 /**
  * Xử lý dữ liệu cảnh báo tồn kho thực tế (FR-036)
  */
+let currentLowStockItems = [];
+
 function processLowStockData(data) {
   const items = Array.isArray(data) ? data : (data.items || data.products || []);
   if (!items) return;
+  currentLowStockItems = items;
 
   const total = data.total_low_stock_products !== undefined ? data.total_low_stock_products : items.length;
 
@@ -1338,11 +1342,186 @@ function processLowStockData(data) {
         </div>
         <div class="low-stock-right">
           <span class="low-stock-qty">Còn ${stock}</span>
-          <button type="button" class="btn-stock-in" onclick="window.location.href='admin-inventory.html?id=${id}'">Nhập</button>
+          <button type="button" class="btn-stock-in" onclick="openDashboardImportModal(${id})">Nhập</button>
         </div>
       </div>
     `;
   }).join("");
+}
+
+/**
+ * 4. Quản lý Modal Nhập Hàng Trực Tiếp Từ Cảnh Báo Tồn Kho (FR-034, FR-036)
+ */
+function openDashboardImportModal(productId) {
+  const item = currentLowStockItems.find((p) => String(p.product_id || p.id) === String(productId));
+  const modal = document.getElementById("modal-dash-import-stock");
+  if (!modal) return;
+
+  hideDashboardImportError();
+
+  const idInput = document.getElementById("dash-import-product-id");
+  const nameEl = document.getElementById("dash-import-prod-name");
+  const skuEl = document.getElementById("dash-import-prod-sku");
+  const stockEl = document.getElementById("dash-import-prod-stock");
+  const thumbEl = document.getElementById("dash-import-prod-thumb");
+  const qtyInput = document.getElementById("dash-import-quantity");
+  const noteInput = document.getElementById("dash-import-note");
+  const previewEl = document.getElementById("dash-import-preview-new-stock");
+
+  const currentStock = item ? (item.current_stock !== undefined ? item.current_stock : (item.stock_quantity ?? item.stock ?? 0)) : 0;
+  const name = item ? (item.product_name || item.name || "Sản phẩm") : `Sản phẩm #${productId}`;
+  const sku = item ? (item.sku || `SP-${productId}`) : `SP-${productId}`;
+
+  const apiOrigin = (typeof CONFIG !== "undefined" && CONFIG.API_BASE_URL)
+    ? CONFIG.API_BASE_URL.replace(/\/api\/?$/, "")
+    : "";
+  let imgUrl = item ? (item.image_url || item.thumbnail || item.image || "") : "";
+  if (imgUrl && !imgUrl.startsWith("http") && !imgUrl.startsWith("data:") && !imgUrl.startsWith("../")) {
+    imgUrl = `${apiOrigin}/${imgUrl.replace(/^\/+/, "")}`;
+  }
+  if (!imgUrl) imgUrl = "../assets/images/logo_shop.svg";
+
+  if (idInput) idInput.value = productId;
+  if (nameEl) nameEl.textContent = name;
+  if (skuEl) skuEl.textContent = sku;
+  if (stockEl) stockEl.textContent = Number(currentStock).toLocaleString("vi-VN");
+  if (thumbEl) thumbEl.src = imgUrl;
+  if (qtyInput) qtyInput.value = "";
+  if (noteInput) noteInput.value = "";
+  if (previewEl) previewEl.textContent = `${Number(currentStock).toLocaleString("vi-VN")} đơn vị`;
+
+  // Cập nhật real-time tồn mới khi gõ số lượng nhập
+  if (qtyInput) {
+    qtyInput.oninput = () => {
+      const addQty = parseInt(qtyInput.value, 10);
+      if (!isNaN(addQty) && addQty > 0) {
+        const newStock = currentStock + addQty;
+        if (previewEl) previewEl.textContent = `${newStock.toLocaleString("vi-VN")} đơn vị (+${addQty})`;
+      } else {
+        if (previewEl) previewEl.textContent = `${Number(currentStock).toLocaleString("vi-VN")} đơn vị`;
+      }
+    };
+  }
+
+  modal.classList.add("show");
+  modal.setAttribute("aria-hidden", "false");
+  if (qtyInput) qtyInput.focus();
+}
+window.openDashboardImportModal = openDashboardImportModal;
+
+function closeDashboardImportModal() {
+  const modal = document.getElementById("modal-dash-import-stock");
+  if (modal) {
+    modal.classList.remove("show");
+    modal.setAttribute("aria-hidden", "true");
+  }
+}
+window.closeDashboardImportModal = closeDashboardImportModal;
+
+function showDashboardImportError(msg) {
+  const banner = document.getElementById("dash-import-error-banner");
+  if (banner) {
+    banner.textContent = msg;
+    banner.style.display = "block";
+  }
+}
+
+function hideDashboardImportError() {
+  const banner = document.getElementById("dash-import-error-banner");
+  if (banner) {
+    banner.textContent = "";
+    banner.style.display = "none";
+  }
+}
+
+function initDashboardImportModal() {
+  const btnClose = document.getElementById("btn-close-dash-import");
+  const btnCancel = document.getElementById("btn-cancel-dash-import");
+  const modal = document.getElementById("modal-dash-import-stock");
+  const form = document.getElementById("form-dash-import-stock");
+
+  if (btnClose) btnClose.addEventListener("click", closeDashboardImportModal);
+  if (btnCancel) btnCancel.addEventListener("click", closeDashboardImportModal);
+
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeDashboardImportModal();
+    });
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal && modal.classList.contains("show")) {
+      closeDashboardImportModal();
+    }
+  });
+
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      hideDashboardImportError();
+
+      const idInput = document.getElementById("dash-import-product-id");
+      const qtyInput = document.getElementById("dash-import-quantity");
+      const noteInput = document.getElementById("dash-import-note");
+      const submitBtn = document.getElementById("btn-submit-dash-import");
+
+      const productId = idInput ? parseInt(idInput.value, 10) : null;
+      const quantityToAdd = qtyInput ? parseInt(qtyInput.value, 10) : 0;
+      const note = noteInput ? noteInput.value.trim() : "";
+
+      if (!productId) {
+        showDashboardImportError("Không xác định được ID sản phẩm.");
+        return;
+      }
+
+      if (isNaN(quantityToAdd) || quantityToAdd <= 0) {
+        showDashboardImportError("Số lượng nhập thêm phải là số nguyên dương lớn hơn 0.");
+        if (qtyInput) qtyInput.focus();
+        return;
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span class="btn-op-spinner" style="width: 14px; height: 14px; border-width: 2px;"></span> Đang xử lý...`;
+      }
+
+      try {
+        await ensureAdminSession();
+        const res = await api.put(`/inventory/${productId}/import`, {
+          quantity_to_add: quantityToAdd,
+          note: note || "Nhập thêm hàng từ cảnh báo tồn kho Dashboard",
+        });
+
+        closeDashboardImportModal();
+        if (typeof showToast === "function") {
+          showToast(`Nhập hàng thành công! Tồn kho mới: ${res.stock_after} đơn vị.`, "success");
+        }
+
+        // Tự động tải lại cảnh báo tồn kho và KPI trên Dashboard
+        const lowStockRes = await api.get("/inventory/low-stock", { threshold: 15 }).catch(() => null);
+        if (lowStockRes && lowStockRes.items) {
+          processLowStockData(lowStockRes);
+        }
+
+        // Bắn tín hiệu realtime sang các tab khác (Kho hàng, POS, Danh sách sản phẩm)
+        if (realtimeChannel) {
+          realtimeChannel.postMessage({
+            type: "inventory_updated",
+            productId: productId,
+            stock_after: res.stock_after,
+          });
+        }
+      } catch (err) {
+        console.error("[Dashboard Import] Lỗi:", err);
+        showDashboardImportError(err.message || "Không thể nhập kho. Vui lòng thử lại.");
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Xác nhận nhập kho</span>`;
+        }
+      }
+    });
+  }
 }
 
 /**

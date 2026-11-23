@@ -381,9 +381,41 @@ window.changePage = changePage;
  */
 function initFilters() {
   const keywordInput = document.getElementById("filter-customer-keyword");
-  let timer = null;
-
-  if (keywordInput) {
+  // Tìm kiếm theo từ khóa có Debounce 320ms, Lịch sử & Gợi ý khách hàng
+  if (keywordInput && typeof setupAdminSearchAutocomplete === "function") {
+    setupAdminSearchAutocomplete({
+      input: keywordInput,
+      storageKey: "shopease_admin_search_history_customers",
+      debounceMs: 320,
+      onSelect: async (item) => {
+        if (item && item.id) {
+          await window.openCustomerDetailModal(item.id);
+        }
+      },
+      onSearch: (val) => {
+        currentSearchKeyword = (val || "").trim();
+        currentPage = 1;
+        loadCustomersList();
+      },
+      getSuggestions: async (query) => {
+        try {
+          const res = await api.get("/customers", { role: "CUSTOMER", keyword: query, page_size: 6 });
+          const items = res?.items || [];
+          return items.map((c) => ({
+            id: c.id,
+            title: c.full_name || c.username || "Khách hàng",
+            subtitle: `${c.email || ""} ${c.phone_number ? "• " + c.phone_number : ""}`,
+            badge: `${c.total_orders || 0} đơn`,
+            value: c.full_name || c.email || query,
+            item: c,
+          }));
+        } catch (_) {
+          return [];
+        }
+      },
+    });
+  } else if (keywordInput) {
+    let timer = null;
     keywordInput.addEventListener("input", (e) => {
       clearTimeout(timer);
       timer = setTimeout(() => {

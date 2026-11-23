@@ -5,7 +5,7 @@
 
 // Trạng thái bộ lọc và dữ liệu báo cáo hiện tại
 const reportState = {
-  preset: "7days",
+  preset: "this_month",
   fromDate: "",
   toDate: "",
   revenueView: "total", // "total" | "split" | "orders"
@@ -142,7 +142,7 @@ async function loadSalesReport(showSpinner = false) {
       params.from_date = reportState.fromDate;
       params.to_date = reportState.toDate;
     } else {
-      params.preset = reportState.preset || "7days";
+      params.preset = reportState.preset || "this_month";
     }
 
     const res = await api.get("/reports/sales", params);

@@ -629,23 +629,100 @@ window.changePage = changePage;
 // 5. BỘ LỌC & TÌM KIẾM ĐƠN HÀNG
 // ==========================================================
 function initFilterControls() {
-  // Lọc theo Tabs trạng thái
+  // Lọc theo Tabs trạng thái và Dropdown trạng thái (đồng bộ hai chiều)
   const tabButtons = document.querySelectorAll(".order-tab-item");
+  const statusSelect = document.getElementById("filter-order-status");
+
+  function setStatusFilter(statusVal) {
+    currentStatusFilter = statusVal || "";
+    if (statusSelect && statusSelect.value !== currentStatusFilter) {
+      statusSelect.value = currentStatusFilter;
+    }
+    tabButtons.forEach(b => {
+      if ((b.dataset.status || "") === currentStatusFilter) {
+        b.classList.add("active");
+      } else {
+        b.classList.remove("active");
+      }
+    });
+    currentPage = 1;
+    fetchOrdersTable();
+  }
+  window.setOrderStatusFilter = setStatusFilter;
+
   tabButtons.forEach(btn => {
     btn.addEventListener("click", () => {
-      tabButtons.forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-
-      currentStatusFilter = btn.dataset.status || "";
-      currentPage = 1;
-      fetchOrdersTable();
+      setStatusFilter(btn.dataset.status || "");
     });
   });
 
-  // Tìm kiếm từ khóa (Debounce 350ms)
+  if (statusSelect) {
+    statusSelect.addEventListener("change", (e) => {
+      setStatusFilter(e.target.value || "");
+    });
+  }
+
+  // Tìm kiếm từ khóa (Debounce 320ms, Lịch sử & Gợi ý đơn hàng)
   const searchInput = document.getElementById("filter-order-keyword");
-  let searchTimeout = null;
-  if (searchInput) {
+  if (searchInput && typeof setupAdminSearchAutocomplete === "function") {
+    setupAdminSearchAutocomplete({
+      input: searchInput,
+      storageKey: "shopease_admin_search_history_orders",
+      debounceMs: 320,
+      onSelect: async (item) => {
+        if (item && item.id) {
+          await window.openOrderDetailModal(item.id);
+        }
+      },
+      onSearch: (val) => {
+        let kw = (val || "").trim();
+        if (kw.startsWith("#")) {
+          kw = kw.substring(1).trim();
+        }
+        currentSearchKeyword = kw;
+        currentPage = 1;
+        fetchOrdersTable();
+      },
+      getSuggestions: async (query) => {
+        const rawQ = query.trim();
+        const q = (rawQ.startsWith("#") ? rawQ.substring(1) : rawQ).toLowerCase();
+        
+        let pool = (allSystemOrders && allSystemOrders.length > 0) ? allSystemOrders : cachedOrdersList;
+        let matches = (pool || []).filter((o) => {
+          const code = String(o.order_code || o.id || "").toLowerCase();
+          const name = String(o.receiver_name || o.customer_name || "").toLowerCase();
+          const phone = String(o.phone || o.receiver_phone || "").toLowerCase();
+          return code.includes(q) || name.includes(q) || phone.includes(q);
+        }).slice(0, 6);
+
+        // Nếu pool trên frontend chưa có hoặc rỗng, gọi API /orders với keyword
+        if (matches.length === 0 && rawQ) {
+          try {
+            const res = await api.get("/orders", { keyword: q, page_size: 6 });
+            matches = res.items || [];
+          } catch (_) {}
+        }
+
+        return matches.map((o) => {
+          const code = o.order_code || `POS-${o.id}`;
+          const name = o.receiver_name || o.customer_name || "Khách lẻ";
+          const phone = o.phone || o.receiver_phone || "";
+          const priceStr = typeof formatMoney === "function" ? formatMoney(o.total_amount) : `${Number(o.total_amount || 0).toLocaleString("vi-VN")} ₫`;
+          const normSt = normalizeStatus(o.status);
+          const statusText = ORDER_STATUS_MAP[normSt]?.label || normSt;
+          return {
+            id: o.id,
+            title: `#${code}`,
+            subtitle: `${name} ${phone ? "• " + phone : ""} • ${priceStr}`,
+            badge: statusText,
+            value: code,
+            item: o,
+          };
+        });
+      },
+    });
+  } else if (searchInput) {
+    let searchTimeout = null;
     searchInput.addEventListener("input", (e) => {
       clearTimeout(searchTimeout);
       searchTimeout = setTimeout(() => {
@@ -689,6 +766,7 @@ function initFilterControls() {
       currentPage = 1;
 
       if (searchInput) searchInput.value = "";
+      if (statusSelect) statusSelect.value = "";
       if (paymentSelect) paymentSelect.value = "";
 
       if (typeof window.resetOrderDatePicker === "function") {
@@ -1507,6 +1585,10 @@ function checkUrlParamsForDetail() {
   const targetId = params.get("id");
   if (targetId) {
     openOrderDetailModal(targetId);
+  }
+  const targetStatus = params.get("status");
+  if (targetStatus && typeof window.setOrderStatusFilter === "function") {
+    window.setOrderStatusFilter(targetStatus.toUpperCase());
   }
 }
 
