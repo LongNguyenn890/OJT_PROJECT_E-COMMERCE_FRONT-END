@@ -468,7 +468,10 @@
               <div class="admin-kpi-val-wrap">
                 <span class="admin-kpi-number" id="dash-kpi-revenue">-- ₫</span>
               </div>
-              <span class="admin-kpi-subtext" id="dash-kpi-revenue-sub">Tháng này</span>
+              <a href="admin-reports.html" class="admin-kpi-link" title="Xem phân tích báo cáo doanh thu chi tiết">
+                <span>Xem báo cáo</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              </a>
             </div>
           </div>
 
@@ -551,59 +554,9 @@
               </div>
             </div>
 
-            <!-- Rich Analytical Chart -->
-            <div class="analytic-chart-wrap" id="dash-revenue-chart">
-              <div class="chart-y-axis">
-                <span>40M</span>
-                <span>30M</span>
-                <span>20M</span>
-                <span>10M</span>
-                <span>0</span>
-              </div>
-              <div class="chart-grid-lines">
-                <div class="chart-grid-line"></div>
-                <div class="chart-grid-line"></div>
-                <div class="chart-grid-line"></div>
-                <div class="chart-grid-line"></div>
-                <div class="chart-grid-line"></div>
-              </div>
-              <div class="chart-bars-container" id="dash-revenue-chart-bars">
-                <div class="chart-bar-group" title="Đang đồng bộ dữ liệu...">
-                  <span class="chart-bar-val">--</span>
-                  <div class="chart-bar-pill skeleton-bar-pill" style="height: 25%;"></div>
-                  <span class="chart-bar-label">--</span>
-                </div>
-                <div class="chart-bar-group" title="Đang đồng bộ dữ liệu...">
-                  <span class="chart-bar-val">--</span>
-                  <div class="chart-bar-pill skeleton-bar-pill" style="height: 40%;"></div>
-                  <span class="chart-bar-label">--</span>
-                </div>
-                <div class="chart-bar-group" title="Đang đồng bộ dữ liệu...">
-                  <span class="chart-bar-val">--</span>
-                  <div class="chart-bar-pill skeleton-bar-pill" style="height: 30%;"></div>
-                  <span class="chart-bar-label">--</span>
-                </div>
-                <div class="chart-bar-group" title="Đang đồng bộ dữ liệu...">
-                  <span class="chart-bar-val">--</span>
-                  <div class="chart-bar-pill skeleton-bar-pill" style="height: 60%;"></div>
-                  <span class="chart-bar-label">--</span>
-                </div>
-                <div class="chart-bar-group" title="Đang đồng bộ dữ liệu...">
-                  <span class="chart-bar-val">--</span>
-                  <div class="chart-bar-pill skeleton-bar-pill" style="height: 45%;"></div>
-                  <span class="chart-bar-label">--</span>
-                </div>
-                <div class="chart-bar-group" title="Đang đồng bộ dữ liệu...">
-                  <span class="chart-bar-val">--</span>
-                  <div class="chart-bar-pill skeleton-bar-pill" style="height: 70%;"></div>
-                  <span class="chart-bar-label">--</span>
-                </div>
-                <div class="chart-bar-group" title="Đang đồng bộ dữ liệu...">
-                  <span class="chart-bar-val">--</span>
-                  <div class="chart-bar-pill skeleton-bar-pill" style="height: 35%;"></div>
-                  <span class="chart-bar-label">--</span>
-                </div>
-              </div>
+            <!-- Rich Analytical Chart (Chart.js Modern Interactive) -->
+            <div class="analytic-chart-wrap" id="dash-revenue-chart" style="position: relative; width: 100%; height: 260px; padding: 6px 4px 10px 4px;">
+              <canvas id="chart-dash-revenue" style="width: 100%; height: 100%;"></canvas>
             </div>
 
             <div class="analytic-card-footer">
@@ -628,24 +581,24 @@
                 <svg width="200" height="200" viewBox="0 0 200 200" class="donut-svg" id="donut-chart-svg">
                   <defs>
                     <linearGradient id="donut-grad-completed" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stop-color="#00875a"/>
-                      <stop offset="100%" stop-color="#006c4a"/>
+                      <stop offset="0%" stop-color="#10b981"/>
+                      <stop offset="100%" stop-color="#059669"/>
                     </linearGradient>
                     <linearGradient id="donut-grad-shipping" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stop-color="#7c3aed"/>
-                      <stop offset="100%" stop-color="#591fc3"/>
+                      <stop offset="0%" stop-color="#a855f7"/>
+                      <stop offset="100%" stop-color="#7c3aed"/>
                     </linearGradient>
                     <linearGradient id="donut-grad-confirmed" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stop-color="#2563eb"/>
-                      <stop offset="100%" stop-color="#1e40af"/>
+                      <stop offset="0%" stop-color="#3b82f6"/>
+                      <stop offset="100%" stop-color="#1d4ed8"/>
                     </linearGradient>
                     <linearGradient id="donut-grad-pending" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stop-color="#ef4444"/>
-                      <stop offset="100%" stop-color="#ba1a1a"/>
+                      <stop offset="0%" stop-color="#f59e0b"/>
+                      <stop offset="100%" stop-color="#d97706"/>
                     </linearGradient>
                     <linearGradient id="donut-grad-cancelled" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stop-color="#94a3b8"/>
-                      <stop offset="100%" stop-color="#64748b"/>
+                      <stop offset="0%" stop-color="#f43f5e"/>
+                      <stop offset="100%" stop-color="#e11d48"/>
                     </linearGradient>
                     <filter id="donut-soft-shadow" x="-15%" y="-15%" width="130%" height="130%">
                       <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.08"/>
@@ -659,19 +612,19 @@
 
                     <!-- Segments rendered dynamically by JS -->
                     <circle id="donut-seg-completed" class="donut-segment" data-segment="completed" cx="100" cy="100" r="74" fill="none"
-                      stroke="#006c4a" stroke-width="18" stroke-dasharray="0 465.0" stroke-dashoffset="0">
+                      stroke="url(#donut-grad-completed)" stroke-width="18" stroke-dasharray="0 465.0" stroke-dashoffset="0">
                     </circle>
                     <circle id="donut-seg-shipping" class="donut-segment" data-segment="shipping" cx="100" cy="100" r="74" fill="none"
-                      stroke="#591fc3" stroke-width="18" stroke-dasharray="0 465.0" stroke-dashoffset="0">
+                      stroke="url(#donut-grad-shipping)" stroke-width="18" stroke-dasharray="0 465.0" stroke-dashoffset="0">
                     </circle>
                     <circle id="donut-seg-confirmed" class="donut-segment" data-segment="confirmed" cx="100" cy="100" r="74" fill="none"
-                      stroke="#1e40af" stroke-width="18" stroke-dasharray="0 465.0" stroke-dashoffset="0">
+                      stroke="url(#donut-grad-confirmed)" stroke-width="18" stroke-dasharray="0 465.0" stroke-dashoffset="0">
                     </circle>
                     <circle id="donut-seg-pending" class="donut-segment" data-segment="pending" cx="100" cy="100" r="74" fill="none"
-                      stroke="#ba1a1a" stroke-width="18" stroke-dasharray="0 465.0" stroke-dashoffset="0">
+                      stroke="url(#donut-grad-pending)" stroke-width="18" stroke-dasharray="0 465.0" stroke-dashoffset="0">
                     </circle>
                     <circle id="donut-seg-cancelled" class="donut-segment" data-segment="cancelled" cx="100" cy="100" r="74" fill="none"
-                      stroke="#757684" stroke-width="18" stroke-dasharray="0 465.0" stroke-dashoffset="0">
+                      stroke="url(#donut-grad-cancelled)" stroke-width="18" stroke-dasharray="0 465.0" stroke-dashoffset="0">
                     </circle>
                   </g>
                 </svg>
@@ -687,56 +640,71 @@
             <div class="donut-breakdown-list" id="donut-breakdown-container">
               <div class="breakdown-row" data-segment="pending" title="Nhấp hoặc rê chuột để xem chi tiết">
                 <div class="breakdown-left">
-                  <span class="breakdown-dot" style="background-color: #ba1a1a;"></span>
+                  <span class="breakdown-dot" style="background-color: #f59e0b;"></span>
                   <span>Chờ xác nhận</span>
+                </div>
+                <div class="breakdown-bar-wrap">
+                  <div class="breakdown-bar-fill" id="stat-bar-pending" style="width: 0%; background-color: #f59e0b;"></div>
                 </div>
                 <div class="breakdown-right">
                   <span class="breakdown-count" id="stat-count-pending">-- đơn</span>
-                  <span class="breakdown-pct" id="stat-pct-pending">--%</span>
+                  <span class="breakdown-pct" id="stat-pct-pending" style="color: #d97706;">--%</span>
                 </div>
               </div>
 
               <div class="breakdown-row" data-segment="confirmed" title="Nhấp hoặc rê chuột để xem chi tiết">
                 <div class="breakdown-left">
-                  <span class="breakdown-dot" style="background-color: #1e40af;"></span>
+                  <span class="breakdown-dot" style="background-color: #3b82f6;"></span>
                   <span>Đã xác nhận</span>
+                </div>
+                <div class="breakdown-bar-wrap">
+                  <div class="breakdown-bar-fill" id="stat-bar-confirmed" style="width: 0%; background-color: #3b82f6;"></div>
                 </div>
                 <div class="breakdown-right">
                   <span class="breakdown-count" id="stat-count-confirmed">-- đơn</span>
-                  <span class="breakdown-pct" id="stat-pct-confirmed">--%</span>
+                  <span class="breakdown-pct" id="stat-pct-confirmed" style="color: #2563eb;">--%</span>
                 </div>
               </div>
 
               <div class="breakdown-row" data-segment="shipping" title="Nhấp hoặc rê chuột để xem chi tiết">
                 <div class="breakdown-left">
-                  <span class="breakdown-dot" style="background-color: #591fc3;"></span>
+                  <span class="breakdown-dot" style="background-color: #8b5cf6;"></span>
                   <span>Đang giao</span>
+                </div>
+                <div class="breakdown-bar-wrap">
+                  <div class="breakdown-bar-fill" id="stat-bar-shipping" style="width: 0%; background-color: #8b5cf6;"></div>
                 </div>
                 <div class="breakdown-right">
                   <span class="breakdown-count" id="stat-count-shipping">-- đơn</span>
-                  <span class="breakdown-pct" id="stat-pct-shipping">--%</span>
+                  <span class="breakdown-pct" id="stat-pct-shipping" style="color: #7c3aed;">--%</span>
                 </div>
               </div>
 
               <div class="breakdown-row" data-segment="completed" title="Nhấp hoặc rê chuột để xem chi tiết">
                 <div class="breakdown-left">
-                  <span class="breakdown-dot" style="background-color: #006c4a;"></span>
+                  <span class="breakdown-dot" style="background-color: #10b981;"></span>
                   <span>Hoàn thành</span>
+                </div>
+                <div class="breakdown-bar-wrap">
+                  <div class="breakdown-bar-fill" id="stat-bar-completed" style="width: 0%; background-color: #10b981;"></div>
                 </div>
                 <div class="breakdown-right">
                   <span class="breakdown-count" id="stat-count-completed">-- đơn</span>
-                  <span class="breakdown-pct" id="stat-pct-completed">--%</span>
+                  <span class="breakdown-pct" id="stat-pct-completed" style="color: #059669;">--%</span>
                 </div>
               </div>
 
               <div class="breakdown-row" data-segment="cancelled" title="Nhấp hoặc rê chuột để xem chi tiết">
                 <div class="breakdown-left">
-                  <span class="breakdown-dot" style="background-color: #757684;"></span>
+                  <span class="breakdown-dot" style="background-color: #ef4444;"></span>
                   <span>Đã hủy</span>
+                </div>
+                <div class="breakdown-bar-wrap">
+                  <div class="breakdown-bar-fill" id="stat-bar-cancelled" style="width: 0%; background-color: #ef4444;"></div>
                 </div>
                 <div class="breakdown-right">
                   <span class="breakdown-count" id="stat-count-cancelled">-- đơn</span>
-                  <span class="breakdown-pct" id="stat-pct-cancelled">--%</span>
+                  <span class="breakdown-pct" id="stat-pct-cancelled" style="color: #dc2626;">--%</span>
                 </div>
               </div>
             </div>
@@ -848,6 +816,7 @@
 
   <!-- Scripts: Thứ tự nạp chuẩn -->
   <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="../js/config.js"></script>
   <script src="../js/api.js"></script>
   <script src="../js/utils.js"></script>

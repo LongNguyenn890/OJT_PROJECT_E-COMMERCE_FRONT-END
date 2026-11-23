@@ -540,19 +540,19 @@ function renderOrdersTable(orders) {
 // 4. PHÂN TRANG (PAGINATION CONTROLS)
 // ==========================================================
 function renderPagination(total) {
-  const container = document.getElementById("orders-pagination-controls");
-  const info = document.getElementById("orders-pagination-info");
+  const container = document.getElementById("orders-pagination") || document.getElementById("orders-pagination-controls");
+  const summaryLbl = document.getElementById("orders-summary-lbl") || document.getElementById("orders-pagination-info");
   if (!container) return;
 
   const totalPages = Math.ceil(total / pageSize) || 1;
   const startItem = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const endItem = Math.min(currentPage * pageSize, total);
 
-  if (info) {
+  if (summaryLbl) {
     if (total === 0) {
-      info.textContent = "Hiển thị 0 đơn hàng";
+      summaryLbl.textContent = "Hiển thị 0 đơn hàng";
     } else {
-      info.textContent = `Hiển thị ${startItem} - ${endItem} trên tổng số ${total} đơn hàng (Trang ${currentPage}/${totalPages})`;
+      summaryLbl.textContent = `Hiển thị ${startItem} - ${endItem} trong tổng số ${total} đơn hàng (Trang ${currentPage}/${totalPages})`;
     }
   }
 
@@ -562,7 +562,7 @@ function renderPagination(total) {
   }
 
   let html = `
-    <button type="button" class="btn-page prev-btn" ${currentPage === 1 ? "disabled" : ""} onclick="changePage(${currentPage - 1})" title="Trang trước">
+    <button type="button" class="page-btn prev-btn" ${currentPage === 1 ? "disabled" : ""} onclick="changePage(${currentPage - 1})" title="Trang trước">
       &laquo;
     </button>
   `;
@@ -570,14 +570,14 @@ function renderPagination(total) {
   if (totalPages <= 7) {
     for (let i = 1; i <= totalPages; i++) {
       html += `
-        <button type="button" class="btn-page ${i === currentPage ? "active" : ""}" ${i === currentPage ? "disabled" : ""} onclick="changePage(${i})">
+        <button type="button" class="page-btn ${i === currentPage ? "active" : ""}" ${i === currentPage ? "disabled" : ""} onclick="changePage(${i})">
           ${i}
         </button>
       `;
     }
   } else {
     html += `
-      <button type="button" class="btn-page ${currentPage === 1 ? "active" : ""}" ${currentPage === 1 ? "disabled" : ""} onclick="changePage(1)">
+      <button type="button" class="page-btn ${currentPage === 1 ? "active" : ""}" ${currentPage === 1 ? "disabled" : ""} onclick="changePage(1)">
         1
       </button>
     `;
@@ -590,7 +590,7 @@ function renderPagination(total) {
     const end = Math.min(totalPages - 1, currentPage + 1);
     for (let i = start; i <= end; i++) {
       html += `
-        <button type="button" class="btn-page ${i === currentPage ? "active" : ""}" ${i === currentPage ? "disabled" : ""} onclick="changePage(${i})">
+        <button type="button" class="page-btn ${i === currentPage ? "active" : ""}" ${i === currentPage ? "disabled" : ""} onclick="changePage(${i})">
           ${i}
         </button>
       `;
@@ -601,14 +601,14 @@ function renderPagination(total) {
     }
 
     html += `
-      <button type="button" class="btn-page ${currentPage === totalPages ? "active" : ""}" ${currentPage === totalPages ? "disabled" : ""} onclick="changePage(${totalPages})">
+      <button type="button" class="page-btn ${currentPage === totalPages ? "active" : ""}" ${currentPage === totalPages ? "disabled" : ""} onclick="changePage(${totalPages})">
         ${totalPages}
       </button>
     `;
   }
 
   html += `
-    <button type="button" class="btn-page next-btn" ${currentPage === totalPages ? "disabled" : ""} onclick="changePage(${currentPage + 1})" title="Trang sau">
+    <button type="button" class="page-btn next-btn" ${currentPage === totalPages ? "disabled" : ""} onclick="changePage(${currentPage + 1})" title="Trang sau">
       &raquo;
     </button>
   `;

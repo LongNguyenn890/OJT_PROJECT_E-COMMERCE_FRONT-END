@@ -620,15 +620,61 @@ function renderLayout() {
         </nav>
       </div>`;
 
-    // 1. Quản lý tương tác Dropdown menu tài khoản (Click toggle + đóng khi click ngoài hoặc chọn mục)
+    // 1. Quản lý tương tác Dropdown menu tài khoản (Hover mở tự nhiên + Grace period di chuột + Click toggle)
     const shopUserProfile = document.getElementById("shop-user-profile");
     const userToolWrapper = document.querySelector(".user-tool-wrapper");
     const userDropdownMenu = document.getElementById("user-dropdown-menu");
     if (shopUserProfile && userToolWrapper) {
+      let userMenuCloseTimer = null;
+
+      const openUserMenu = () => {
+        if (userMenuCloseTimer) {
+          clearTimeout(userMenuCloseTimer);
+          userMenuCloseTimer = null;
+        }
+        userToolWrapper.classList.add("active");
+        shopUserProfile.setAttribute("aria-expanded", "true");
+        if (userDropdownMenu) userDropdownMenu.style.display = "";
+      };
+
+      const closeUserMenu = (immediate = false) => {
+        if (userMenuCloseTimer) {
+          clearTimeout(userMenuCloseTimer);
+          userMenuCloseTimer = null;
+        }
+        if (immediate) {
+          userToolWrapper.classList.remove("active");
+          shopUserProfile.setAttribute("aria-expanded", "false");
+          if (userDropdownMenu) userDropdownMenu.style.display = "";
+        } else {
+          // Grace period 280ms cho phép chuột di chuyển thoải mái từ avatar vào menu mà không bị tắt đột ngột
+          userMenuCloseTimer = setTimeout(() => {
+            userToolWrapper.classList.remove("active");
+            shopUserProfile.setAttribute("aria-expanded", "false");
+            if (userDropdownMenu) userDropdownMenu.style.display = "";
+          }, 280);
+        }
+      };
+
+      // Hover mở dropdown và giữ menu khi chuột di vào trong dropdown
+      userToolWrapper.addEventListener("mouseenter", () => {
+        openUserMenu();
+      });
+
+      userToolWrapper.addEventListener("mouseleave", () => {
+        closeUserMenu(false);
+      });
+
+      // Hỗ trợ click toggle nếu người dùng bấm vào
       const toggleUserMenu = (e) => {
         e.stopPropagation();
+        if (userMenuCloseTimer) {
+          clearTimeout(userMenuCloseTimer);
+          userMenuCloseTimer = null;
+        }
         const isOpen = userToolWrapper.classList.toggle("active");
         shopUserProfile.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        if (userDropdownMenu) userDropdownMenu.style.display = "";
       };
 
       shopUserProfile.addEventListener("click", toggleUserMenu);
@@ -641,9 +687,13 @@ function renderLayout() {
     }
 
     if (userDropdownMenu && userToolWrapper) {
-      userDropdownMenu.addEventListener("click", () => {
-        userToolWrapper.classList.remove("active");
-        if (shopUserProfile) shopUserProfile.setAttribute("aria-expanded", "false");
+      userDropdownMenu.addEventListener("click", (e) => {
+        // Đóng ngay khi click chọn một chức năng
+        if (e.target.closest(".user-dropdown-item")) {
+          userToolWrapper.classList.remove("active");
+          if (shopUserProfile) shopUserProfile.setAttribute("aria-expanded", "false");
+          if (userDropdownMenu) userDropdownMenu.style.display = "";
+        }
       });
     }
 
@@ -651,6 +701,7 @@ function renderLayout() {
       if (userToolWrapper && !userToolWrapper.contains(e.target)) {
         userToolWrapper.classList.remove("active");
         if (shopUserProfile) shopUserProfile.setAttribute("aria-expanded", "false");
+        if (userDropdownMenu) userDropdownMenu.style.display = "";
       }
     });
 
@@ -999,7 +1050,9 @@ function renderLayout() {
 
         // Đóng menu tài khoản nếu đang mở
         const userDropdown = document.getElementById("user-dropdown-menu");
-        if (userDropdown) userDropdown.style.display = "none";
+        const userWrapper = document.querySelector(".user-tool-wrapper");
+        if (userWrapper) userWrapper.classList.remove("active");
+        if (userDropdown) userDropdown.style.display = "";
 
         // Mở panel
         shopOrdersPanel.hidden = false;

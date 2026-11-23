@@ -668,10 +668,15 @@
   transform: translateY(-1px);
 }
 
+.btn-add-cart:hover:not(:disabled) svg {
+  stroke: #06247c !important;
+}
+
 .btn-add-cart svg {
   width: 20px;
   height: 20px;
-  stroke: currentColor;
+  stroke: #082e9e !important;
+  color: #082e9e !important;
   flex-shrink: 0;
 }
 

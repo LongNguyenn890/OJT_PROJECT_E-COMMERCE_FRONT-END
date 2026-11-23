@@ -599,8 +599,8 @@ html {
   position: relative;
   display: inline-flex;
   align-items: center;
-  padding-bottom: 6px;
-  margin-bottom: -6px;
+  padding-bottom: 10px;
+  margin-bottom: -10px;
 }
 
 .user-tool {
@@ -660,7 +660,8 @@ html {
 }
 
 .user-tool-wrapper:hover .user-caret,
-.user-tool-wrapper.active .user-caret {
+.user-tool-wrapper.active .user-caret,
+.user-tool-wrapper:focus-within .user-caret {
   transform: rotate(180deg);
 }
 
@@ -668,7 +669,7 @@ html {
   position: absolute;
   top: calc(100% + 2px);
   right: 0;
-  min-width: 200px;
+  min-width: 215px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
@@ -681,15 +682,16 @@ html {
   pointer-events: auto;
 }
 
-/* Cầu nối hover vô hình giúp chuột di chuyển mượt mà từ trigger xuống dropdown không bị đứt đoạn */
+/* Cầu nối hover vô hình mở rộng bao trọn vùng di chuột từ avatar chéo xuống menu */
 .user-dropdown-menu::before {
   content: "";
   position: absolute;
-  top: -12px;
-  left: 0;
-  right: 0;
-  height: 12px;
+  top: -20px;
+  left: -90px;
+  right: -10px;
+  height: 24px;
   background: transparent;
+  pointer-events: auto;
 }
 
 @keyframes dropdownFadeIn {
@@ -698,8 +700,9 @@ html {
 }
 
 .user-tool-wrapper:hover .user-dropdown-menu,
-.user-tool-wrapper.active .user-dropdown-menu {
-  display: flex;
+.user-tool-wrapper.active .user-dropdown-menu,
+.user-tool-wrapper:focus-within .user-dropdown-menu {
+  display: flex !important;
 }
 
 .user-dropdown-item {

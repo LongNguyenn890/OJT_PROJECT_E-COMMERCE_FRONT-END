@@ -93,15 +93,32 @@
     return Number(amount || 0).toLocaleString("vi-VN") + " ₫";
   }
 
-  function getProductImg(product) {
-    if (product.images && product.images.length > 0) {
-      const primary = product.images.find(img => img.is_primary) || product.images[0];
-      const url = primary.image_url || "";
-      if (url.startsWith("http")) return url;
-      if (url.startsWith("/")) return `${CONFIG.API_BASE_URL}${url}`;
-      return `${CONFIG.API_BASE_URL}/${url}`;
+  function resolvePosImageUrl(url) {
+    if (!url) return "../assets/images/logo_shop.svg";
+    if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:") || url.startsWith("blob:")) {
+      return url;
     }
-    return "../assets/images/logo_shop.svg";
+    const cleanUrl = url.startsWith("/") ? url.substring(1) : url;
+    const origin = (typeof CONFIG !== "undefined" && CONFIG.API_BASE_URL)
+      ? CONFIG.API_BASE_URL.replace(/\/api\/?$/, "")
+      : "http://127.0.0.1:8000";
+    return `${origin}/${cleanUrl}`;
+  }
+
+  function getProductImg(product) {
+    if (!product) return "../assets/images/logo_shop.svg";
+    const imgs = product.product_images || product.images || [];
+    let rawUrl = "";
+    if (Array.isArray(imgs) && imgs.length > 0) {
+      const sorted = [...imgs].sort((a, b) => Number(b.is_primary || 0) - Number(a.is_primary || 0) || (a.sort_order || 0) - (b.sort_order || 0));
+      const primary = sorted[0];
+      rawUrl = typeof primary === "string" ? primary : (primary.image_url || primary.url || "");
+    } else if (typeof product.image_url === "string") {
+      rawUrl = product.image_url;
+    } else if (typeof product.image === "string") {
+      rawUrl = product.image;
+    }
+    return resolvePosImageUrl(rawUrl);
   }
 
   // ==========================================================
@@ -190,6 +207,30 @@
     renderProductsGrid(displayedProducts);
   }
 
+  function updateProductCardBadges() {
+    if (!productsGrid) return;
+    productsGrid.querySelectorAll(".pos-product-card").forEach(card => {
+      const prodId = parseInt(card.getAttribute("data-product-id"), 10);
+      const cartItem = cart.find(it => it.product.id === prodId);
+      let badge = card.querySelector(".pos-card-selected-badge");
+      if (cartItem && cartItem.quantity > 0) {
+        card.classList.add("is-selected");
+        if (badge) {
+          badge.textContent = `✓ Đã chọn: ${cartItem.quantity}`;
+        } else {
+          badge = document.createElement("span");
+          badge.className = "pos-card-selected-badge";
+          badge.title = `Đã chọn ${cartItem.quantity} sản phẩm`;
+          badge.textContent = `✓ Đã chọn: ${cartItem.quantity}`;
+          card.appendChild(badge);
+        }
+      } else {
+        card.classList.remove("is-selected");
+        if (badge) badge.remove();
+      }
+    });
+  }
+
   function renderProductsGrid(products) {
     if (!productsGrid) return;
 
@@ -210,6 +251,13 @@
       const isLowStock = prod.stock_quantity > 0 && prod.stock_quantity <= 5;
       const effectivePrice = prod.promotional_price && prod.promotional_price > 0 ? prod.promotional_price : prod.price;
 
+      const cartItem = cart.find(it => it.product.id === prod.id);
+      const inCartQty = cartItem ? cartItem.quantity : 0;
+      const isSelected = inCartQty > 0;
+      const selectedBadgeHtml = isSelected
+        ? `<span class="pos-card-selected-badge" title="Đã chọn ${inCartQty} sản phẩm">✓ Đã chọn: ${inCartQty}</span>`
+        : "";
+
       let badgeHtml = "";
       if (isOutOfStock) {
         badgeHtml = `<span class="pos-card-stock-badge out">Hết hàng</span>`;
@@ -222,9 +270,10 @@
       const skuText = prod.sku ? escapeHtml(prod.sku) : `SP-${prod.id}`;
 
       return `
-        <div class="pos-product-card ${isOutOfStock ? "out-of-stock" : ""}" data-product-id="${prod.id}" title="${escapeHtml(prod.name)}">
+        <div class="pos-product-card ${isOutOfStock ? "out-of-stock" : ""} ${isSelected ? "is-selected" : ""}" data-product-id="${prod.id}" title="${escapeHtml(prod.name)}">
+          ${selectedBadgeHtml}
           <div class="pos-card-thumb-wrap">
-            <img src="${img}" class="pos-card-thumb" alt="${escapeHtml(prod.name)}" onerror="this.src='../assets/images/logo_shop.svg';">
+            <img src="${img}" class="pos-card-thumb" alt="${escapeHtml(prod.name)}" loading="lazy" onerror="this.onerror=null; this.src='../assets/images/logo_shop.svg'; this.style.objectFit='contain'; this.style.padding='14px';">
           </div>
           <div class="pos-card-info">
             <div class="pos-card-sku">${skuText}</div>
@@ -339,6 +388,7 @@
           <div style="font-size: 11.5px;">Nhấp vào sản phẩm bên trái để thêm vào đơn</div>
         </div>
       `;
+      updateProductCardBadges();
       calculateCheckout();
       return;
     }
@@ -350,18 +400,20 @@
 
       return `
         <div class="pos-cart-row" data-id="${prod.id}">
-          <img src="${img}" class="pos-cart-thumb" alt="${escapeHtml(prod.name)}" onerror="this.src='../assets/images/logo_shop.svg';">
+          <img src="${img}" class="pos-cart-thumb" alt="${escapeHtml(prod.name)}" onerror="this.onerror=null; this.src='../assets/images/logo_shop.svg'; this.style.objectFit='contain';">
           <div class="pos-cart-detail">
             <div class="pos-cart-name" title="${escapeHtml(prod.name)}">${escapeHtml(prod.name)}</div>
             <div class="pos-cart-price-line">
-              <span>${fmtMoney(item.unit_price)}</span> • <span style="font-size: 10.5px; color: #94a3b8;">${sku}</span>
+              <span class="pos-cart-qty-pill">x<strong>${item.quantity}</strong></span>
+              <span>${fmtMoney(item.unit_price)}</span>
+              <span class="pos-cart-subtotal-pill">= ${fmtMoney(item.subtotal)}</span>
             </div>
           </div>
           <div class="pos-cart-action-group">
             <div class="pos-qty-spinner">
-              <button type="button" class="pos-qty-btn btn-cart-dec" data-id="${prod.id}">-</button>
-              <input type="number" class="pos-qty-input cart-qty-input" data-id="${prod.id}" value="${item.quantity}" min="1" max="${prod.stock_quantity}">
-              <button type="button" class="pos-qty-btn btn-cart-inc" data-id="${prod.id}">+</button>
+              <button type="button" class="pos-qty-btn btn-cart-dec" data-id="${prod.id}" title="Giảm số lượng">-</button>
+              <input type="number" class="pos-qty-input cart-qty-input" data-id="${prod.id}" value="${item.quantity}" min="1" max="${prod.stock_quantity}" title="Số lượng món">
+              <button type="button" class="pos-qty-btn btn-cart-inc" data-id="${prod.id}" title="Tăng số lượng">+</button>
             </div>
             <button type="button" class="pos-btn-del-item" data-id="${prod.id}" title="Xoá món này">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -402,6 +454,7 @@
       });
     });
 
+    updateProductCardBadges();
     calculateCheckout();
   }
 
@@ -409,8 +462,13 @@
   // 5. TÍNH TIỀN, TIỀN KHÁCH ĐƯA & TIỀN THỪA (CHECKOUT)
   // ==========================================================
   function calculateCheckout() {
+    const totalQty = cart.reduce((acc, it) => acc + it.quantity, 0);
     const subtotal = cart.reduce((acc, it) => acc + it.subtotal, 0);
     const grandTotal = subtotal;
+
+    if (cartCountEl) cartCountEl.textContent = totalQty;
+    const totalItemsQtyEl = document.getElementById("pos-total-items-qty");
+    if (totalItemsQtyEl) totalItemsQtyEl.textContent = `${totalQty} món`;
 
     if (subtotalValEl) subtotalValEl.textContent = fmtMoney(subtotal);
     if (grandTotalValEl) grandTotalValEl.textContent = fmtMoney(grandTotal);

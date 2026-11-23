@@ -908,17 +908,19 @@ function initProductForm() {
       return;
     }
 
-    // 2. Chuẩn bị payload
+    // 2. Chuẩn bị payload (Lưu ý: Không gửi price khi sửa để bảo đảm giá gốc cố định theo quy định)
     const payload = {
       name: name,
       sku: sku,
       category_id: categoryId,
-      price: price,
       promotional_price: promoPrice,
       stock_quantity: stock,
       is_visible: isVisible,
       description: description || null,
     };
+    if (!isEditing) {
+      payload.price = price;
+    }
 
     if (submitBtn) {
       submitBtn.disabled = true;
@@ -1169,6 +1171,18 @@ function openCreateProductModal() {
   const idInput = document.getElementById("product-id");
   if (idInput) idInput.value = "";
 
+  // Mở khóa ô giá gốc khi thêm sản phẩm mới
+  const priceInput = document.getElementById("prod-price");
+  if (priceInput) {
+    priceInput.readOnly = false;
+    priceInput.style.backgroundColor = "";
+    priceInput.style.cursor = "";
+  }
+  const lockHint = document.getElementById("prod-price-lock-hint");
+  if (lockHint) {
+    lockHint.style.display = "none";
+  }
+
   const percentInput = document.getElementById("prod-discount-percent");
   if (percentInput) percentInput.value = "";
 
@@ -1213,6 +1227,17 @@ async function openEditProductModal(id) {
   const descInput = document.getElementById("prod-description");
 
   if (idInput) idInput.value = id;
+
+  // Khóa ô giá gốc khi chỉnh sửa sản phẩm - Chỉ cho phép nhập 1 lần lúc tạo, sau đó qua quản lý kho
+  if (priceInput) {
+    priceInput.readOnly = true;
+    priceInput.style.backgroundColor = "#f1f5f9";
+    priceInput.style.cursor = "not-allowed";
+  }
+  const lockHint = document.getElementById("prod-price-lock-hint");
+  if (lockHint) {
+    lockHint.style.display = "flex";
+  }
 
   openModal("modal-product");
 
