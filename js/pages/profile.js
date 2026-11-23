@@ -1033,6 +1033,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   // XỬ LÝ ĐỔI MẬT KHẨU
   // ==========================================================
   if (passwordForm) {
+    // Ngăn chặn nhập khoảng trắng ngay khi người dùng gõ phím
+    [pwdCurrentInput, pwdNewInput, pwdConfirmInput].forEach(inp => {
+      if (!inp) return;
+      inp.addEventListener("input", () => {
+        if (/\s/.test(inp.value)) {
+          inp.value = inp.value.replace(/\s+/g, "");
+          const errElem = inp === pwdCurrentInput ? pwdCurrentError : (inp === pwdNewInput ? pwdNewError : pwdConfirmError);
+          showError(inp, errElem, "Mật khẩu không được chứa khoảng trắng");
+        }
+      });
+    });
+
     passwordForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -1046,21 +1058,36 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       let isValid = true;
 
+      // 1. Kiểm tra Mật khẩu hiện tại
       if (!currentPwd) {
         showError(pwdCurrentInput, pwdCurrentError, "Vui lòng nhập mật khẩu hiện tại");
         isValid = false;
+      } else if (/\s/.test(currentPwd)) {
+        showError(pwdCurrentInput, pwdCurrentError, "Mật khẩu hiện tại không được chứa khoảng trắng");
+        isValid = false;
       }
 
+      // 2. Kiểm tra Mật khẩu mới
       if (!newPwd) {
         showError(pwdNewInput, pwdNewError, "Vui lòng nhập mật khẩu mới");
+        isValid = false;
+      } else if (/\s/.test(newPwd)) {
+        showError(pwdNewInput, pwdNewError, "Mật khẩu mới không được chứa khoảng trắng");
         isValid = false;
       } else if (newPwd.length < 6) {
         showError(pwdNewInput, pwdNewError, "Mật khẩu mới phải có tối thiểu 6 ký tự");
         isValid = false;
+      } else if (currentPwd && newPwd === currentPwd) {
+        showError(pwdNewInput, pwdNewError, "Mật khẩu mới không được trùng với mật khẩu hiện tại");
+        isValid = false;
       }
 
+      // 3. Kiểm tra Xác nhận mật khẩu mới
       if (!confirmPwd) {
         showError(pwdConfirmInput, pwdConfirmError, "Vui lòng xác nhận lại mật khẩu mới");
+        isValid = false;
+      } else if (/\s/.test(confirmPwd)) {
+        showError(pwdConfirmInput, pwdConfirmError, "Mật khẩu xác nhận không được chứa khoảng trắng");
         isValid = false;
       } else if (newPwd !== confirmPwd) {
         showError(pwdConfirmInput, pwdConfirmError, "Mật khẩu xác nhận không khớp");
@@ -1074,8 +1101,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       btnSubmitPwd.innerHTML = `<span>Đang xử lý...</span>`;
 
       try {
-        await api.put("/auth/me", {
-          password: newPwd
+        await api.put("/auth/me/change-password", {
+          current_password: currentPwd,
+          new_password: newPwd
         });
 
         passwordForm.reset();
@@ -1086,7 +1114,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         }, 1000);
       } catch (err) {
         console.error("Lỗi đổi mật khẩu:", err);
-        showToast("Không thể cập nhật mật khẩu: " + (err.message || "Lỗi máy chủ"), "error");
+        const errMsg = err.message || err.detail || "Không thể cập nhật mật khẩu: Lỗi máy chủ";
+        if (errMsg.includes("hiện tại không chính xác") || errMsg.includes("hiện tại")) {
+          showError(pwdCurrentInput, pwdCurrentError, errMsg);
+          if (pwdCurrentInput) pwdCurrentInput.focus();
+        } else if (errMsg.includes("Mật khẩu mới") || errMsg.includes("trùng")) {
+          showError(pwdNewInput, pwdNewError, errMsg);
+          if (pwdNewInput) pwdNewInput.focus();
+        } else {
+          showToast(errMsg, "error");
+        }
       } finally {
         btnSubmitPwd.disabled = false;
         btnSubmitPwd.innerHTML = originalPwdBtnText;
@@ -1180,6 +1217,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     redeemVoucherModal.style.display = "none";
   }
 
+  let currentVoucherFilter = "all";
+
   async function loadRewardPointsInfo() {
     try {
       const res = await api.get("/auth/me/reward-points");
@@ -1190,10 +1229,22 @@ document.addEventListener("DOMContentLoaded", async () => {
       rewardInfoCache = {
         reward_points: curPts,
         available_tiers: [
-          { tier_id: "VOUCHER_20K", title: "Voucher giảm 20.000₫", points_required: 100, discount_amount: 20000, min_order_value: 100000 },
-          { tier_id: "VOUCHER_50K", title: "Voucher giảm 50.000₫", points_required: 200, discount_amount: 50000, min_order_value: 250000 },
-          { tier_id: "VOUCHER_100K", title: "Voucher giảm 100.000₫", points_required: 350, discount_amount: 100000, min_order_value: 500000 },
-          { tier_id: "VOUCHER_150K", title: "Voucher giảm 150.000₫", points_required: 500, discount_amount: 150000, min_order_value: 700000 },
+          // 1. Nhóm Freeship
+          { tier_id: "FREESHIP_15K", title: "FreeShip - Giảm 15.000₫ phí ship", voucher_type: "freeship", points_required: 50, discount_amount: 15000, min_order_value: 100000, percent: 0, max_discount: 15000 },
+          { tier_id: "FREESHIP_MAX", title: "FreeShip Xtra - Miễn phí vận chuyển 100% (tối đa 30.000₫)", voucher_type: "freeship", points_required: 100, discount_amount: 30000, min_order_value: 150000, percent: 0, max_discount: 30000 },
+          // 2. Nhóm Giảm % (lên đến 70%)
+          { tier_id: "VOUCHER_PCT_10", title: "Giảm 10% (tối đa 50.000₫)", voucher_type: "percent", percent: 10, max_discount: 50000, points_required: 120, discount_amount: 0, min_order_value: 200000 },
+          { tier_id: "VOUCHER_PCT_20", title: "Giảm 20% (tối đa 100.000₫)", voucher_type: "percent", percent: 20, max_discount: 100000, points_required: 220, discount_amount: 0, min_order_value: 300000 },
+          { tier_id: "VOUCHER_PCT_30", title: "Giảm 30% (tối đa 200.000₫)", voucher_type: "percent", percent: 30, max_discount: 200000, points_required: 350, discount_amount: 0, min_order_value: 500000 },
+          { tier_id: "VOUCHER_PCT_50", title: "Giảm 50% Siêu Sale (tối đa 500.000₫)", voucher_type: "percent", percent: 50, max_discount: 500000, points_required: 650, discount_amount: 0, min_order_value: 800000 },
+          { tier_id: "VOUCHER_PCT_70", title: "Giảm 70% Khủng Nhất (tối đa 1.000.000₫)", voucher_type: "percent", percent: 70, max_discount: 1000000, points_required: 1200, discount_amount: 0, min_order_value: 1200000 },
+          // 3. Nhóm Giảm tiền mặt (lên đến 1.000.000₫)
+          { tier_id: "VOUCHER_20K", title: "Voucher giảm 20.000₫", voucher_type: "fixed", points_required: 80, discount_amount: 20000, min_order_value: 100000, percent: 0, max_discount: 20000 },
+          { tier_id: "VOUCHER_50K", title: "Voucher giảm 50.000₫", voucher_type: "fixed", points_required: 160, discount_amount: 50000, min_order_value: 250000, percent: 0, max_discount: 50000 },
+          { tier_id: "VOUCHER_100K", title: "Voucher giảm 100.000₫", voucher_type: "fixed", points_required: 280, discount_amount: 100000, min_order_value: 500000, percent: 0, max_discount: 100000 },
+          { tier_id: "VOUCHER_200K", title: "Voucher giảm 200.000₫", voucher_type: "fixed", points_required: 480, discount_amount: 200000, min_order_value: 800000, percent: 0, max_discount: 200000 },
+          { tier_id: "VOUCHER_500K", title: "Voucher giảm 500.000₫ Siêu Ưu Đãi", voucher_type: "fixed", points_required: 950, discount_amount: 500000, min_order_value: 1500000, percent: 0, max_discount: 500000 },
+          { tier_id: "VOUCHER_1M", title: "Voucher giảm 1.000.000₫ Siêu VIP", voucher_type: "fixed", points_required: 1600, discount_amount: 1000000, min_order_value: 2500000, percent: 0, max_discount: 1000000 },
         ],
         vouchers: []
       };
@@ -1201,6 +1252,20 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     renderRewardTiersAndVouchers(rewardInfoCache);
   }
+
+  function setupVoucherFilterTabs() {
+    const filterContainer = document.getElementById("voucher-tier-filters");
+    if (!filterContainer) return;
+    filterContainer.querySelectorAll(".filter-pill").forEach(btn => {
+      btn.addEventListener("click", () => {
+        filterContainer.querySelectorAll(".filter-pill").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentVoucherFilter = btn.getAttribute("data-filter") || "all";
+        if (rewardInfoCache) renderRewardTiersAndVouchers(rewardInfoCache);
+      });
+    });
+  }
+  setupVoucherFilterTabs();
 
   function renderRewardTiersAndVouchers(data) {
     if (!data) return;
@@ -1210,35 +1275,67 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (modalRewardPointsBalance) modalRewardPointsBalance.textContent = String(points);
     if (currentUserData) currentUserData.reward_points = points;
 
-    // 1. Render các gói quy đổi
+    // 1. Render các gói quy đổi theo bộ lọc
     if (redeemTiersContainer && Array.isArray(data.available_tiers)) {
-      redeemTiersContainer.innerHTML = data.available_tiers.map(tier => {
-        const canRedeem = points >= tier.points_required;
-        const discountK = Math.round(tier.discount_amount / 1000);
-        const minOrderK = Math.round((tier.min_order_value || 0) / 1000);
-
-        return `
-          <div class="tier-item-box">
-            <div class="tier-top-row">
-              <span class="tier-amount">Giảm ${discountK}.000₫</span>
-              <span class="tier-points-pill">${tier.points_required} điểm</span>
-            </div>
-            <p class="tier-min-order">Đơn tối thiểu ${minOrderK}.000₫</p>
-            <button type="button" class="btn-redeem-action" data-tier-id="${tier.tier_id}" ${!canRedeem ? 'disabled' : ''}>
-              ${canRedeem ? 'Đổi ngay' : `Cần thêm ${tier.points_required - points} điểm`}
-            </button>
-          </div>
-        `;
-      }).join("");
-
-      redeemTiersContainer.querySelectorAll(".btn-redeem-action").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const tierId = btn.getAttribute("data-tier-id");
-          if (tierId) {
-            handleRedeemTier(tierId);
-          }
-        });
+      const allTiers = data.available_tiers;
+      const filteredTiers = allTiers.filter(t => {
+        if (currentVoucherFilter === "all") return true;
+        return (t.voucher_type || "fixed") === currentVoucherFilter;
       });
+
+      if (filteredTiers.length === 0) {
+        redeemTiersContainer.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: #64748b; font-size: 13px;">Không có gói voucher nào thuộc danh mục này.</div>`;
+      } else {
+        redeemTiersContainer.innerHTML = filteredTiers.map(tier => {
+          const canRedeem = points >= tier.points_required;
+          const vtype = tier.voucher_type || "fixed";
+          let amountText = "";
+          let badgeTypeHtml = "";
+          let conditionText = "";
+
+          if (vtype === "freeship") {
+            amountText = `FreeShip ${formatMoney(tier.discount_amount)}`;
+            badgeTypeHtml = `<span class="tier-type-badge tier-type-ship">Freeship</span>`;
+            conditionText = `Đơn tối thiểu ${formatMoney(tier.min_order_value || 0)}`;
+          } else if (vtype === "percent") {
+            amountText = `Giảm ${tier.percent}%`;
+            badgeTypeHtml = `<span class="tier-type-badge tier-type-pct">Giảm %</span>`;
+            const maxText = tier.max_discount > 0 ? ` (Tối đa ${formatMoney(tier.max_discount)})` : "";
+            conditionText = `Đơn tối thiểu ${formatMoney(tier.min_order_value || 0)}${maxText}`;
+          } else {
+            amountText = `Giảm ${formatMoney(tier.discount_amount)}`;
+            badgeTypeHtml = `<span class="tier-type-badge tier-type-fixed">Giảm tiền</span>`;
+            conditionText = `Đơn tối thiểu ${formatMoney(tier.min_order_value || 0)}`;
+          }
+
+          const isVip = tier.percent === 70 || tier.discount_amount >= 1000000;
+
+          return `
+            <div class="tier-item-box ${isVip ? 'tier-vip-highlight' : ''}">
+              <div class="tier-top-row">
+                <div class="tier-amount-wrap">
+                  <span class="tier-amount">${amountText}</span>
+                  ${badgeTypeHtml}
+                </div>
+                <span class="tier-points-pill">${tier.points_required} điểm</span>
+              </div>
+              <p class="tier-min-order">${conditionText}</p>
+              <button type="button" class="btn-redeem-action" data-tier-id="${tier.tier_id}" ${!canRedeem ? 'disabled' : ''}>
+                ${canRedeem ? (isVip ? '★ Đổi ngay' : 'Đổi ngay') : `Cần thêm ${tier.points_required - points} điểm`}
+              </button>
+            </div>
+          `;
+        }).join("");
+
+        redeemTiersContainer.querySelectorAll(".btn-redeem-action").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const tierId = btn.getAttribute("data-tier-id");
+            if (tierId) {
+              handleRedeemTier(tierId);
+            }
+          });
+        });
+      }
     }
 
     // 2. Render danh sách mã đã đổi
@@ -1248,10 +1345,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         myVouchersList.innerHTML = `<p class="empty-vouchers-hint">Bạn chưa đổi mã giảm giá nào. Hãy chọn gói ưu đãi phía trên để đổi ngay!</p>`;
       } else {
         myVouchersList.innerHTML = vouchers.map(v => {
+          const vtype = v.voucher_type || "fixed";
+          let typeBadge = "";
+          if (vtype === "freeship") {
+            typeBadge = `<span class="tier-type-badge tier-type-ship" style="margin-left: 6px;">Freeship</span>`;
+          } else if (vtype === "percent") {
+            typeBadge = `<span class="tier-type-badge tier-type-pct" style="margin-left: 6px;">-${v.percent}%</span>`;
+          }
+
           return `
             <div class="my-voucher-item">
               <div class="voucher-item-left">
-                <span class="voucher-item-title">${escapeHTML(v.title || "Voucher giảm giá")}</span>
+                <span class="voucher-item-title">${escapeHTML(v.title || "Voucher giảm giá")}${typeBadge}</span>
                 <span class="voucher-item-expiry">Hạn dùng: 30 ngày kể từ ngày đổi</span>
               </div>
               <div class="voucher-item-right">
@@ -1290,17 +1395,31 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       if (rewardInfoCache) {
-        const tier = rewardInfoCache.available_tiers.find(t => t.tier_id === tierId);
+        const tier = (rewardInfoCache.available_tiers || []).find(t => t.tier_id === tierId);
         if (tier) {
           rewardInfoCache.reward_points = Math.max(0, rewardInfoCache.reward_points - tier.points_required);
           if (!newVoucher || !newVoucher.code) {
-            const discountK = Math.round(tier.discount_amount / 1000);
+            const codeSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
+            let genCode = "";
+            const vtype = tier.voucher_type || "fixed";
+            if (vtype === "freeship") {
+              genCode = `SEFREE-${codeSuffix}`;
+            } else if (vtype === "percent") {
+              genCode = `SEP${tier.percent}-${codeSuffix}`;
+            } else {
+              const discountK = Math.round(tier.discount_amount / 1000);
+              genCode = discountK >= 1000 ? `SE1M-${codeSuffix}` : `SE${discountK}K-${codeSuffix}`;
+            }
+
             newVoucher = {
               id: Date.now(),
-              code: `SE${discountK}K-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+              code: genCode,
               title: tier.title,
-              discount_amount: tier.discount_amount,
-              min_order_value: tier.min_order_value,
+              discount_amount: tier.discount_amount || 0,
+              min_order_value: tier.min_order_value || 0,
+              voucher_type: vtype,
+              percent: tier.percent || 0,
+              max_discount: tier.max_discount || 0,
               points_spent: tier.points_required,
               is_used: 0
             };

@@ -124,9 +124,12 @@ document.addEventListener("DOMContentLoaded", () => {
       isValid = false;
     }
 
-    // Validate Mật khẩu (tối thiểu 6 ký tự)
+    // Validate Mật khẩu (tối thiểu 6 ký tự, không chứa khoảng trắng)
     if (!password) {
       setFieldError(passwordInput, passwordError, "Vui lòng nhập mật khẩu");
+      isValid = false;
+    } else if (/\s/.test(password)) {
+      setFieldError(passwordInput, passwordError, "Mật khẩu không được chứa khoảng trắng");
       isValid = false;
     } else if (password.length < 6) {
       setFieldError(passwordInput, passwordError, "Mật khẩu phải chứa ít nhất 6 ký tự");
@@ -136,6 +139,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Validate Xác nhận mật khẩu
     if (!confirmPassword) {
       setFieldError(confirmPasswordInput, confirmPasswordError, "Vui lòng nhập lại mật khẩu");
+      isValid = false;
+    } else if (/\s/.test(confirmPassword)) {
+      setFieldError(confirmPasswordInput, confirmPasswordError, "Mật khẩu xác nhận không được chứa khoảng trắng");
       isValid = false;
     } else if (confirmPassword !== password) {
       setFieldError(confirmPasswordInput, confirmPasswordError, "Mật khẩu xác nhận không khớp");

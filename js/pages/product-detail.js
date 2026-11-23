@@ -803,25 +803,69 @@ async function executeAddToCart(productId, isBuyNow = false) {
   }
 
   try {
-    await api.post("/cart/items", {
-      product_id: productId,
-      quantity: quantity,
-    });
-
-    if (typeof window.refreshCartCount === "function") {
-      await window.refreshCartCount();
-    }
-
     if (isBuyNow) {
-      showToast("Đã thêm vào giỏ! Đang chuyển hướng đến giỏ hàng…", "success");
+      // 1. Khi chọn "Mua ngay": cập nhật số lượng của sản phẩm này về đúng số lượng khách chọn
+      // Thử PUT để set số lượng (nếu sản phẩm đã có trong giỏ), nếu chưa có (404) thì POST để thêm vào
+      try {
+        await api.put(`/cart/items/${productId}`, { quantity: quantity });
+      } catch (putErr) {
+        await api.post("/cart/items", {
+          product_id: productId,
+          quantity: quantity,
+        });
+      }
+
+      // Đồng bộ vào localStorage cho chế độ demo / offline
+      try {
+        const localCart = JSON.parse(localStorage.getItem("CART_ITEMS") || "[]");
+        const idx = localCart.findIndex(item => (item.product_id || item.id) === productId);
+        if (idx > -1) {
+          localCart[idx].quantity = quantity;
+        } else {
+          localCart.push({ id: Date.now(), product_id: productId, quantity: quantity });
+        }
+        localStorage.setItem("CART_ITEMS", JSON.stringify(localCart));
+      } catch (_) {}
+
+      if (typeof window.refreshCartCount === "function") {
+        await window.refreshCartCount();
+      }
+
+      // Lưu cờ Mua ngay để trang cart.html CHỈ TÍCH CHỌN ĐÚNG SẢN PHẨM NÀY
+      sessionStorage.setItem("buy_now_product_id", String(productId));
+      sessionStorage.setItem("buy_now_qty", String(quantity));
+
+      showToast("Đang chuyển đến giỏ hàng để thanh toán…", "success");
       setTimeout(() => {
-        window.location.href = "cart.html";
-      }, 600);
+        window.location.href = `cart.html?buy_now=${productId}&buy_qty=${quantity}`;
+      }, 350);
     } else {
+      // 2. Khi chọn "Thêm vào giỏ": cộng dồn số lượng
+      await api.post("/cart/items", {
+        product_id: productId,
+        quantity: quantity,
+      });
+
+      // Đồng bộ vào localStorage cho chế độ demo / offline
+      try {
+        const localCart = JSON.parse(localStorage.getItem("CART_ITEMS") || "[]");
+        const idx = localCart.findIndex(item => (item.product_id || item.id) === productId);
+        if (idx > -1) {
+          localCart[idx].quantity = Number(localCart[idx].quantity || 1) + quantity;
+        } else {
+          localCart.push({ id: Date.now(), product_id: productId, quantity: quantity });
+        }
+        localStorage.setItem("CART_ITEMS", JSON.stringify(localCart));
+      } catch (_) {}
+
+      if (typeof window.refreshCartCount === "function") {
+        await window.refreshCartCount();
+      }
+
       showToast(`Đã thêm ${quantity} sản phẩm vào giỏ hàng thành công!`, "success");
     }
   } catch (error) {
-    showToast(`Không thể thêm vào giỏ hàng: ${error.message}`, "error");
+    showToast(`Không thể thực hiện: ${error.message}`, "error");
   } finally {
     if (btn) {
       btn.disabled = false;
