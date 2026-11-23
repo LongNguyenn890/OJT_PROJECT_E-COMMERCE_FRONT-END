@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShopEase - Báo cáo & Thống kê doanh thu</title>
+  <link rel="icon" href="../assets/images/logo_shop.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Liberation+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/admin-reports.css">
+  <script>
+    // Đảm bảo có phiên làm việc Quản trị viên
+    if (!localStorage.getItem("token") || !localStorage.getItem("user")) {
+      localStorage.setItem("token", "demo-admin-session-token");
+      localStorage.setItem("user", JSON.stringify({
+        id: 1,
+        name: "Nguyễn Thu Hà",
+        full_name: "Nguyễn Thu Hà",
+        username: "admin_ha",
+        email: "admin@example.com",
+        role: "ADMIN"
+      }));
+    }
+  </script>
+</head>
+<body class="admin-page" data-root="../" data-auth="admin">
+  <div class="admin-layout">
+    <!-- Sidebar tự động render bởi layout.js -->
+    <aside id="admin-sidebar" class="admin-sidebar"></aside>
+
+    <!-- Khung nội dung chính -->
+    <div class="admin-main-wrap">
+      <!-- Topbar tự động render bởi layout.js -->
+      <header id="admin-topbar" class="admin-topbar"></header>
+
+      <main class="admin-content">
+        <!-- Header trang Báo cáo & Thống kê -->
+        <div class="admin-page-header-card">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+            <div class="admin-page-header-info">
+              <h1 class="admin-page-title">Báo cáo &amp; Thống kê</h1>
+              <p class="admin-page-desc">Tổng hợp biến động doanh thu, đơn hàng theo trạng thái và top sản phẩm bán chạy trên toàn hệ thống</p>
+            </div>
+            <div class="admin-header-actions">
+              <button type="button" class="btn-admin-action secondary" id="btn-export-report" title="Xuất báo cáo dạng file Excel hoặc CSV" style="padding: 9px 15px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Xuất dữ liệu</span>
+              </button>
+              <button type="button" class="btn-admin-primary" id="btn-refresh-report" style="padding: 9px 18px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" id="icon-refresh-spinner"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                <span>Làm mới dữ liệu</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Thanh chọn khoảng thời gian (Presets & Custom Date Picker) -->
+          <div class="reports-filter-bar">
+            <div class="reports-presets-group" id="reports-presets-container">
+              <button type="button" class="report-preset-btn" data-preset="today">Hôm nay</button>
+              <button type="button" class="report-preset-btn active" data-preset="7days">7 ngày qua</button>
+              <button type="button" class="report-preset-btn" data-preset="30days">30 ngày qua</button>
+              <button type="button" class="report-preset-btn" data-preset="this_month">Tháng này</button>
+              <button type="button" class="report-preset-btn" data-preset="last_month">Tháng trước</button>
+              <button type="button" class="report-preset-btn" data-preset="all">Tất cả</button>
+            </div>
+
+            <div class="reports-custom-date-group">
+              <div class="report-date-input-wrap">
+                <span>Từ:</span>
+                <input type="date" id="input-from-date" class="report-date-input" aria-label="Từ ngày">
+              </div>
+              <div class="report-date-input-wrap">
+                <span>Đến:</span>
+                <input type="date" id="input-to-date" class="report-date-input" aria-label="Đến ngày">
+              </div>
+              <button type="button" class="btn-apply-dates" id="btn-apply-custom-dates">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Áp dụng</span>
+              </button>
+              <div class="report-current-range-badge" id="report-range-label">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span id="range-label-text">Đang tải...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- THẺ CHỈ SỐ DOANH THU & BÁN HÀNG (4 KPI CARDS) -->
+        <div class="admin-metrics-4col">
+          <!-- KPI 1: Tổng doanh thu -->
+          <div class="admin-stat-card">
+            <div class="stat-top">
+              <span class="stat-label">Tổng doanh thu thực tế</span>
+              <div class="stat-icon-box mint" title="Doanh thu thực thu từ đơn giao thành công và bán tại quầy">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
+            </div>
+            <div class="stat-bottom">
+              <span class="stat-number" id="metric-total-revenue" style="font-size: 24px; color: var(--admin-success);">--</span>
+            </div>
+            <div class="stat-breakdown-row">
+              <span class="stat-pill-tag online" id="pill-online-rev" title="Doanh thu Online">Online: --</span>
+              <span class="stat-pill-tag pos" id="pill-pos-rev" title="Doanh thu bán tại quầy POS">Tại quầy: --</span>
+            </div>
+          </div>
+
+          <!-- KPI 2: Tổng đơn hàng -->
+          <div class="admin-stat-card">
+            <div class="stat-top">
+              <span class="stat-label">Tổng số đơn hàng</span>
+              <div class="stat-icon-box lavender">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+              </div>
+            </div>
+            <div class="stat-bottom">
+              <span class="stat-number" id="metric-total-orders">--</span>
+              <span class="stat-sub">đơn phát sinh</span>
+            </div>
+            <div class="stat-breakdown-row">
+              <span class="stat-pill-tag success" id="pill-completed-orders">Thành công: --</span>
+              <span class="stat-pill-tag pending" id="pill-processing-orders">Đang xử lý: --</span>
+            </div>
+          </div>
+
+          <!-- KPI 3: Số sản phẩm đã bán -->
+          <div class="admin-stat-card">
+            <div class="stat-top">
+              <span class="stat-label">Sản phẩm đã bán</span>
+              <div class="stat-icon-box warning">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+              </div>
+            </div>
+            <div class="stat-bottom">
+              <span class="stat-number" id="metric-items-sold">--</span>
+              <span class="stat-sub">mặt hàng thành công</span>
+            </div>
+            <div class="stat-breakdown-row">
+              <span style="font-size: 11.5px; color: #64748b;" id="sub-cancel-rate">Đơn hủy: <b id="val-cancelled-count" style="color: #dc2626;">0</b></span>
+            </div>
+          </div>
+
+          <!-- KPI 4: Giá trị trung bình đơn (AOV) -->
+          <div class="admin-stat-card">
+            <div class="stat-top">
+              <span class="stat-label">Giá trị trung bình đơn (AOV)</span>
+              <div class="stat-icon-box lavender">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>
+              </div>
+            </div>
+            <div class="stat-bottom">
+              <span class="stat-number" id="metric-aov" style="font-size: 24px; color: var(--admin-primary);">--</span>
+            </div>
+            <div class="stat-breakdown-row">
+              <span style="font-size: 11.5px; color: #64748b;">Doanh thu / Mỗi đơn thành công</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- KHU VỰC BIỂU ĐỒ (2 BIỂU ĐỒ CHART.JS) -->
+        <div class="reports-charts-grid">
+          <!-- BIỂU ĐỒ 1: Biến động doanh thu & đơn hàng theo ngày -->
+          <div class="report-chart-card">
+            <div class="report-chart-header">
+              <div class="report-chart-title-wrap">
+                <h3>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                  <span>Biến động doanh thu theo ngày</span>
+                </h3>
+                <p>Theo dõi doanh thu thực thu (Online + Tại quầy POS) và lượng đơn phát sinh</p>
+                <div class="report-chart-stats-row" id="revenue-chart-stats-pill"></div>
+              </div>
+              <div class="chart-toggle-views" id="revenue-chart-view-toggles">
+                <button type="button" class="chart-view-btn active" data-view="total">Tất cả</button>
+                <button type="button" class="chart-view-btn" data-view="split">Tách Online &amp; POS</button>
+                <button type="button" class="chart-view-btn" data-view="orders">Số đơn &amp; Sản phẩm</button>
+              </div>
+            </div>
+            <div class="chart-canvas-container">
+              <canvas id="chart-daily-revenue"></canvas>
+            </div>
+          </div>
+
+          <!-- BIỂU ĐỒ 2: Đơn theo trạng thái (Doughnut Chart & Legend List) -->
+          <div class="report-chart-card">
+            <div class="report-chart-header">
+              <div class="report-chart-title-wrap">
+                <h3>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+                  <span>Cơ cấu đơn hàng theo trạng thái</span>
+                </h3>
+                <p>Tỷ trọng phân bổ trạng thái các đơn hàng trong kỳ</p>
+              </div>
+            </div>
+            <div class="chart-canvas-container" style="min-height: 250px; max-height: 270px;">
+              <canvas id="chart-order-status"></canvas>
+            </div>
+            <div class="status-distribution-list" id="status-distribution-container">
+              <!-- Render động danh sách thống kê trạng thái -->
+            </div>
+          </div>
+        </div>
+
+        <!-- BẢNG TOP SẢN PHẨM BÁN CHẠY NHẤT -->
+        <div class="top-products-card">
+          <div class="top-products-header">
+            <div>
+              <h3 style="font-size: 15px; font-weight: 700; color: var(--admin-text-main); margin: 0 0 3px 0; display: flex; align-items: center; gap: 8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="color: #f59e0b;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <span>Top sản phẩm bán chạy nhất</span>
+              </h3>
+              <p style="font-size: 12px; color: var(--admin-text-muted); margin: 0;">Danh sách 10 mặt hàng có doanh thu và số lượng tiêu thụ cao nhất trong khoảng thời gian đã chọn</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 12px; color: #64748b; font-weight: 500;">Sắp xếp theo:</span>
+              <div class="chart-toggle-views" id="top-products-sort-toggles">
+                <button type="button" class="chart-view-btn active" data-sort="qty">Số lượng bán</button>
+                <button type="button" class="chart-view-btn" data-sort="rev">Doanh thu</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-table-container">
+            <table class="admin-table" id="table-top-products">
+              <thead>
+                <tr>
+                  <th style="width: 60px; text-align: center;">HẠNG</th>
+                  <th style="min-width: 280px;">SẢN PHẨM</th>
+                  <th style="width: 160px;">SỐ LƯỢNG BÁN</th>
+                  <th style="width: 170px; text-align: right;">DOANH THU MANG LẠI</th>
+                  <th style="width: 130px; text-align: center;">SỐ ĐƠN HÀNG</th>
+                  <th style="width: 120px; text-align: right;">TỶ TRỌNG</th>
+                </tr>
+              </thead>
+              <tbody id="top-products-tbody">
+                <tr>
+                  <td colspan="6" style="text-align: center; padding: 36px 12px; color: #94a3b8;">
+                    <div class="report-skeleton" style="width: 200px; height: 16px; margin: 0 auto 10px;"></div>
+                    <div style="font-size: 12.5px;">Đang tải danh sách sản phẩm bán chạy...</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Nạp các thư viện JavaScript theo thứ tự chuẩn -->
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/pages/admin-reports.js"></script>
+</body>
+</html>

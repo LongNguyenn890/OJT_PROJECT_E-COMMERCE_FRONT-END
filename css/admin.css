@@ -702,14 +702,13 @@ body.admin-page {
   background-color: var(--admin-success);
 }
 
-/* Rich Analytical SVG Bar Chart matching Figma */
+/* Rich Analytical Chart matching Figma */
 .analytic-chart-wrap {
   width: 100%;
-  height: 256px;
-  display: flex;
-  align-items: flex-end;
+  min-height: 250px;
+  max-height: 270px;
   position: relative;
-  padding: 10px 0 20px 40px;
+  padding: 4px 6px;
   box-sizing: border-box;
 }
 
@@ -926,7 +925,7 @@ body.admin-page {
 .donut-breakdown-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 6px;
   width: 100%;
 }
 
@@ -934,23 +933,26 @@ body.admin-page {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 10px;
+  gap: 10px;
+  padding: 8px 12px;
   border-radius: 8px;
-  border-bottom: 1px solid var(--admin-border-subtle);
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
   font-size: 12.5px;
   cursor: pointer;
   transition: all 0.18s ease;
 }
 
 .breakdown-row:last-child {
-  border-bottom: none;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .breakdown-row:hover,
 .breakdown-row.active {
-  background-color: #f8fafc;
-  transform: translateX(3px);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  background-color: #ffffff;
+  border-color: #cbd5e1;
+  transform: translateX(2px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
 .breakdown-row.active {
@@ -962,7 +964,8 @@ body.admin-page {
   align-items: center;
   gap: 8px;
   color: var(--admin-text-main);
-  font-weight: 500;
+  font-weight: 600;
+  min-width: 110px;
 }
 
 .breakdown-dot {
@@ -973,23 +976,38 @@ body.admin-page {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
+.breakdown-bar-wrap {
+  flex: 1;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 99px;
+  overflow: hidden;
+  margin: 0 4px;
+}
+
+.breakdown-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .breakdown-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .breakdown-count {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--admin-text-main);
+  font-size: 12px;
 }
 
 .breakdown-pct {
-  width: 44px;
+  min-width: 42px;
   text-align: right;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--admin-text-muted);
+  font-size: 11.5px;
+  font-weight: 700;
 }
 
 /* ==========================================================
@@ -2586,7 +2604,7 @@ select.admin-form-input {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  height: 38px;
+  height: 40px;
   padding: 0 36px 0 13px !important;
   background-color: #ffffff;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
@@ -3333,6 +3351,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .table-summary-text {
@@ -3345,6 +3365,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
 }
 
 .page-btn,
@@ -3364,6 +3385,15 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
+}
+
+.page-btn.prev-btn,
+.page-btn.next-btn,
+.btn-page.prev-btn,
+.btn-page.next-btn {
+  font-size: 16px;
+  font-family: system-ui, -apple-system, sans-serif;
+  line-height: 1;
 }
 
 .page-btn:hover:not(:disabled):not(.active),

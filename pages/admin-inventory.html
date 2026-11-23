@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShopEase - Quản lý Kho hàng</title>
+  <link rel="icon" href="../assets/images/logo_shop.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Liberation+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/admin-products.css">
+  <style>
+    /* Nút thao tác nhanh trong bảng kho hàng */
+    .btn-inv-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .btn-inv-chip.import {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-color: #bfdbfe;
+    }
+    .btn-inv-chip.import:hover {
+      background: #dbeafe;
+      color: #1e40af;
+      transform: translateY(-1px);
+    }
+    .btn-inv-chip.adjust {
+      background: #fdf4ff;
+      color: #9333ea;
+      border-color: #f5d0fe;
+    }
+    .btn-inv-chip.adjust:hover {
+      background: #fae8ff;
+      color: #7e22ce;
+      transform: translateY(-1px);
+    }
+    .btn-inv-chip.logs {
+      background: #f8fafc;
+      color: #475569;
+      border-color: #e2e8f0;
+    }
+    .btn-inv-chip.logs:hover {
+      background: #f1f5f9;
+      color: #1e293b;
+      transform: translateY(-1px);
+    }
+
+    /* Huy hiệu phân loại biến động kho trong modal log */
+    .log-change-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 11.5px;
+      font-weight: 700;
+      white-space: nowrap;
+      min-width: 88px;
+      text-align: center;
+      line-height: 1.2;
+    }
+    .log-change-badge.initial { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+    .log-change-badge.import { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .log-change-badge.order { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .log-change-badge.cancel { background: #f3e8ff; color: #7e22ce; border: 1px solid #e9d5ff; }
+    .log-change-badge.adjust { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+
+    /* Khung xem trước thông tin sản phẩm trong modal */
+    .inv-product-preview-box {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 18px;
+    }
+    .inv-preview-thumb {
+      width: 52px;
+      height: 52px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      flex-shrink: 0;
+    }
+    .inv-preview-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .inv-preview-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--admin-text-main);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .inv-preview-sub {
+      font-size: 12px;
+      color: #64748b;
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+  </style>
+  <script>
+    // Đảm bảo có phiên làm việc Quản trị viên
+    if (!localStorage.getItem("token") || !localStorage.getItem("user")) {
+      localStorage.setItem("token", "demo-admin-session-token");
+      localStorage.setItem("user", JSON.stringify({
+        id: 1,
+        name: "Nguyễn Thu Hà",
+        full_name: "Nguyễn Thu Hà",
+        username: "admin_ha",
+        email: "ha.admin@shopease.vn",
+        role: "ADMIN"
+      }));
+    }
+  </script>
+</head>
+<body class="admin-page" data-root="../" data-auth="admin">
+  <div class="admin-layout">
+    <!-- Sidebar tự động render bởi layout.js -->
+    <aside id="admin-sidebar" class="admin-sidebar"></aside>
+
+    <!-- Khung nội dung chính -->
+    <div class="admin-main-wrap">
+      <!-- Topbar tự động render bởi layout.js -->
+      <header id="admin-topbar" class="admin-topbar"></header>
+
+      <main class="admin-content">
+        <!-- Header trang Quản lý Kho hàng -->
+        <div class="admin-page-header-card">
+          <div class="admin-page-header-info">
+            <h1 class="admin-page-title">Quản lý Kho hàng</h1>
+            <p class="admin-page-desc">Theo dõi số lượng hàng tồn, kiểm soát ngưỡng cảnh báo hết hàng, kiểm kê định kỳ và thực hiện nhập hàng vào kho</p>
+          </div>
+          <div class="admin-header-actions">
+            <a href="admin-products.html" class="btn-admin-action secondary" style="padding: 9px 16px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+              <span>Quản lý Sản phẩm</span>
+            </a>
+            <button type="button" class="btn-admin-action secondary" id="btn-refresh-inventory" style="padding: 9px 16px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              <span>Làm mới dữ liệu</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Thống kê nhanh Tồn kho (KPI 4 Cột đồng bộ) -->
+        <div class="admin-metrics-4col">
+          <div class="admin-stat-card">
+            <div class="stat-top">
+              <span class="stat-label">Tổng mặt hàng</span>
+              <div class="stat-icon-box lavender">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+              </div>
+            </div>
+            <div class="stat-bottom">
+              <span class="stat-number" id="kpi-total-inventory">--</span>
+              <span class="stat-sub">mặt hàng trong hệ thống</span>
+            </div>
+          </div>
+
+          <div class="admin-stat-card">
+            <div class="stat-top">
+              <span class="stat-label">Tổng tồn kho</span>
+              <div class="stat-icon-box mint">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              </div>
+            </div>
+            <div class="stat-bottom">
+              <span class="stat-number" id="kpi-total-stock-units" style="color: var(--admin-success);">--</span>
+              <span class="stat-sub">đơn vị lưu kho</span>
+            </div>
+          </div>
+
+          <div class="admin-stat-card" id="card-low-stock-kpi" style="cursor: pointer;" title="Nhấn để xem các sản phẩm sắp hết hàng">
+            <div class="stat-top">
+              <span class="stat-label">Cảnh báo sắp hết</span>
+              <div class="stat-icon-box warning">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </div>
+            </div>
+            <div class="stat-bottom">
+              <span class="stat-number" id="kpi-low-stock-count" style="color: var(--admin-warning);">--</span>
+              <span class="stat-sub">tồn &le; <span id="kpi-threshold-label">5</span> sản phẩm</span>
+            </div>
+          </div>
+
+          <div class="admin-stat-card" id="card-out-stock-kpi" style="cursor: pointer;" title="Nhấn để xem các sản phẩm đã hết hàng">
+            <div class="stat-top">
+              <span class="stat-label">Đã hết hàng</span>
+              <div class="stat-icon-box danger">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+            </div>
+            <div class="stat-bottom">
+              <span class="stat-number" id="kpi-out-stock-count" style="color: var(--admin-danger);">--</span>
+              <span class="stat-sub">tồn kho = 0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Thanh Tìm kiếm & Bộ lọc Tồn kho (admin-filter-card đồng bộ) -->
+        <div class="admin-filter-card">
+          <div class="admin-filter-inputs">
+            <!-- Tìm kiếm theo Tên hoặc SKU -->
+            <div class="admin-search-box" style="flex: 1.5; min-width: 260px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--admin-text-muted);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="filter-keyword" placeholder="Tìm theo tên sản phẩm hoặc mã SKU..." autocomplete="off">
+            </div>
+
+            <!-- Lọc theo Danh mục -->
+            <div class="admin-select-box" style="min-width: 180px;">
+              <select id="filter-category">
+                <option value="">-- Tất cả danh mục --</option>
+              </select>
+            </div>
+
+            <!-- Lọc theo Trạng thái tồn kho -->
+            <div class="admin-select-box" style="min-width: 170px;">
+              <select id="filter-status">
+                <option value="">-- Tất cả trạng thái --</option>
+                <option value="IN_STOCK">Còn hàng (Đầy đủ)</option>
+                <option value="LOW_STOCK">Sắp hết hàng (&le; ngưỡng)</option>
+                <option value="OUT_OF_STOCK">Hết hàng (Tồn = 0)</option>
+              </select>
+            </div>
+
+            <!-- Cấu hình ngưỡng cảnh báo -->
+            <div class="admin-select-box" style="min-width: 145px; display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; background: #ffffff; border: 1px solid var(--admin-border); border-radius: 8px; height: 38px;">
+              <span style="font-size: 12px; color: var(--admin-text-muted); white-space: nowrap;">Ngưỡng &le;</span>
+              <input type="number" id="filter-threshold" value="5" min="1" max="1000" style="width: 48px; border: none; outline: none; font-size: 13px; font-weight: 700; color: var(--admin-text-main); text-align: center; background: transparent;">
+            </div>
+
+            <!-- Nút Xóa bộ lọc -->
+            <button type="button" class="btn-admin-action secondary" id="btn-reset-filter" title="Xóa bộ lọc">
+              <span>Xóa bộ lọc</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Bảng danh sách tồn kho (op-table đồng bộ) -->
+        <div class="admin-table-card">
+          <div class="op-table-wrap">
+            <table class="op-table" id="inventory-table">
+              <thead>
+                <tr>
+                  <th style="width: 130px;">MÃ SKU</th>
+                  <th style="min-width: 280px;">SẢN PHẨM</th>
+                  <th style="width: 160px;">DANH MỤC</th>
+                  <th style="width: 150px; text-align: right;">GIÁ GỐC (CỐ ĐỊNH)</th>
+                  <th style="width: 130px; text-align: center;">TỒN KHO</th>
+                  <th style="width: 140px; text-align: center;">TRẠNG THÁI</th>
+                  <th style="width: 220px; text-align: center;">THAO TÁC KHO</th>
+                </tr>
+              </thead>
+              <tbody id="inventory-table-body">
+                <tr>
+                  <td colspan="7" style="text-align: center; padding: 40px; color: var(--admin-text-muted);">
+                    <span class="btn-op-spinner" style="width: 20px; height: 20px; border-width: 2px; margin-bottom: 8px;"></span>
+                    <div>Đang đồng bộ dữ liệu tồn kho từ cơ sở dữ liệu...</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Phân trang đồng bộ chuẩn ShopEase Admin -->
+          <div class="admin-table-footer">
+            <span class="table-summary-text" id="inventory-summary-lbl">Hiển thị 0 sản phẩm</span>
+            <div class="admin-pagination" id="inventory-pagination"></div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL 1: NHẬP HÀNG VÀO KHO (PUT /api/inventory/{id}/import) -->
+  <!-- ============================================================== -->
+  <div class="admin-modal-overlay" id="modal-import-stock">
+    <div class="admin-modal-box" style="max-width: 540px;">
+      <div class="admin-modal-header">
+        <h2 class="admin-modal-title" style="display: flex; align-items: center; gap: 8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          <span>Nhập thêm hàng vào kho</span>
+        </h2>
+        <button type="button" class="btn-modal-close" data-close="modal-import-stock">&times;</button>
+      </div>
+
+      <form id="form-import-stock" autocomplete="off">
+        <input type="hidden" id="import-product-id">
+
+        <div class="admin-modal-body">
+          <div class="modal-error-banner" id="import-error-banner">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span class="error-text"></span>
+          </div>
+
+          <!-- Preview sản phẩm -->
+          <div class="inv-product-preview-box">
+            <img id="import-prod-thumb" src="../assets/images/logo_shop.svg" alt="Product" class="inv-preview-thumb">
+            <div class="inv-preview-info">
+              <div class="inv-preview-title" id="import-prod-name">Tên sản phẩm</div>
+              <div class="inv-preview-sub">
+                <span>Mã SKU: <strong id="import-prod-sku">--</strong></span>
+                <span>Tồn kho hiện tại: <strong id="import-prod-stock" style="color: #2563eb;">0</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-form-group">
+            <label class="admin-label" for="import-quantity">Số lượng nhập thêm <span class="required" style="color: #dc2626;">*</span></label>
+            <input type="number" id="import-quantity" class="admin-form-input" min="1" step="1" placeholder="Ví dụ: 20" required style="font-size: 15px; font-weight: 700;">
+            <p style="margin: 5px 0 0; font-size: 11.5px; color: #64748b;">
+              Số lượng nhập phải là số nguyên dương (&gt; 0). Tồn mới sau khi nhập: <strong id="import-preview-new-stock" style="color: #059669;">--</strong>
+            </p>
+          </div>
+
+          <div class="admin-form-group" style="margin-bottom: 0;">
+            <label class="admin-label" for="import-note">Ghi chú nhập hàng</label>
+            <textarea id="import-note" class="admin-form-input" rows="3" placeholder="Ví dụ: Nhập bổ sung đợt mới từ nhà cung cấp..."></textarea>
+          </div>
+        </div>
+
+        <div class="admin-modal-footer">
+          <button type="button" class="btn-admin-action secondary" data-close="modal-import-stock">Hủy</button>
+          <button type="submit" id="btn-submit-import" class="btn-admin-primary" style="padding: 8px 18px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Xác nhận nhập kho</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL 2: ĐIỀU CHỈNH TỒN KHO SAU KIỂM KÊ (PUT /api/inventory/{id}/adjust) -->
+  <!-- ============================================================== -->
+  <div class="admin-modal-overlay" id="modal-adjust-stock">
+    <div class="admin-modal-box" style="max-width: 540px;">
+      <div class="admin-modal-header">
+        <h2 class="admin-modal-title" style="display: flex; align-items: center; gap: 8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
+          <span>Kiểm kê & Điều chỉnh tồn kho</span>
+        </h2>
+        <button type="button" class="btn-modal-close" data-close="modal-adjust-stock">&times;</button>
+      </div>
+
+      <form id="form-adjust-stock" autocomplete="off">
+        <input type="hidden" id="adjust-product-id">
+
+        <div class="admin-modal-body">
+          <div class="modal-error-banner" id="adjust-error-banner">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span class="error-text"></span>
+          </div>
+
+          <!-- Preview sản phẩm -->
+          <div class="inv-product-preview-box">
+            <img id="adjust-prod-thumb" src="../assets/images/logo_shop.svg" alt="Product" class="inv-preview-thumb">
+            <div class="inv-preview-info">
+              <div class="inv-preview-title" id="adjust-prod-name">Tên sản phẩm</div>
+              <div class="inv-preview-sub">
+                <span>Mã SKU: <strong id="adjust-prod-sku">--</strong></span>
+                <span>Tồn trên hệ thống: <strong id="adjust-prod-stock" style="color: #7c3aed;">0</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-form-group">
+            <label class="admin-label" for="adjust-quantity">Số lượng tồn kho thực tế <span class="required" style="color: #dc2626;">*</span></label>
+            <input type="number" id="adjust-quantity" class="admin-form-input" min="0" step="1" placeholder="Ví dụ: 15" required style="font-size: 15px; font-weight: 700;">
+            <p style="margin: 5px 0 0; font-size: 11.5px; color: #64748b;">
+              Số lượng kiểm kê thực tế tại kho (&ge; 0). Chênh lệch: <strong id="adjust-preview-diff" style="color: #475569;">0</strong>
+            </p>
+          </div>
+
+          <div class="admin-form-group" style="margin-bottom: 0;">
+            <label class="admin-label" for="adjust-note">Lý do điều chỉnh kiểm kê <span class="required" style="color: #dc2626;">*</span></label>
+            <textarea id="adjust-note" class="admin-form-input" rows="3" required placeholder="Ví dụ: Kiểm kê định kỳ tháng 11, phát hiện hư hỏng / chênh lệch..."></textarea>
+          </div>
+        </div>
+
+        <div class="admin-modal-footer">
+          <button type="button" class="btn-admin-action secondary" data-close="modal-adjust-stock">Hủy</button>
+          <button type="submit" id="btn-submit-adjust" class="btn-admin-primary" style="padding: 8px 18px; background: #7c3aed; border-color: #7c3aed;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Lưu kết quả kiểm kê</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL 3: NHẬT KÝ BIẾN ĐỘNG KHO (GET /api/inventory/{id}/logs) -->
+  <!-- ============================================================== -->
+  <div class="admin-modal-overlay" id="modal-stock-logs">
+    <div class="admin-modal-box" style="max-width: 860px;">
+      <div class="admin-modal-header">
+        <h2 class="admin-modal-title" style="display: flex; align-items: center; gap: 8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>Nhật ký biến động kho</span>
+        </h2>
+        <button type="button" class="btn-modal-close" data-close="modal-stock-logs">&times;</button>
+      </div>
+
+      <div class="admin-modal-body" style="padding: 20px;">
+        <!-- Header tóm tắt sản phẩm -->
+        <div class="inv-product-preview-box" style="margin-bottom: 16px;">
+          <div class="inv-preview-info">
+            <div class="inv-preview-title" id="logs-prod-name">Tên sản phẩm</div>
+            <div class="inv-preview-sub">
+              <span>Mã SP: <strong id="logs-prod-id">--</strong></span>
+              <span>Tồn kho hiện tại: <strong id="logs-prod-current-stock" style="color: #0284c7; font-size: 13px;">0</strong> đơn vị</span>
+            </div>
+          </div>
+          <button type="button" class="btn-admin-action secondary" id="btn-refresh-logs" style="padding: 5px 12px; font-size: 12px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            <span>Làm mới log</span>
+          </button>
+        </div>
+
+        <!-- Bảng danh sách log (op-table đồng bộ) -->
+        <div class="op-table-wrap" style="max-height: 380px; overflow-y: auto; border: 1px solid var(--admin-border); border-radius: 8px;">
+          <table class="op-table" style="font-size: 12.5px;">
+            <thead>
+              <tr>
+                <th style="min-width: 140px;">THỜI GIAN</th>
+                <th style="min-width: 130px; text-align: center;">LOẠI BIẾN ĐỘNG</th>
+                <th style="min-width: 100px; text-align: center;">SỐ LƯỢNG</th>
+                <th style="min-width: 120px; text-align: center;">TỒN TRƯỚC &rarr; SAU</th>
+                <th style="min-width: 200px;">GHI CHÚ / ĐƠN HÀNG</th>
+              </tr>
+            </thead>
+            <tbody id="logs-table-body">
+              <tr>
+                <td colspan="5" style="text-align: center; padding: 32px 16px; color: var(--admin-text-muted);">
+                  Đang tải nhật ký...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Phân trang log -->
+        <div class="admin-pagination-bar" style="border: none; padding: 14px 0 0; background: transparent;">
+          <span class="admin-pagination-info" id="logs-pagination-info">Hiển thị 0 log</span>
+          <div class="admin-pagination-btns" id="logs-pagination-controls"></div>
+        </div>
+      </div>
+
+      <div class="admin-modal-footer">
+        <button type="button" class="btn-admin-action secondary" data-close="modal-stock-logs">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Thư viện Axios & App Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/pages/admin-inventory.js"></script>
+</body>
+</html>

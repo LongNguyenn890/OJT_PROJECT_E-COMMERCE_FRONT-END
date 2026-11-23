@@ -1,0 +1,545 @@
+/* ==========================================================
+   BÁO CÁO & THỐNG KÊ DOANH THU (ADMIN REPORTS & ANALYTICS)
+   Đồng bộ tiêu chuẩn giao diện Quản trị viên ShopEase
+   ========================================================== */
+
+/* Thanh bộ lọc thời gian trong Header Card */
+.reports-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--admin-border-subtle);
+}
+
+.reports-presets-group {
+  display: inline-flex;
+  align-items: center;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 9px;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.report-preset-btn {
+  border: none;
+  background: transparent;
+  color: #475569;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 13px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.report-preset-btn:hover {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.report-preset-btn.active {
+  background: #ffffff;
+  color: var(--admin-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  font-weight: 700;
+}
+
+.reports-custom-date-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.report-date-input-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  padding: 0 10px;
+  height: 36px;
+  font-size: 13px;
+  color: var(--admin-text-main);
+  box-sizing: border-box;
+}
+
+.report-date-input-wrap span {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.report-date-input {
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #1e293b;
+  background: transparent;
+  cursor: pointer;
+}
+
+.report-date-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.report-date-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+.btn-apply-dates {
+  height: 36px;
+  padding: 0 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: 8px;
+  background: var(--admin-primary);
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-apply-dates:hover {
+  background: #001f70;
+  transform: translateY(-1px);
+}
+
+.report-current-range-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Chi tiết phụ trong thẻ chỉ số (Breakdown Pills) */
+.stat-breakdown-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--admin-border-subtle);
+  font-size: 11.5px;
+  color: #64748b;
+  flex-wrap: wrap;
+}
+
+.stat-pill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f8fafc;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  font-weight: 600;
+}
+
+.stat-pill-tag.online {
+  color: #2563eb;
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.stat-pill-tag.pos {
+  color: #0891b2;
+  border-color: #a5f3fc;
+  background: #ecfeff;
+}
+
+.stat-pill-tag.success {
+  color: #16a34a;
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.stat-pill-tag.pending {
+  color: #d97706;
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+/* Lưới Biểu Đồ 2 Cột */
+.reports-charts-grid {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1024px) {
+  .reports-charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.report-chart-card {
+  background: var(--admin-card-bg);
+  border-radius: var(--admin-radius);
+  border: 1px solid var(--admin-border-subtle);
+  box-shadow: var(--admin-shadow);
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+}
+
+.report-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.report-chart-title-wrap h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--admin-text-main);
+  margin: 0 0 3px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.report-chart-title-wrap p {
+  font-size: 12px;
+  color: var(--admin-text-muted);
+  margin: 0;
+}
+
+.report-chart-stats-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.report-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  font-size: 12px;
+  font-weight: 500;
+  color: #334155;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.report-stat-chip.peak {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.report-stat-chip.avg {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #047857;
+}
+
+.report-stat-chip svg {
+  flex-shrink: 0;
+}
+
+.report-stat-chip strong {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.chart-toggle-views {
+  display: inline-flex;
+  align-items: center;
+  background: #f1f5f9;
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.chart-view-btn {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chart-view-btn:hover {
+  color: #1e293b;
+}
+
+.chart-view-btn.active {
+  background: #ffffff;
+  color: var(--admin-primary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.chart-canvas-container {
+  position: relative;
+  width: 100%;
+  min-height: 290px;
+  max-height: 330px;
+  flex: 1;
+}
+
+/* Thống kê đơn theo trạng thái (Bên dưới Doughnut chart) */
+.status-distribution-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--admin-border-subtle);
+}
+
+.status-dist-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 12px;
+  border: 1px solid #f1f5f9;
+  transition: all 0.18s ease;
+}
+
+.status-dist-item:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.status-dist-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 130px;
+}
+
+.status-dist-bar-wrap {
+  flex: 1;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 99px;
+  overflow: hidden;
+  margin: 0 4px;
+}
+
+.status-dist-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.status-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dist-name {
+  font-weight: 600;
+  color: #334155;
+}
+
+.status-dist-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-dist-count {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.status-dist-amount {
+  color: #64748b;
+  font-size: 11.5px;
+}
+
+.status-dist-pct {
+  display: inline-flex;
+  min-width: 42px;
+  text-align: right;
+  justify-content: flex-end;
+  font-weight: 600;
+  color: var(--admin-primary);
+}
+
+/* Bảng Top Sản phẩm Bán chạy */
+.top-products-card {
+  background: var(--admin-card-bg);
+  border-radius: var(--admin-radius);
+  border: 1px solid var(--admin-border-subtle);
+  box-shadow: var(--admin-shadow);
+  margin-bottom: 30px;
+  overflow: hidden;
+}
+
+.top-products-header {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--admin-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.top-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.top-rank-badge.rank-1 {
+  background: linear-gradient(135deg, #fef08a 0%, #facc15 100%);
+  color: #854d0e;
+  box-shadow: 0 2px 6px rgba(234, 179, 8, 0.35);
+}
+
+.top-rank-badge.rank-2 {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  color: #334155;
+  box-shadow: 0 2px 6px rgba(148, 163, 184, 0.3);
+}
+
+.top-rank-badge.rank-3 {
+  background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
+  color: #7c2d12;
+  box-shadow: 0 2px 6px rgba(249, 115, 22, 0.3);
+}
+
+.top-rank-badge.rank-other {
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 11px;
+}
+
+.product-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.product-row-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  flex-shrink: 0;
+}
+
+.product-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.product-row-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 320px;
+}
+
+.product-row-sub {
+  font-size: 11.5px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.progress-bar-wrap {
+  width: 100%;
+  max-width: 110px;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* Skeleton Loading cho báo cáo */
+.report-skeleton {
+  animation: reportPulse 1.5s ease-in-out infinite;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  border-radius: 6px;
+}
+
+@keyframes reportPulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .reports-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .reports-presets-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .reports-custom-date-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .product-row-name {
+    max-width: 180px;
+  }
+}

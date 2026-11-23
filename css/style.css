@@ -1075,3 +1075,22 @@ tbody tr:hover {
 .se-breadcrumb-current span {
   color: #0f172a;
 }
+
+/* User Tool & Dropdown Hover Support */
+.user-tool-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.user-tool-wrapper:hover .user-dropdown-menu,
+.user-tool-wrapper.active .user-dropdown-menu,
+.user-tool-wrapper:focus-within .user-dropdown-menu {
+  display: flex !important;
+}
+
+.user-tool-wrapper:hover .user-caret,
+.user-tool-wrapper.active .user-caret,
+.user-tool-wrapper:focus-within .user-caret {
+  transform: rotate(180deg);
+}

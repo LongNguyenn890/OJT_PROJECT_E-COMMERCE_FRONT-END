@@ -574,6 +574,10 @@ function handleOrdersLoadError() {
       </div>
     `;
   }
+  if (dashRevenueChartInstance) {
+    dashRevenueChartInstance.destroy();
+    dashRevenueChartInstance = null;
+  }
   const subOrders = document.getElementById("dash-kpi-orders-sub");
   if (subOrders) subOrders.textContent = "Chưa kết nối máy chủ";
   const donutSub = document.getElementById("dash-donut-sub");
@@ -877,11 +881,21 @@ function processOrdersData(data, skipTableRender = false, isFilterSwitch = false
     const pEl = document.getElementById(pctId);
     if (pEl) pEl.textContent = `${pct}%`;
   };
+  const setBar = (barId, pct) => {
+    const bEl = document.getElementById(barId);
+    if (bEl) bEl.style.width = `${pct}%`;
+  };
+
   setStat("stat-count-pending", "stat-pct-pending", countPending, pctPending);
+  setBar("stat-bar-pending", pctPending);
   setStat("stat-count-confirmed", "stat-pct-confirmed", countConfirmed, pctConfirmed);
+  setBar("stat-bar-confirmed", pctConfirmed);
   setStat("stat-count-shipping", "stat-pct-shipping", countShipping, pctShipping);
+  setBar("stat-bar-shipping", pctShipping);
   setStat("stat-count-completed", "stat-pct-completed", countCompleted, pctCompleted);
+  setBar("stat-bar-completed", pctCompleted);
   setStat("stat-count-cancelled", "stat-pct-cancelled", countCancelled, pctCancelled);
+  setBar("stat-bar-cancelled", pctCancelled);
 
   // Cập nhật dữ liệu tương tác hover
   segmentData.completed.count = `${countCompleted} đơn`;
@@ -982,29 +996,29 @@ function updateDonutSvgArcs(stats) {
   setArc("donut-seg-cancelled", lenCancelled, offCancelled);
 }
 
+let dashRevenueChartInstance = null;
+
 /**
- * Cập nhật xu hướng doanh thu & vẽ biểu đồ cột động theo kỳ (FR-037, FR-041)
+ * Cập nhật xu hướng doanh thu & vẽ biểu đồ cột động theo kỳ (Sử dụng Chart.js hiện đại)
  */
 function updateRevenueTrendBars(items) {
-  const container = document.querySelector("#dash-revenue-chart .chart-bars-container");
+  const canvas = document.getElementById("chart-dash-revenue");
   const footerAvg = document.querySelector(".analytic-card-footer strong");
 
+  // Xử lý khi không có đơn hàng nào
   if (!items || items.length === 0) {
-    if (footerAvg) {
-      footerAvg.textContent = "0 ₫";
+    if (footerAvg) footerAvg.textContent = "0 ₫";
+    if (dashRevenueChartInstance) {
+      dashRevenueChartInstance.destroy();
+      dashRevenueChartInstance = null;
     }
-    if (container) {
-      const now = new Date();
-      const dd = String(now.getDate()).padStart(2, "0");
-      const mm = String(now.getMonth() + 1).padStart(2, "0");
-      const todayLabel = `${dd}/${mm}`;
-
-      container.innerHTML = `
-        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; color: var(--admin-text-muted); padding: 40px 0;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="margin-bottom: 6px; color: #94a3b8;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-          <div style="font-size: 13px; font-weight: 500;">Chưa phát sinh doanh thu trong kỳ này</div>
-        </div>
-      `;
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.font = "500 13px 'Inter', sans-serif";
+      ctx.fillStyle = "#94a3b8";
+      ctx.textAlign = "center";
+      ctx.fillText("Chưa phát sinh doanh thu trong kỳ này", canvas.width / 2, canvas.height / 2);
     }
     return;
   }
@@ -1037,9 +1051,6 @@ function updateRevenueTrendBars(items) {
     displaySlots = sortedDates.slice(-7).map((d) => dateMap[d]);
   }
 
-  // Tối thiểu 40M làm mốc tỷ lệ tương ứng trục Y
-  const maxRev = Math.max(...displaySlots.map((s) => s.rev), 40000000);
-
   // Tính doanh thu trung bình theo kỳ
   const totalCompletedRev = items.reduce((sum, o) => {
     return normalizeStatus(o.status) === "COMPLETED" ? sum + Number(o.total_amount || o.total_price || 0) : sum;
@@ -1047,44 +1058,158 @@ function updateRevenueTrendBars(items) {
   const avgRev = Math.round(totalCompletedRev / (displaySlots.length || 7));
 
   if (footerAvg) {
-    footerAvg.textContent = avgRev > 0 ? `${(avgRev / 1000000).toFixed(1)}M ₫` : "0 ₫";
+    footerAvg.textContent = avgRev > 0 ? formatCurrency(avgRev) : "0 ₫";
   }
 
-  if (container && displaySlots.length > 0) {
-    let highestIdx = 0;
-    let highestRev = -1;
-    displaySlots.forEach((slot, idx) => {
-      if (slot.rev > highestRev) {
-        highestRev = slot.rev;
-        highestIdx = idx;
-      }
-    });
+  if (!canvas || typeof Chart === "undefined") return;
 
-    container.innerHTML = displaySlots.map((slot, idx) => {
-      const isPeak = idx === highestIdx && slot.rev > 0;
-      const heightPct = slot.rev > 0 ? Math.min(94, Math.max(14, Math.round((slot.rev / maxRev) * 88))) : 8;
-      const valStr = (slot.rev / 1000000).toFixed(1) + "M";
-      const tooltip = `${slot.label}: ${formatCurrency(slot.rev)} (${slot.count} đơn)`;
-
-      const pillStyle = isPeak
-        ? `height: ${heightPct}%; background: linear-gradient(180deg, #00288e 0%, #1e40af 100%);`
-        : `height: ${heightPct}%;`;
-      const valStyle = isPeak
-        ? `style="color: var(--admin-primary-dark); font-weight: 700;"`
-        : ``;
-      const labelStyle = isPeak
-        ? `style="color: var(--admin-primary-dark); font-weight: 700;"`
-        : ``;
-
-      return `
-        <div class="chart-bar-group" title="${escapeHtml(tooltip)}">
-          <span class="chart-bar-val" ${valStyle}>${valStr}</span>
-          <div class="chart-bar-pill" style="${pillStyle}"></div>
-          <span class="chart-bar-label" ${labelStyle}>${escapeHtml(slot.label)}</span>
-        </div>
-      `;
-    }).join("");
+  if (dashRevenueChartInstance) {
+    dashRevenueChartInstance.destroy();
+    dashRevenueChartInstance = null;
   }
+
+  const labels = displaySlots.map((s) => s.label);
+  const revData = displaySlots.map((s) => s.rev);
+  const countData = displaySlots.map((s) => s.count);
+
+  dashRevenueChartInstance = new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          type: "bar",
+          label: "Doanh thu",
+          data: revData,
+          backgroundColor: (c) => {
+            const chart = c.chart;
+            const { ctx, chartArea } = chart;
+            if (!chartArea) return "#2563eb";
+            const grad = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            grad.addColorStop(0, "#2563eb");
+            grad.addColorStop(1, "rgba(37, 99, 235, 0.2)");
+            return grad;
+          },
+          hoverBackgroundColor: (c) => {
+            const chart = c.chart;
+            const { ctx, chartArea } = chart;
+            if (!chartArea) return "#1d4ed8";
+            const grad = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            grad.addColorStop(0, "#1d4ed8");
+            grad.addColorStop(1, "rgba(29, 78, 216, 0.35)");
+            return grad;
+          },
+          borderRadius: { topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0 },
+          barPercentage: 0.58,
+          categoryPercentage: 0.7,
+          yAxisID: "yRev",
+          order: 2,
+        },
+        {
+          type: "line",
+          label: "Số đơn hàng",
+          data: countData,
+          borderColor: "#10b981",
+          borderWidth: 2.6,
+          tension: 0.4,
+          fill: true,
+          backgroundColor: (c) => {
+            const chart = c.chart;
+            const { ctx, chartArea } = chart;
+            if (!chartArea) return "transparent";
+            const grad = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            grad.addColorStop(0, "rgba(16, 185, 129, 0.18)");
+            grad.addColorStop(1, "rgba(16, 185, 129, 0.0)");
+            return grad;
+          },
+          pointBackgroundColor: "#10b981",
+          pointBorderColor: "#ffffff",
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 7,
+          pointHoverBackgroundColor: "#059669",
+          pointHoverBorderColor: "#ffffff",
+          pointHoverBorderWidth: 2.5,
+          yAxisID: "yCount",
+          order: 1,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: "index",
+        intersect: false,
+      },
+      plugins: {
+        legend: {
+          display: false,
+        },
+        tooltip: {
+          backgroundColor: "rgba(15, 23, 42, 0.95)",
+          titleFont: { family: "'Inter', sans-serif", size: 12.5, weight: 700 },
+          bodyFont: { family: "'Inter', sans-serif", size: 12 },
+          padding: 12,
+          cornerRadius: 8,
+          borderColor: "rgba(255, 255, 255, 0.12)",
+          borderWidth: 1,
+          boxPadding: 4,
+          callbacks: {
+            title: (items) => {
+              const idx = items[0]?.dataIndex;
+              return displaySlots[idx] ? `Ngày ${displaySlots[idx].dateStr || displaySlots[idx].label}` : "";
+            },
+            label: (context) => {
+              const label = context.dataset.label || "";
+              const val = context.parsed.y || 0;
+              if (context.dataset.yAxisID === "yCount") {
+                return ` ${label}: ${val.toLocaleString("vi-VN")} đơn`;
+              }
+              return ` ${label}: ${formatCurrency(val)}`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: {
+            font: { family: "'Inter', sans-serif", size: 11, weight: 600 },
+            color: "#64748b",
+          },
+        },
+        yRev: {
+          position: "left",
+          beginAtZero: true,
+          grid: {
+            color: "rgba(241, 245, 249, 0.9)",
+            borderDash: [4, 4],
+          },
+          ticks: {
+            font: { family: "'Inter', sans-serif", size: 11 },
+            color: "#64748b",
+            callback: (v) => {
+              if (v >= 1000000) return (v / 1000000).toFixed(0) + " tr";
+              if (v >= 1000) return (v / 1000).toFixed(0) + " k";
+              return v;
+            },
+          },
+        },
+        yCount: {
+          position: "right",
+          beginAtZero: true,
+          grid: { display: false },
+          ticks: {
+            font: { family: "'Inter', sans-serif", size: 11 },
+            color: "#10b981",
+            precision: 0,
+            callback: (v) => `${v} đơn`,
+          },
+        },
+      },
+    },
+  });
 }
 
 /**
