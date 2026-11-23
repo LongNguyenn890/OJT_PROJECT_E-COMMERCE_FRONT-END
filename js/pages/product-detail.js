@@ -27,6 +27,9 @@ const detailState = {
   imagesList: [],
 };
 
+let detailPhotoLightboxPreviousOverflow = "";
+let detailPhotoLightboxTrigger = null;
+
 // ==========================================================
 // 1. KHỞI TẠO VÀ TẢI THÔNG TIN CHI TIẾT SẢN PHẨM TỪ API
 // ==========================================================
@@ -70,6 +73,11 @@ async function initProductDetailPage() {
     renderRecentlyViewedSection(product.id);
     saveCurrentProductToRecent(product);
     setupEventListeners(product);
+    await loadProductReviews(product.id);
+    if (params.get("review") === "1") {
+      document.querySelector('[data-tab="tab-reviews"]')?.click();
+      document.getElementById("tab-reviews")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   } catch (error) {
     if (loadingBox) loadingBox.hidden = true;
     if (contentBox) contentBox.hidden = true;
@@ -212,6 +220,8 @@ function renderProductInfo(product) {
     if (saveTipElem) saveTipElem.hidden = true;
   }
 
+  renderProductRating(product.average_rating, product.review_count);
+
   // Tình trạng kho: Chỉ báo "Còn hàng" hoặc "Hết hàng" (không hiện số lượng)
   const stock = Number(product.stock_quantity || 0);
   const stockBadge = document.getElementById("stock-status-badge");
@@ -275,6 +285,276 @@ function renderProductInfo(product) {
   }
 }
 
+function renderProductRating(averageRating, reviewCount) {
+  const average = Number(averageRating || 0);
+  const count = Number(reviewCount || 0);
+  const averageElem = document.getElementById("product-average-rating");
+  const countElem = document.getElementById("product-review-count");
+  const tabCount = document.getElementById("reviews-tab-count");
+  if (averageElem) averageElem.textContent = count ? average.toFixed(1) : "0";
+  if (countElem) countElem.textContent = count ? `(${count} đánh giá)` : "(Chưa có đánh giá)";
+  if (tabCount) tabCount.textContent = String(count);
+}
+
+async function loadProductReviews(productId) {
+  const comments = document.getElementById("reviews-comments-list");
+  const accessMessage = document.getElementById("review-access-message");
+  if (comments) comments.innerHTML = `<p class="reviews-empty-state">Đang tải đánh giá…</p>`;
+
+  try {
+    const result = await api.get(`/products/${productId}/reviews`, { page: 1, page_size: 50 });
+    const count = Number(result.review_count || 0);
+    const average = Number(result.average_rating || 0);
+    renderProductRating(average, count);
+
+    const averageElem = document.getElementById("reviews-average");
+    const totalElem = document.getElementById("reviews-total");
+    if (averageElem) averageElem.textContent = count ? average.toFixed(1) : "0";
+    if (totalElem) totalElem.textContent = count ? `Dựa trên ${count} đánh giá thực tế` : "Chưa có đánh giá";
+    const summaryStars = document.querySelector(".review-stars-big");
+    if (summaryStars) {
+      const rounded = count ? Math.max(0, Math.min(5, Math.round(average))) : 0;
+      summaryStars.textContent = `${"★".repeat(rounded)}${"☆".repeat(5 - rounded)}`;
+    }
+
+    const distribution = result.rating_distribution || {};
+    const bars = document.getElementById("reviews-rating-bars");
+    if (bars) {
+      bars.innerHTML = [5, 4, 3, 2, 1].map(rating => {
+        const ratingCount = Number(distribution[rating] || 0);
+        const width = count ? Math.round(ratingCount * 100 / count) : 0;
+        return `<div class="review-bar-row">
+          <span class="bar-star-label">${rating} sao</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div>
+          <span class="bar-count">${ratingCount}</span>
+        </div>`;
+      }).join("");
+    }
+
+    if (comments) {
+      const reviews = result.items || [];
+      comments.innerHTML = reviews.length ? reviews.map(review => {
+        const date = new Date(review.created_at);
+        const dateLabel = Number.isNaN(date.getTime()) ? "" : date.toLocaleString("vi-VN", { dateStyle: "medium", timeStyle: "short" });
+        const rating = Math.max(1, Math.min(5, Number(review.rating || 0)));
+        return `<article class="review-comment-card">
+          <div class="reviewer-header">
+            <span class="reviewer-name">${escapeHTML(review.customer_name || "Khách hàng")} <span class="verified-reviewer">✓ Đã mua hàng</span></span>
+            <time class="review-date" datetime="${escapeHTML(review.created_at || "")}">${escapeHTML(dateLabel)}</time>
+          </div>
+          <div class="review-comment-stars" aria-label="${rating} trên 5 sao">${"★".repeat(rating)}${"☆".repeat(5 - rating)}</div>
+          <p class="review-comment-text">${escapeHTML(review.comment)}</p>
+          ${review.image_url ? `<button type="button" class="review-photo-open" data-image-url="${escapeHTML(resolveImageUrl(review.image_url))}" data-image-alt="Ảnh đánh giá của ${escapeHTML(review.customer_name || "khách hàng")}" aria-label="Phóng to ảnh đánh giá"><img class="review-photo" src="${escapeHTML(resolveImageUrl(review.image_url))}" alt="Ảnh đính kèm của ${escapeHTML(review.customer_name || "khách hàng")}" loading="lazy"></button>` : ""}
+        </article>`;
+      }).join("") : `<p class="reviews-empty-state">Sản phẩm chưa có đánh giá. Hãy là người đầu tiên chia sẻ trải nghiệm.</p>`;
+    }
+  } catch (error) {
+    if (comments) comments.innerHTML = `<p class="reviews-empty-state">Chưa thể tải đánh giá lúc này.</p>`;
+  }
+
+  if (!localStorage.getItem("token")) {
+    if (accessMessage) {
+      const currentUrl = window.location.pathname + window.location.search;
+      accessMessage.innerHTML = `Đăng nhập và mua sản phẩm để đánh giá. <a href="login.html?redirect=${encodeURIComponent(currentUrl)}">Đăng nhập</a>`;
+    }
+    return;
+  }
+
+  try {
+    const access = await api.get(`/products/${productId}/reviews/mine`);
+    if (access.review) {
+      if (accessMessage) {
+        accessMessage.innerHTML = `Bạn đã gửi đánh giá cho sản phẩm này. <button type="button" class="review-delete-btn" id="delete-product-review">Xóa đánh giá</button>`;
+      }
+      return;
+    }
+    if (access.eligible) {
+      if (accessMessage) accessMessage.hidden = true;
+      const form = document.getElementById("product-review-form");
+      if (form) form.hidden = false;
+    } else if (accessMessage) {
+      accessMessage.textContent = "Bạn có thể đánh giá sau khi đơn hàng chứa sản phẩm này được giao thành công.";
+    }
+  } catch (error) {
+    if (accessMessage) accessMessage.textContent = "Chỉ khách hàng có đơn hàng đã giao mới có thể đánh giá sản phẩm.";
+  }
+}
+
+function setupReviewEvents(productId) {
+  const ratingInput = document.getElementById("review-rating-input");
+  const ratingLabel = document.getElementById("review-rating-label");
+  const form = document.getElementById("product-review-form");
+  const formMessage = document.getElementById("review-form-message");
+  const accessMessage = document.getElementById("review-access-message");
+  const imageInput = document.getElementById("review-image-input");
+  const imagePreviewWrap = document.getElementById("review-image-preview-wrap");
+  const imagePreview = document.getElementById("review-image-preview");
+  const imageName = document.getElementById("review-image-name");
+  const imageRemove = document.getElementById("review-image-remove");
+
+  const clearReviewImage = () => {
+    if (imageInput) imageInput.value = "";
+    if (imagePreview) {
+      if (imagePreview.src.startsWith("blob:")) URL.revokeObjectURL(imagePreview.src);
+      imagePreview.removeAttribute("src");
+    }
+    if (imageName) imageName.textContent = "";
+    if (imagePreviewWrap) imagePreviewWrap.hidden = true;
+  };
+
+  imageInput?.addEventListener("change", () => {
+    const image = imageInput.files?.[0];
+    if (!image) {
+      clearReviewImage();
+      return;
+    }
+    if (image.size > 5 * 1024 * 1024) {
+      clearReviewImage();
+      if (formMessage) formMessage.textContent = "Ảnh đính kèm không được vượt quá 5MB.";
+      return;
+    }
+    if (imagePreview) imagePreview.src = URL.createObjectURL(image);
+    if (imageName) imageName.textContent = image.name;
+    if (imagePreviewWrap) imagePreviewWrap.hidden = false;
+    if (formMessage) formMessage.textContent = "";
+  });
+  imageRemove?.addEventListener("click", clearReviewImage);
+
+  accessMessage?.addEventListener("click", event => {
+    const deleteButton = event.target.closest("#delete-product-review");
+    if (!deleteButton) return;
+
+    showConfirmModal({
+      title: "Xóa đánh giá sản phẩm?",
+      message: "Đánh giá và ảnh đính kèm (nếu có) sẽ bị xóa khỏi sản phẩm.",
+      confirmText: "Xóa đánh giá",
+      cancelText: "Giữ đánh giá",
+      type: "danger",
+      onConfirm: async () => {
+        deleteButton.disabled = true;
+        try {
+          await api.delete(`/products/${productId}/reviews/mine`);
+          if (typeof showToast === "function") showToast("Đã xóa đánh giá sản phẩm.", "success");
+          await loadProductReviews(productId);
+        } catch (error) {
+          if (deleteButton.isConnected) deleteButton.disabled = false;
+          if (typeof showToast === "function") showToast(error.message || "Không thể xóa đánh giá.", "error");
+        }
+      }
+    });
+  });
+
+  document.querySelectorAll(".review-star-choice").forEach(button => {
+    button.addEventListener("click", () => {
+      const rating = Number(button.dataset.rating);
+      if (ratingInput) ratingInput.value = String(rating);
+      document.querySelectorAll(".review-star-choice").forEach(choice => {
+        const selected = Number(choice.dataset.rating) <= rating;
+        choice.classList.toggle("selected", selected);
+        choice.setAttribute("aria-pressed", String(Number(choice.dataset.rating) === rating));
+      });
+      if (ratingLabel) ratingLabel.textContent = `${rating} sao`;
+    });
+  });
+
+  form?.addEventListener("submit", async event => {
+    event.preventDefault();
+    const rating = Number(ratingInput?.value || 0);
+    const comment = document.getElementById("review-comment-input")?.value.trim() || "";
+    if (!rating) {
+      if (formMessage) formMessage.textContent = "Vui lòng chọn số sao.";
+      return;
+    }
+    if (!comment) {
+      if (formMessage) formMessage.textContent = "Vui lòng nhập nhận xét.";
+      return;
+    }
+
+    const submit = form.querySelector(".review-submit-btn");
+    if (submit) submit.disabled = true;
+    if (formMessage) formMessage.textContent = "Đang gửi đánh giá…";
+    try {
+      const formData = new FormData();
+      formData.append("rating", String(rating));
+      formData.append("comment", comment);
+      const image = imageInput?.files?.[0];
+      if (image) formData.append("image", image);
+      await api.post(`/products/${productId}/reviews`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      form.reset();
+      clearReviewImage();
+      if (ratingInput) ratingInput.value = "";
+      document.querySelectorAll(".review-star-choice").forEach(choice => {
+        choice.classList.remove("selected");
+        choice.setAttribute("aria-pressed", "false");
+      });
+      if (ratingLabel) ratingLabel.textContent = "Chọn số sao";
+      form.hidden = true;
+      const accessMessage = document.getElementById("review-access-message");
+      if (accessMessage) {
+        accessMessage.hidden = false;
+        accessMessage.textContent = "Đã gửi đánh giá. Cảm ơn bạn đã chia sẻ!";
+      }
+      await loadProductReviews(productId);
+      if (accessMessage) {
+        accessMessage.hidden = false;
+        accessMessage.textContent = "Bạn đã gửi đánh giá cho sản phẩm này. Cảm ơn bạn đã chia sẻ!";
+      }
+    } catch (error) {
+      if (formMessage) formMessage.textContent = error.message || "Không thể gửi đánh giá.";
+    } finally {
+      if (submit) submit.disabled = false;
+    }
+  });
+}
+
+function openDetailPhotoLightbox(url, alt, trigger = document.activeElement) {
+  const modal = document.getElementById("detail-image-lightbox");
+  const image = document.getElementById("detail-image-lightbox-image");
+  if (!modal || !image || !url) return;
+
+  if (modal.hidden) detailPhotoLightboxPreviousOverflow = document.body.style.overflow;
+  detailPhotoLightboxTrigger = trigger instanceof HTMLElement ? trigger : null;
+  image.src = url;
+  image.alt = alt || "Ảnh sản phẩm";
+  modal.hidden = false;
+  document.body.style.overflow = "hidden";
+  document.getElementById("detail-image-lightbox-close")?.focus();
+}
+
+function closeDetailPhotoLightbox() {
+  const modal = document.getElementById("detail-image-lightbox");
+  const image = document.getElementById("detail-image-lightbox-image");
+  if (!modal || modal.hidden) return;
+
+  modal.hidden = true;
+  image?.removeAttribute("src");
+  document.body.style.overflow = detailPhotoLightboxPreviousOverflow;
+  if (detailPhotoLightboxTrigger?.isConnected) detailPhotoLightboxTrigger.focus();
+  detailPhotoLightboxTrigger = null;
+}
+
+function setupDetailPhotoLightbox() {
+  const modal = document.getElementById("detail-image-lightbox");
+  const comments = document.getElementById("reviews-comments-list");
+  if (!modal) return;
+
+  comments?.addEventListener("click", event => {
+    const trigger = event.target.closest(".review-photo-open");
+    if (!trigger) return;
+    event.preventDefault();
+    openDetailPhotoLightbox(trigger.dataset.imageUrl, trigger.dataset.imageAlt, trigger);
+  });
+
+  document.getElementById("detail-image-lightbox-close")?.addEventListener("click", closeDetailPhotoLightbox);
+  modal.querySelector(".detail-image-lightbox-backdrop")?.addEventListener("click", closeDetailPhotoLightbox);
+  modal.querySelector(".detail-image-lightbox-dialog")?.addEventListener("click", event => event.stopPropagation());
+  window.addEventListener("keydown", event => {
+    if (event.key === "Escape" && !modal.hidden) closeDetailPhotoLightbox();
+  });
+}
+
 // ==========================================================
 // 5. RENDER NỘI DUNG TABS (MÔ TẢ, THÔNG SỐ)
 // ==========================================================
@@ -330,6 +610,9 @@ function renderRelatedProducts(related) {
       ? resolveImageUrl(item.product_images[0].image_url)
       : asset("logo_shop.svg");
     const catName = item.category?.name || "Sản phẩm";
+    const itemRating = Number(item.average_rating || 0);
+    const itemReviewCount = Number(item.review_count || 0);
+    const roundedRating = Math.max(0, Math.min(5, Math.round(itemRating)));
 
     const isWishlisted = (typeof Wishlist !== "undefined") ? Wishlist.isWishlisted(item.id) : false;
     return `
@@ -345,6 +628,10 @@ function renderRelatedProducts(related) {
         </div>
         <div class="product-info">
           <h3 title="${escapeHTML(item.name)}" style="cursor: pointer;" onclick="window.location.href='product-detail.html?id=${item.id}'">${escapeHTML(item.name)}</h3>
+          <div class="product-card-rating" aria-label="${itemReviewCount ? `${itemRating.toFixed(1)} trên 5 sao, ${itemReviewCount} đánh giá` : "Chưa có đánh giá"}">
+            <span class="product-card-rating-stars ${itemReviewCount ? "" : "is-empty"}" aria-hidden="true">${"★".repeat(roundedRating)}${"☆".repeat(5 - roundedRating)}</span>
+            <span>${itemReviewCount ? `${itemRating.toFixed(1)} (${itemReviewCount})` : "Chưa có đánh giá"}</span>
+          </div>
           <p class="product-desc" title="${escapeHTML(item.description || "")}">${escapeHTML(item.description || "Sản phẩm chính hãng.")}</p>
           <strong class="product-price">
             ${formatPrice(item.promotional_price || item.price)}
@@ -383,6 +670,8 @@ function saveCurrentProductToRecent(product) {
       promotional_price: product.promotional_price,
       image_url: primaryImg,
       category_name: product.category?.name || "Sản phẩm",
+      average_rating: product.average_rating || 0,
+      review_count: product.review_count || 0,
       viewed_at: new Date().toISOString()
     });
     if (list.length > 12) list = list.slice(0, 12);
@@ -414,6 +703,9 @@ function renderRecentlyViewedSection(currentProductId) {
       const hasPromo = item.promotional_price && Number(item.promotional_price) < Number(item.price);
       const imgUrl = resolveImageUrl(item.image_url);
       const isWishlisted = (typeof Wishlist !== "undefined") ? Wishlist.isWishlisted(item.id) : false;
+      const itemRating = Number(item.average_rating || 0);
+      const itemReviewCount = Number(item.review_count || 0);
+      const roundedRating = Math.max(0, Math.min(5, Math.round(itemRating)));
       return `
         <article class="product-card" data-product-id="${item.id}">
           <div class="product-photo" style="cursor: pointer;" onclick="if (!event.target.closest('.product-wishlist-btn')) window.location.href='product-detail.html?id=${item.id}'">
@@ -427,6 +719,10 @@ function renderRecentlyViewedSection(currentProductId) {
           </div>
           <div class="product-info">
             <h3 title="${escapeHTML(item.name)}" style="cursor: pointer;" onclick="window.location.href='product-detail.html?id=${item.id}'">${escapeHTML(item.name)}</h3>
+            <div class="product-card-rating" aria-label="${itemReviewCount ? `${itemRating.toFixed(1)} trên 5 sao, ${itemReviewCount} đánh giá` : "Chưa có đánh giá"}">
+              <span class="product-card-rating-stars ${itemReviewCount ? "" : "is-empty"}" aria-hidden="true">${"★".repeat(roundedRating)}${"☆".repeat(5 - roundedRating)}</span>
+              <span>${itemReviewCount ? `${itemRating.toFixed(1)} (${itemReviewCount})` : "Chưa có đánh giá"}</span>
+            </div>
             <strong class="product-price">
               ${formatPrice(item.promotional_price || item.price)}
               ${hasPromo ? `<del class="product-old-price">${formatPrice(item.price)}</del>` : ""}
@@ -521,6 +817,8 @@ window.toggleWishlistRelated = function (productId) {
 // 7. XỬ LÝ SỰ KIỆN: TĂNG GIẢM SỐ LƯỢNG, MUA HÀNG, TABS
 // ==========================================================
 function setupEventListeners(product) {
+  setupReviewEvents(product.id);
+  setupDetailPhotoLightbox();
   const qtyInput = document.getElementById("qty-input");
   const qtyMinus = document.getElementById("qty-minus");
   const qtyPlus = document.getElementById("qty-plus");
@@ -618,12 +916,14 @@ function setupEventListeners(product) {
   mainViewport?.addEventListener("click", (e) => {
     // Không kích hoạt khi bấm vào các badge đè lên
     if (e.target.closest(".gallery-badge")) return;
-    openLightbox(detailState.activeImageIndex || 0);
+    const index = detailState.activeImageIndex || 0;
+    openDetailPhotoLightbox(detailState.imagesList[index], `Ảnh sản phẩm: ${product.name}`, zoomBtn);
   });
 
   zoomBtn?.addEventListener("click", (e) => {
     e.stopPropagation();
-    openLightbox(detailState.activeImageIndex || 0);
+    const index = detailState.activeImageIndex || 0;
+    openDetailPhotoLightbox(detailState.imagesList[index], `Ảnh sản phẩm: ${product.name}`, zoomBtn);
   });
 
   // Tab switching
@@ -641,144 +941,6 @@ function setupEventListeners(product) {
       const targetPane = document.getElementById(targetTab);
       if (targetPane) targetPane.classList.add("active");
     });
-  });
-
-  // Khởi tạo các sự kiện cho Lightbox Popup
-  setupLightboxEvents();
-}
-
-// ==========================================================
-// 8. LOGIC POP-UP PHÓNG TO ẢNH (IMAGE LIGHTBOX MODAL)
-// ==========================================================
-let currentLightboxIndex = 0;
-
-function openLightbox(index = 0) {
-  const modal = document.getElementById("image-lightbox-modal");
-  if (!modal) return;
-
-  const images = detailState.imagesList || [];
-  if (images.length === 0) return;
-
-  currentLightboxIndex = (index >= 0 && index < images.length) ? index : 0;
-
-  // Cập nhật tiêu đề sản phẩm trong pop-up
-  const titleElem = document.getElementById("lightbox-product-title");
-  if (titleElem && detailState.product) {
-    titleElem.textContent = detailState.product.name;
-  }
-
-  // Render thumbnails bên trong lightbox
-  renderLightboxThumbnails(images);
-
-  // Hiển thị ảnh đang chọn
-  switchLightboxImage(currentLightboxIndex);
-
-  // Mở modal và khóa cuộn trang
-  modal.hidden = false;
-  document.body.style.overflow = "hidden";
-}
-
-function closeLightbox() {
-  const modal = document.getElementById("image-lightbox-modal");
-  if (!modal) return;
-  modal.hidden = true;
-  document.body.style.overflow = "";
-}
-
-function switchLightboxImage(index) {
-  const images = detailState.imagesList || [];
-  if (index < 0 || index >= images.length) return;
-
-  currentLightboxIndex = index;
-  const mainImg = document.getElementById("lightbox-main-img");
-  const counter = document.getElementById("lightbox-counter");
-  const prevBtn = document.getElementById("lightbox-prev-btn");
-  const nextBtn = document.getElementById("lightbox-next-btn");
-
-  if (mainImg) {
-    mainImg.style.opacity = "0.3";
-    mainImg.style.transform = "scale(0.96)";
-    setTimeout(() => {
-      mainImg.src = images[index];
-      mainImg.style.opacity = "1";
-      mainImg.style.transform = "scale(1)";
-    }, 120);
-  }
-
-  if (counter) {
-    counter.textContent = `Ảnh ${index + 1} / ${images.length}`;
-  }
-
-  // Cập nhật trạng thái thumbnails trong lightbox
-  document.querySelectorAll(".lightbox-thumb-item").forEach((thumb, i) => {
-    thumb.classList.toggle("active", i === index);
-  });
-
-  // Cập nhật trạng thái nút Prev / Next
-  if (prevBtn) prevBtn.disabled = images.length <= 1;
-  if (nextBtn) nextBtn.disabled = images.length <= 1;
-}
-
-function renderLightboxThumbnails(images) {
-  const thumbsWrap = document.getElementById("lightbox-thumbs");
-  if (!thumbsWrap) return;
-
-  if (images.length <= 1) {
-    thumbsWrap.style.display = "none";
-    return;
-  }
-
-  thumbsWrap.style.display = "flex";
-  thumbsWrap.innerHTML = images.map((url, idx) => `
-    <div class="lightbox-thumb-item ${idx === currentLightboxIndex ? "active" : ""}" data-lb-index="${idx}">
-      <img src="${escapeHTML(url)}" alt="Thu nhỏ ${idx + 1}" loading="lazy">
-    </div>
-  `).join("");
-
-  thumbsWrap.querySelectorAll(".lightbox-thumb-item").forEach(item => {
-    item.addEventListener("click", () => {
-      const idx = Number(item.dataset.lbIndex);
-      switchLightboxImage(idx);
-    });
-  });
-}
-
-function setupLightboxEvents() {
-  const modal = document.getElementById("image-lightbox-modal");
-  const backdrop = document.getElementById("lightbox-backdrop");
-  const closeBtn = document.getElementById("lightbox-close-btn");
-  const prevBtn = document.getElementById("lightbox-prev-btn");
-  const nextBtn = document.getElementById("lightbox-next-btn");
-
-  // Đóng modal khi bấm nền tối hoặc nút đóng
-  backdrop?.addEventListener("click", closeLightbox);
-  closeBtn?.addEventListener("click", closeLightbox);
-
-  // Chuyển ảnh trước / sau
-  prevBtn?.addEventListener("click", () => {
-    const images = detailState.imagesList || [];
-    if (images.length <= 1) return;
-    const newIdx = (currentLightboxIndex - 1 + images.length) % images.length;
-    switchLightboxImage(newIdx);
-  });
-
-  nextBtn?.addEventListener("click", () => {
-    const images = detailState.imagesList || [];
-    if (images.length <= 1) return;
-    const newIdx = (currentLightboxIndex + 1) % images.length;
-    switchLightboxImage(newIdx);
-  });
-
-  // Điều hướng bằng bàn phím (Phím ESC để đóng, Phím mũi tên Trái/Phải để chuyển ảnh)
-  window.addEventListener("keydown", (e) => {
-    if (!modal || modal.hidden) return;
-    if (e.key === "Escape") {
-      closeLightbox();
-    } else if (e.key === "ArrowLeft") {
-      prevBtn?.click();
-    } else if (e.key === "ArrowRight") {
-      nextBtn?.click();
-    }
   });
 }
 

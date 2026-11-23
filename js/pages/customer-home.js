@@ -193,6 +193,17 @@ function productShortDesc(product) {
   return "Sản phẩm chính hãng chất lượng cao · Giao hàng toàn quốc";
 }
 
+function productRatingMarkup(product) {
+  const average = Number(product.average_rating || 0);
+  const count = Number(product.review_count || 0);
+  const rounded = Math.max(0, Math.min(5, Math.round(average)));
+  const label = count ? `${average.toFixed(1)} (${count})` : "Chưa có đánh giá";
+  return `<div class="product-card-rating" aria-label="${count ? `${average.toFixed(1)} trên 5 sao, ${count} đánh giá` : "Chưa có đánh giá"}">
+    <span class="product-card-rating-stars ${count ? "" : "is-empty"}" aria-hidden="true">${"★".repeat(rounded)}${"☆".repeat(5 - rounded)}</span>
+    <span>${label}</span>
+  </div>`;
+}
+
 function renderProducts() {
   const grid = document.getElementById("product-grid");
   if (!grid) return;
@@ -223,6 +234,7 @@ function renderProducts() {
           </div>
           <div class="product-info">
             <h3 title="${escapeHTML(product.name)}">${escapeHTML(product.name)}</h3>
+            ${productRatingMarkup(product)}
             <p class="product-desc" title="${escapeHTML(shortDesc)}">${escapeHTML(shortDesc)}</p>
             <div class="product-price">
               <strong class="price-current">${formatPrice(displayPrice)}</strong>

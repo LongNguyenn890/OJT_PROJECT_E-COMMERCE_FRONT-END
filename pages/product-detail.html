@@ -116,9 +116,9 @@
           <div class="product-rating-meta">
             <div class="stars-rating">
               <svg width="15" height="15" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              <span>4.9</span>
+              <span id="product-average-rating">0</span>
             </div>
-            <span class="rating-count">(128 đánh giá)</span>
+            <span class="rating-count" id="product-review-count">(Chưa có đánh giá)</span>
             <span class="rating-divider"></span>
             <span class="sold-count">Đã bán <strong>500+</strong></span>
             <span class="rating-divider"></span>
@@ -250,7 +250,7 @@
           </button>
           <button type="button" class="tab-nav-btn" data-tab="tab-reviews" role="tab" aria-selected="false">
             <span>Đánh giá khách hàng</span>
-            <span class="tab-badge">128</span>
+            <span class="tab-badge" id="reviews-tab-count">0</span>
           </button>
         </div>
 
@@ -322,66 +322,44 @@
           <div class="tab-pane" id="tab-reviews" role="tabpanel">
             <div class="reviews-summary-panel">
               <div class="review-score-box">
-                <div class="review-big-num">4.9</div>
+                <div class="review-big-num" id="reviews-average">0</div>
                 <div class="review-stars-big">★★★★★</div>
-                <div class="review-total-text">Dựa trên 128 đánh giá thực tế</div>
+                <div class="review-total-text" id="reviews-total">Chưa có đánh giá</div>
               </div>
-              <div class="review-bars-list">
-                <div class="review-bar-row">
-                  <span class="bar-star-label">5 sao</span>
-                  <div class="bar-track"><div class="bar-fill" style="width: 88%;"></div></div>
-                  <span class="bar-count">112</span>
-                </div>
-                <div class="review-bar-row">
-                  <span class="bar-star-label">4 sao</span>
-                  <div class="bar-track"><div class="bar-fill" style="width: 9%;"></div></div>
-                  <span class="bar-count">12</span>
-                </div>
-                <div class="review-bar-row">
-                  <span class="bar-star-label">3 sao</span>
-                  <div class="bar-track"><div class="bar-fill" style="width: 2%;"></div></div>
-                  <span class="bar-count">3</span>
-                </div>
-                <div class="review-bar-row">
-                  <span class="bar-star-label">2 sao</span>
-                  <div class="bar-track"><div class="bar-fill" style="width: 1%;"></div></div>
-                  <span class="bar-count">1</span>
-                </div>
-                <div class="review-bar-row">
-                  <span class="bar-star-label">1 sao</span>
-                  <div class="bar-track"><div class="bar-fill" style="width: 0%;"></div></div>
-                  <span class="bar-count">0</span>
-                </div>
-              </div>
+              <div class="review-bars-list" id="reviews-rating-bars"></div>
             </div>
 
-            <!-- Danh sách nhận xét mẫu từ khách hàng -->
-            <div class="reviews-comments-list">
-              <div class="review-comment-card">
-                <div class="reviewer-header">
-                  <span class="reviewer-name">Nguyễn Hoàng Long <span style="color:#16a34a; font-weight:400; font-size:12px;">✓ Đã mua hàng tại ShopEase</span></span>
-                  <span class="review-date">Hôm qua, 14:20</span>
+            <div class="product-review-entry">
+              <div id="review-access-message" class="review-access-message">Đang kiểm tra quyền đánh giá…</div>
+              <form id="product-review-form" class="product-review-form" hidden>
+                <h3>Viết đánh giá của bạn</h3>
+                <div class="review-star-picker" role="radiogroup" aria-label="Chọn số sao">
+                  <button type="button" class="review-star-choice" data-rating="1" aria-label="1 sao" aria-pressed="false">★</button>
+                  <button type="button" class="review-star-choice" data-rating="2" aria-label="2 sao" aria-pressed="false">★</button>
+                  <button type="button" class="review-star-choice" data-rating="3" aria-label="3 sao" aria-pressed="false">★</button>
+                  <button type="button" class="review-star-choice" data-rating="4" aria-label="4 sao" aria-pressed="false">★</button>
+                  <button type="button" class="review-star-choice" data-rating="5" aria-label="5 sao" aria-pressed="false">★</button>
+                  <span id="review-rating-label">Chọn số sao</span>
                 </div>
-                <div class="review-comment-stars">★★★★★</div>
-                <p class="review-comment-text">Sản phẩm đóng gói rất cẩn thận, hộp nguyên seal không hề móp méo. Giao hàng cực nhanh, đặt sáng mà chiều đã nhận được. Chất lượng tuyệt vời đúng như mô tả!</p>
-              </div>
-              <div class="review-comment-card">
-                <div class="reviewer-header">
-                  <span class="reviewer-name">Trần Thị Mai Anh <span style="color:#16a34a; font-weight:400; font-size:12px;">✓ Đã mua hàng tại ShopEase</span></span>
-                  <span class="review-date">3 ngày trước</span>
+                <input type="hidden" id="review-rating-input" value="">
+                <label class="review-comment-label" for="review-comment-input">Nhận xét</label>
+                <textarea id="review-comment-input" rows="4" maxlength="1000" required placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm"></textarea>
+                <label class="review-comment-label review-image-label" for="review-image-input">Ảnh đính kèm <span>(không bắt buộc)</span></label>
+                <input id="review-image-input" class="review-image-input" type="file" accept="image/jpeg,image/png,image/webp">
+                <small class="review-image-hint">JPG, PNG hoặc WEBP, tối đa 5MB.</small>
+                <div id="review-image-preview-wrap" class="review-image-preview-wrap" hidden>
+                  <img id="review-image-preview" alt="Xem trước ảnh đánh giá">
+                  <span id="review-image-name"></span>
+                  <button id="review-image-remove" class="review-image-remove" type="button" aria-label="Bỏ ảnh đính kèm">Bỏ ảnh</button>
                 </div>
-                <div class="review-comment-stars">★★★★★</div>
-                <p class="review-comment-text">Hàng chính hãng chuẩn xịn, bảo hành đầy đủ qua điện thoại. Dùng rất mượt mà và êm tay. Nhân viên CSKH 1900 6868 tư vấn rất nhiệt tình, 10 điểm cho ShopEase!</p>
-              </div>
-              <div class="review-comment-card">
-                <div class="reviewer-header">
-                  <span class="reviewer-name">Lê Quang Huy <span style="color:#16a34a; font-weight:400; font-size:12px;">✓ Đã mua hàng tại ShopEase</span></span>
-                  <span class="review-date">1 tuần trước</span>
+                <div class="review-form-footer">
+                  <span id="review-form-message" role="status"></span>
+                  <button type="submit" class="review-submit-btn">Gửi đánh giá</button>
                 </div>
-                <div class="review-comment-stars">★★★★★</div>
-                <p class="review-comment-text">Giá tốt hơn so với các hệ thống lớn mà chất lượng tương đương. Miễn phí vận chuyển tận nhà và được mở ra kiểm hàng trước khi trả tiền nên rất an tâm.</p>
-              </div>
+              </form>
             </div>
+
+            <div class="reviews-comments-list" id="reviews-comments-list" aria-live="polite"></div>
           </div>
         </div>
       </section>
@@ -418,31 +396,11 @@
     </div>
   </main>
 
-  <!-- Pop-up phóng to ảnh (Image Lightbox Modal) -->
-  <div class="image-lightbox-modal" id="image-lightbox-modal" hidden>
-    <div class="lightbox-backdrop" id="lightbox-backdrop"></div>
-    <div class="lightbox-dialog" role="dialog" aria-modal="true" aria-label="Xem ảnh phóng to">
-      <div class="lightbox-header">
-        <div class="lightbox-title-box">
-          <h4 id="lightbox-product-title">Tên sản phẩm</h4>
-          <span class="lightbox-counter" id="lightbox-counter">Ảnh 1 / 1</span>
-        </div>
-        <button type="button" class="lightbox-close-btn" id="lightbox-close-btn" aria-label="Đóng popup">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-      </div>
-      <div class="lightbox-body">
-        <button type="button" class="lightbox-nav-btn prev" id="lightbox-prev-btn" aria-label="Ảnh trước">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        </button>
-        <div class="lightbox-img-wrap">
-          <img id="lightbox-main-img" src="" alt="Ảnh phóng to">
-        </div>
-        <button type="button" class="lightbox-nav-btn next" id="lightbox-next-btn" aria-label="Ảnh sau">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        </button>
-      </div>
-      <div class="lightbox-thumbs" id="lightbox-thumbs"></div>
+  <div class="detail-image-lightbox" id="detail-image-lightbox" hidden>
+    <div class="detail-image-lightbox-backdrop" aria-hidden="true"></div>
+    <div class="detail-image-lightbox-dialog" role="dialog" aria-modal="true" aria-label="Ảnh phóng to">
+      <button type="button" class="detail-image-lightbox-close" id="detail-image-lightbox-close" aria-label="Đóng ảnh phóng to">&times;</button>
+      <img id="detail-image-lightbox-image" alt="Ảnh phóng to">
     </div>
   </div>
 

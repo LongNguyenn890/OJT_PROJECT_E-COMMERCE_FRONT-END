@@ -111,13 +111,17 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
+  max-width: 560px;
+  margin-inline: auto;
 }
 
 .gallery-main-viewport {
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 1;
-  min-height: 420px;
+  aspect-ratio: 4 / 3;
+  min-height: 0;
+  max-height: 520px;
   background: #f1f5f9;
   border-radius: 14px;
   border: 1px solid var(--pd-border);
@@ -127,6 +131,13 @@
   justify-content: center;
   cursor: zoom-in;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+@media (max-width: 600px) {
+  .gallery-main-viewport {
+    aspect-ratio: 1 / 1;
+    max-height: none;
+  }
 }
 
 .gallery-main-viewport:hover {
@@ -1063,6 +1074,296 @@
   margin: 0;
 }
 
+.product-review-entry {
+  margin: 0 0 24px;
+}
+
+.review-access-message {
+  padding: 12px 14px;
+  border: 1px solid var(--pd-border);
+  border-radius: 8px;
+  background: #f8fafc;
+  color: var(--pd-text-muted);
+  font-size: 13px;
+}
+
+.review-access-message a {
+  color: var(--pd-primary);
+  font-weight: 700;
+}
+
+.review-delete-btn {
+  margin-left: 8px;
+  padding: 5px 9px;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  background: #fff;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.review-delete-btn:hover {
+  background: #fef2f2;
+}
+
+.product-review-form {
+  padding: 18px;
+  border: 1px solid var(--pd-border);
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.product-review-form h3 {
+  margin: 0 0 12px;
+  color: var(--pd-text-dark);
+  font-size: 16px;
+}
+
+.review-star-picker {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-bottom: 14px;
+}
+
+.review-star-choice {
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
+  color: #cbd5e1;
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.review-star-choice:hover,
+.review-star-choice.selected {
+  color: var(--pd-yellow);
+}
+
+#review-rating-label {
+  margin-left: 8px;
+  color: var(--pd-text-muted);
+  font-size: 12px;
+}
+
+.review-comment-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--pd-text-dark);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.product-review-form textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 96px;
+  padding: 10px 12px;
+  border: 1px solid var(--pd-border);
+  border-radius: 7px;
+  background: #ffffff;
+  color: var(--pd-text-dark);
+  font: inherit;
+  resize: vertical;
+}
+
+.product-review-form textarea:focus {
+  outline: 2px solid #bfdbfe;
+  border-color: var(--pd-border-focus);
+}
+
+.review-image-label {
+  margin-top: 12px;
+}
+
+.review-image-label span,
+.review-image-hint {
+  color: var(--pd-text-muted);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.review-image-input {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 7px;
+  background: #ffffff;
+  color: var(--pd-text-body);
+  font-size: 12px;
+}
+
+.review-image-hint {
+  display: block;
+  margin-top: 5px;
+}
+
+.review-image-preview-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  color: var(--pd-text-muted);
+  font-size: 12px;
+}
+
+.review-image-preview-wrap img {
+  width: 58px;
+  height: 58px;
+  border-radius: 7px;
+  border: 1px solid var(--pd-border);
+  object-fit: cover;
+}
+
+.review-image-remove {
+  padding: 4px 8px;
+  border: 1px solid var(--pd-border);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--pd-text-body);
+  cursor: pointer;
+}
+
+.review-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+#review-form-message {
+  color: var(--pd-text-muted);
+  font-size: 12px;
+}
+
+.review-submit-btn {
+  padding: 9px 16px;
+  border: 0;
+  border-radius: 7px;
+  background: var(--pd-primary);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.review-submit-btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.verified-reviewer {
+  color: var(--pd-green);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.reviews-empty-state {
+  padding: 14px;
+  color: var(--pd-text-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.review-photo-open {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+.review-photo {
+  display: block;
+  max-width: min(100%, 360px);
+  max-height: 280px;
+  border: 1px solid var(--pd-border);
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.review-photo-open:hover .review-photo {
+  border-color: #93c5fd;
+  box-shadow: 0 5px 16px rgba(15, 23, 42, 0.14);
+}
+
+.detail-image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+}
+
+.detail-image-lightbox[hidden] {
+  display: none !important;
+}
+
+.detail-image-lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.82);
+  backdrop-filter: blur(3px);
+}
+
+.detail-image-lightbox-dialog {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: min(1100px, 94vw);
+  max-height: 90vh;
+}
+
+.detail-image-lightbox-dialog img {
+  display: block;
+  max-width: 100%;
+  max-height: 88vh;
+  border-radius: 10px;
+  background: #ffffff;
+  object-fit: contain;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+.detail-image-lightbox-close {
+  position: absolute;
+  z-index: 2;
+  top: -18px;
+  right: -18px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 600px) {
+  .detail-image-lightbox {
+    padding: 18px;
+  }
+
+  .detail-image-lightbox-close {
+    top: -14px;
+    right: -8px;
+  }
+}
+
 /* 7. RELATED PRODUCTS SECTION */
 .related-products-section {
   margin-top: 40px;
@@ -1195,221 +1496,4 @@
 .btn-back-home:hover {
   background: var(--pd-primary-hover);
   color: #ffffff;
-}
-
-/* ==========================================================
-   9. POP-UP PHÓNG TO ẢNH (IMAGE LIGHTBOX MODAL)
-   ========================================================== */
-.image-lightbox-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 99999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  animation: fadeInModal 0.25s ease forwards;
-}
-
-.image-lightbox-modal[hidden] {
-  display: none !important;
-}
-
-@keyframes fadeInModal {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.lightbox-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.lightbox-dialog {
-  position: relative;
-  z-index: 2;
-  width: 92vw;
-  max-width: 980px;
-  max-height: 94vh;
-  display: flex;
-  flex-direction: column;
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
-  overflow: hidden;
-  animation: zoomDialog 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes zoomDialog {
-  from {
-    transform: scale(0.92);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.lightbox-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 24px;
-  background: #ffffff;
-  border-bottom: 1px solid var(--pd-border);
-}
-
-.lightbox-title-box {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-}
-
-.lightbox-title-box h4 {
-  margin: 0;
-  font-family: "Plus Jakarta Sans", "Inter", sans-serif;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--pd-text-dark);
-}
-
-.lightbox-counter {
-  font-size: 13px;
-  color: var(--pd-text-muted);
-  font-weight: 500;
-}
-
-.lightbox-close-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
-  background: #f1f5f9;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--pd-text-dark);
-  transition: all 0.2s ease;
-}
-
-.lightbox-close-btn:hover {
-  background: #e2e8f0;
-  color: var(--pd-red);
-  transform: rotate(90deg);
-}
-
-.lightbox-body {
-  position: relative;
-  flex: 1;
-  min-height: 380px;
-  max-height: 60vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #090e1a;
-  padding: 24px;
-}
-
-.lightbox-img-wrap {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.lightbox-img-wrap img {
-  max-width: 100%;
-  max-height: 54vh;
-  object-fit: contain;
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.lightbox-nav-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(15, 23, 42, 0.65);
-  color: #ffffff;
-  backdrop-filter: blur(6px);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  z-index: 10;
-}
-
-.lightbox-nav-btn:hover:not(:disabled) {
-  background: var(--pd-primary);
-  border-color: var(--pd-primary);
-  transform: translateY(-50%) scale(1.1);
-}
-
-.lightbox-nav-btn:disabled {
-  opacity: 0.25;
-  cursor: not-allowed;
-}
-
-.lightbox-nav-btn.prev {
-  left: 20px;
-}
-
-.lightbox-nav-btn.next {
-  right: 20px;
-}
-
-.lightbox-thumbs {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 14px 20px;
-  background: #f8fafc;
-  border-top: 1px solid var(--pd-border);
-  overflow-x: auto;
-  scrollbar-width: thin;
-}
-
-.lightbox-thumb-item {
-  width: 64px;
-  height: 64px;
-  flex: 0 0 64px;
-  border-radius: 8px;
-  border: 2px solid var(--pd-border);
-  background: #ffffff;
-  cursor: pointer;
-  overflow: hidden;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.lightbox-thumb-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.lightbox-thumb-item:hover {
-  border-color: #93c5fd;
-  transform: translateY(-2px);
-}
-
-.lightbox-thumb-item.active {
-  border-color: var(--pd-primary);
-  box-shadow: 0 0 0 3px rgba(8, 46, 158, 0.2);
 }
