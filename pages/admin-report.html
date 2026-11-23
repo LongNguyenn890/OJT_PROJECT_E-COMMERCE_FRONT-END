@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thống kê &amp; Báo cáo | ShopEase Admin</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- 1) CSS dùng chung của dự án  2) CSS riêng của trang Thống kê & Báo cáo -->
+  <link rel="stylesheet" href="/frontend/css/style.css" />
+  <link rel="stylesheet" href="/frontend/css/items.css" />
+  <link rel="stylesheet" href="/frontend/css/auth.css" />
+  <link rel="stylesheet" href="/frontend/css/admin-report.css" />
+</head>
+
+<body class="admin-page">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar admin-sidebar">
+    <div class="sidebar-top">
+      <a class="admin-brand" href="#">
+        <span class="brand-mark">S</span>
+        <span><b>ShopEase</b><small>Executive Admin Console</small></span>
+      </a>
+
+      <div class="sidebar-title">Quản trị hệ thống</div>
+      <nav class="sidebar-menu">
+        <a href="#">Tổng quan</a>
+        <a href="#">Quản lý Đơn hàng</a>
+        <a href="#">Quản lý Sản phẩm</a>
+        <a href="#">Quản lý Danh mục</a>
+        <a href="#">Quản lý Kho hàng</a>
+        <a href="#">Quản lý Khách hàng</a>
+        <a href="#" class="active">Thống kê &amp; Báo cáo</a>
+        <a href="#">Cài đặt hệ thống</a>
+      </nav>
+    </div>
+
+    <div class="gateway-card">
+      <div>
+        <small>Trạng thái cổng</small>
+        <b><i class="dot-ok"></i> Hoạt động 100%</b>
+      </div>
+      <i data-icon="gear"></i>
+    </div>
+  </aside>
+
+  <!-- ============ KHU VỰC CHÍNH ============ -->
+  <div class="admin-main">
+
+    <!-- Topbar -->
+    <header class="admin-topbar">
+      <div class="topbar-search">
+        <i data-icon="search"></i>
+        <input type="text" placeholder="Tìm kiếm toàn cục (mã đơn, SKU, khách hàng)..." aria-label="Tìm kiếm toàn cục" />
+        <kbd>Ctrl + K</kbd>
+      </div>
+      <div class="topbar-right">
+        <button class="icon-btn bell" aria-label="Thông báo"><i data-icon="bell"></i><span class="dot"></span></button>
+        <div class="topbar-user">
+          <span class="avatar">TH</span>
+          <span><b>Nguyễn Thu Hà (Admin)</b><small>Quản trị viên trưởng</small></span>
+        </div>
+        <a href="#" class="logout-link"><i data-icon="logout"></i> <span>Đăng xuất</span></a>
+      </div>
+    </header>
+
+    <main class="admin-content">
+
+      <!-- Tiêu đề -->
+      <header class="page-title-block">
+        <span class="eyebrow">HỆ THỐNG SHOPEASE</span>
+        <h1>Thống kê &amp; Báo cáo Hoạt động Kinh doanh</h1>
+      </header>
+
+      <!-- Bộ lọc kỳ báo cáo -->
+      <section class="card filter-card">
+        <div class="filter-left">
+          <span class="filter-label">KỲ BÁO CÁO:</span>
+          <div class="pills" id="period-pills">
+            <button type="button" data-period="today">Hôm nay</button>
+            <button type="button" data-period="week">7 ngày gần nhất</button>
+            <button type="button" data-period="month" class="active" id="pill-month">Tháng này</button>
+            <button type="button" data-period="lastMonth">Tháng trước</button>
+          </div>
+          <div class="date-chip">
+            <i data-icon="calendar"></i>
+            <input type="date" id="date-from" aria-label="Từ ngày" />
+            <span>-</span>
+            <input type="date" id="date-to" aria-label="Đến ngày" />
+          </div>
+        </div>
+        <button class="btn btn-primary" id="btn-apply"><i data-icon="filter"></i> Áp dụng bộ lọc</button>
+      </section>
+
+      <!-- 4 thẻ KPI -->
+      <section class="kpi-grid">
+        <article class="kpi kpi-blue">
+          <div class="kpi-top">
+            <div><h3>DOANH THU THỰC TẾ</h3><p>Chỉ tính đơn Hoàn thành</p></div>
+            <span class="kpi-icon"><i data-icon="banknote"></i></span>
+          </div>
+          <div class="kpi-value"><b id="kpi-revenue">0</b><small>đ</small></div>
+          <div class="kpi-foot" id="kpi-revenue-foot"></div>
+        </article>
+
+        <article class="kpi kpi-green">
+          <div class="kpi-top">
+            <div><h3>TỔNG ĐƠN HÀNG</h3><p>Tất cả trạng thái tạo mới</p></div>
+            <span class="kpi-icon"><i data-icon="bag"></i></span>
+          </div>
+          <div class="kpi-value"><b id="kpi-orders">0</b><small>đơn</small></div>
+          <div class="kpi-foot" id="kpi-orders-foot"></div>
+        </article>
+
+        <article class="kpi kpi-purple">
+          <div class="kpi-top">
+            <div><h3>SẢN PHẨM TIÊU THỤ</h3><p>Xuất kho đơn thành công</p></div>
+            <span class="kpi-icon"><i data-icon="archive"></i></span>
+          </div>
+          <div class="kpi-value"><b id="kpi-items">0</b><small>sản phẩm</small></div>
+          <div class="kpi-foot" id="kpi-items-foot"></div>
+        </article>
+
+        <article class="kpi kpi-indigo">
+          <div class="kpi-top">
+            <div><h3>GIÁ TRỊ TRUNG BÌNH ĐƠN (AOV)</h3><p>Doanh thu / Đơn hoàn thành</p></div>
+            <span class="kpi-icon"><i data-icon="calc"></i></span>
+          </div>
+          <div class="kpi-value"><b id="kpi-aov">0</b><small>đ</small></div>
+          <div class="kpi-foot" id="kpi-aov-foot"></div>
+        </article>
+      </section>
+
+      <!-- Biểu đồ -->
+      <section class="chart-grid">
+        <article class="card chart-card">
+          <div class="chart-head">
+            <div>
+              <h2>Diễn biến Doanh thu Thực tế theo Thời gian</h2>
+              <p id="chart-sub"></p>
+            </div>
+            <div class="legend">
+              <span><i class="dot blue"></i>Doanh thu kỳ này</span>
+              <span><i class="dot green"></i><em id="peak-legend">Tuần đỉnh doanh số</em></span>
+            </div>
+          </div>
+
+          <div class="bar-chart" id="bar-chart" role="img" aria-label="Biểu đồ cột doanh thu theo thời gian"></div>
+
+          <div class="chart-note">
+            <i data-icon="info"></i>
+            <span>Nguyên tắc hạch toán: Doanh thu chỉ ghi nhận tại thời điểm đơn chuyển sang trạng thái Hoàn thành.</span>
+            <b id="chart-total"></b>
+          </div>
+        </article>
+
+        <article class="card donut-card">
+          <h2>Cơ cấu Đơn hàng</h2>
+          <p id="donut-sub" class="sub"></p>
+          <div class="donut-wrap">
+            <svg id="donut" viewBox="0 0 220 220" role="img" aria-label="Biểu đồ tròn cơ cấu đơn hàng"></svg>
+            <div class="donut-center"><b id="donut-total">0</b><span>TỔNG ĐƠN</span></div>
+          </div>
+          <ul class="status-list" id="status-list"></ul>
+        </article>
+      </section>
+
+      <!-- Top 5 sản phẩm -->
+      <section class="card top-card">
+        <div class="top-head">
+          <div>
+            <h2>Top 5 Sản phẩm Bán chạy nhất trong kỳ <span class="fr-badge">FR-039</span></h2>
+            <p class="sub">Xếp hạng theo số lượng xuất kho thực tế trong các đơn hàng hoàn tất</p>
+          </div>
+          <label class="cat-filter">Lọc danh mục:
+            <select id="cat-filter"></select>
+          </label>
+        </div>
+
+        <div class="table-wrap">
+          <table class="top-table">
+            <thead>
+              <tr>
+                <th>HẠNG</th>
+                <th>MÃ SP</th>
+                <th>TÊN SẢN PHẨM</th>
+                <th>DANH MỤC</th>
+                <th class="text-right">SỐ LƯỢNG BÁN</th>
+                <th class="text-right">DOANH THU ĐÓNG GÓP</th>
+                <th class="text-center">TỒN KHO CÒN LẠI</th>
+                <th class="text-center">THAO TÁC</th>
+              </tr>
+            </thead>
+            <tbody id="top-body"></tbody>
+          </table>
+        </div>
+
+        <div class="table-footer">
+          <span id="top-info"></span>
+          <nav class="pager" id="pager" aria-label="Phân trang"></nav>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal xem nhanh sản phẩm -->
+  <div id="product-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Chi tiết sản phẩm</h3>
+        <button type="button" class="icon-btn" data-close-modal aria-label="Đóng"><i data-icon="close"></i></button>
+      </div>
+      <div class="modal-body" id="product-modal-body"></div>
+      <div class="modal-footer"><button class="btn" data-close-modal>Đóng</button></div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="/frontend/js/pages/admin-report.js"></script>
+</body>
+</html>
