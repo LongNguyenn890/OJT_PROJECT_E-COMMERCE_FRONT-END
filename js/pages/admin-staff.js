@@ -415,9 +415,41 @@ window.changePage = changePage;
  */
 function initFilters() {
   const keywordInput = document.getElementById("filter-keyword");
-  let timer = null;
-
-  if (keywordInput) {
+  // Tìm kiếm theo từ khóa có Debounce 320ms, Lịch sử & Gợi ý nhân viên
+  if (keywordInput && typeof setupAdminSearchAutocomplete === "function") {
+    setupAdminSearchAutocomplete({
+      input: keywordInput,
+      storageKey: "shopease_admin_search_history_staff",
+      debounceMs: 320,
+      onSelect: async (item) => {
+        if (item && item.id) {
+          await window.openStaffDetailModal(item.id);
+        }
+      },
+      onSearch: (val) => {
+        currentSearchKeyword = (val || "").trim();
+        currentPage = 1;
+        loadStaffList();
+      },
+      getSuggestions: async (query) => {
+        try {
+          const res = await api.get("/staff", { role: "INTERNAL", exclude_self: true, keyword: query, page_size: 6 });
+          const items = res?.items || [];
+          return items.map((st) => ({
+            id: st.id,
+            title: st.full_name || st.username || "Nhân viên",
+            subtitle: `${st.email || ""} ${st.phone_number ? "• " + st.phone_number : ""}`,
+            badge: st.role === "ADMIN" ? "Quản trị viên" : "Nhân viên",
+            value: st.full_name || st.email || query,
+            item: st,
+          }));
+        } catch (_) {
+          return [];
+        }
+      },
+    });
+  } else if (keywordInput) {
+    let timer = null;
     keywordInput.addEventListener("input", (e) => {
       clearTimeout(timer);
       timer = setTimeout(() => {

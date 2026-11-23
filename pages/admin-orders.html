@@ -652,6 +652,18 @@
               <input type="text" id="filter-order-keyword" placeholder="Tìm theo mã đơn (DH-...), SĐT hoặc tên người nhận..." autocomplete="off">
             </div>
 
+            <!-- Lọc theo Trạng thái đơn hàng -->
+            <div class="admin-select-box" style="min-width: 175px;">
+              <select id="filter-order-status" aria-label="Lọc theo trạng thái đơn hàng">
+                <option value="">-- Mọi trạng thái --</option>
+                <option value="PENDING">Chờ xác nhận</option>
+                <option value="CONFIRMED">Đã xác nhận</option>
+                <option value="SHIPPING">Đang giao hàng</option>
+                <option value="COMPLETED">Hoàn thành</option>
+                <option value="CANCELLED">Đã hủy</option>
+              </select>
+            </div>
+
             <div class="admin-select-box" style="min-width: 190px;">
               <select id="filter-order-payment">
                 <option value="">-- Mọi phương thức TT --</option>

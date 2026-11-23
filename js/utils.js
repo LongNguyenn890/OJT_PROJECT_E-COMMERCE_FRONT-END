@@ -446,3 +446,376 @@ const Auth = {
     }
   }
 };
+
+/**
+ * Hàm Debounce trì hoãn gọi hàm cho tới khi người dùng ngừng thao tác
+ * @param {Function} func 
+ * @param {number} wait 
+ * @returns {Function}
+ */
+function debounce(func, wait = 300) {
+  let timeout;
+  return function (...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}
+
+/**
+ * Thiết lập hệ thống tìm kiếm thông minh cho các trang quản trị (Admin Autocomplete & Search History)
+ * - Tự động debounce khi người dùng nhập từ khóa
+ * - Hiển thị dropdown Lịch sử tìm kiếm gần đây (Search History) khi focus vào ô tìm kiếm
+ * - Hiển thị dropdown Gợi ý tìm kiếm trực tiếp (Live Suggestions) khi gõ ký tự
+ * - Lưu từ khóa tìm kiếm gần đây vào localStorage theo từng phân hệ quản trị
+ * - Hỗ trợ phím Enter để chọn / tìm kiếm, Escape để đóng, mũi tên lên/xuống để duyệt
+ * - Đóng dropdown khi click ra ngoài
+ * 
+ * @param {Object} opts
+ * @param {string|HTMLInputElement} opts.input - ID hoặc element ô tìm kiếm
+ * @param {string} opts.storageKey - Key lưu trữ lịch sử trong localStorage
+ * @param {Function} opts.onSearch - Callback khi tìm kiếm: (query, item) => void
+ * @param {Function} [opts.getSuggestions] - Async callback: async (query) => Array<{ title, subtitle, badge, value }>
+ * @param {number} [opts.debounceMs=320] - Thời gian debounce gõ phím
+ * @param {number} [opts.maxHistory=6] - Số lượng từ khóa lịch sử tối đa
+ * @returns {Object} Các hàm điều khiển: { saveHistory, clearHistory, close, refreshSuggestions }
+ */
+function setupAdminSearchAutocomplete(opts) {
+  const inputEl = typeof opts.input === "string" ? document.querySelector(opts.input) : opts.input;
+  if (!inputEl) return null;
+
+  const storageKey = opts.storageKey || "shopease_admin_search_history";
+  const debounceMs = opts.debounceMs || 320;
+  const maxHistory = opts.maxHistory || 6;
+  const onSearch = opts.onSearch || (() => {});
+  const onSelect = opts.onSelect || null;
+  const getSuggestions = opts.getSuggestions || null;
+
+  // Đảm bảo wrapper .admin-search-box có position: relative
+  const wrapper = inputEl.closest(".admin-search-box") || inputEl.parentElement;
+  if (wrapper && getComputedStyle(wrapper).position === "static") {
+    wrapper.style.position = "relative";
+  }
+
+  // Tạo dropdown container nếu chưa có
+  let dropdown = wrapper.querySelector(".admin-search-dropdown");
+  if (!dropdown) {
+    dropdown = document.createElement("div");
+    dropdown.className = "admin-search-dropdown";
+    dropdown.hidden = true;
+    wrapper.appendChild(dropdown);
+  }
+
+  let lastSuggestions = [];
+  let debounceTimer = null;
+  let activeIndex = -1;
+
+  const getHistory = () => {
+    try {
+      return JSON.parse(localStorage.getItem(storageKey) || "[]");
+    } catch (_) {
+      return [];
+    }
+  };
+
+  const saveHistoryItem = (val) => {
+    const trimmed = String(val || "").trim();
+    if (!trimmed) return;
+    let list = getHistory().filter(item => {
+      const v = typeof item === "string" ? item : (item.value || item.title);
+      return String(v).toLowerCase() !== trimmed.toLowerCase();
+    });
+    list.unshift({ title: trimmed, value: trimmed, timestamp: Date.now() });
+    if (list.length > maxHistory) list = list.slice(0, maxHistory);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(list));
+    } catch (_) {}
+  };
+
+  const removeHistoryItem = (val) => {
+    let list = getHistory().filter(item => {
+      const v = typeof item === "string" ? item : (item.value || item.title);
+      return String(v).toLowerCase() !== String(val).toLowerCase();
+    });
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(list));
+    } catch (_) {}
+  };
+
+  const clearAllHistory = () => {
+    try {
+      localStorage.removeItem(storageKey);
+    } catch (_) {}
+  };
+
+  const closeDropdown = () => {
+    dropdown.hidden = true;
+    dropdown.innerHTML = "";
+    activeIndex = -1;
+  };
+
+  const highlightKeyword = (text, query) => {
+    if (!text) return "";
+    if (!query) return escapeHtml(text);
+    const escaped = escapeHtml(text);
+    const q = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${q})`, 'gi');
+    return escaped.replace(regex, '<mark>$1</mark>');
+  };
+
+  const renderHistory = () => {
+    const history = getHistory();
+    if (!history || history.length === 0) {
+      closeDropdown();
+      return;
+    }
+
+    dropdown.innerHTML = `
+      <div class="admin-suggest-header">
+        <span class="admin-suggest-header-title">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Lịch sử tìm kiếm
+        </span>
+        <button type="button" class="admin-suggest-clear-all" data-action="clear-all">Xóa lịch sử</button>
+      </div>
+      <div class="admin-suggest-list">
+        ${history.map((item, idx) => {
+          const title = typeof item === "string" ? item : item.title;
+          const val = typeof item === "string" ? item : (item.value || item.title);
+          return `
+            <div class="admin-suggest-item" data-action="select-history" data-index="${idx}" data-value="${escapeHtml(val)}">
+              <svg class="admin-suggest-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <div class="admin-suggest-content">
+                <span class="admin-suggest-title">${escapeHtml(title)}</span>
+              </div>
+              <button type="button" class="admin-suggest-remove-item" data-action="remove-one" data-value="${escapeHtml(val)}" title="Xóa từ khóa này">&times;</button>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+    dropdown.hidden = false;
+  };
+
+  const renderSuggestions = async (query) => {
+    if (!getSuggestions) {
+      closeDropdown();
+      return;
+    }
+
+    try {
+      dropdown.innerHTML = `
+        <div style="padding: 14px; text-align: center; color: #94a3b8; font-size: 12.5px;">
+          <span class="btn-op-spinner" style="width: 13px; height: 13px; border-width: 1.5px; vertical-align: -2px; margin-right: 6px;"></span>
+          Đang tìm gợi ý...
+        </div>
+      `;
+      dropdown.hidden = false;
+
+      const suggestions = await getSuggestions(query);
+      if (inputEl.value.trim() !== query) return; // Kiểm tra tránh race condition nếu người dùng đã gõ tiếp
+
+      lastSuggestions = suggestions || [];
+
+      if (!suggestions || suggestions.length === 0) {
+        dropdown.innerHTML = `
+          <div class="admin-suggest-empty">
+            Không tìm thấy kết quả phù hợp cho "<b>${escapeHtml(query)}</b>"
+          </div>
+        `;
+        return;
+      }
+
+      dropdown.innerHTML = `
+        <div class="admin-suggest-header">
+          <span class="admin-suggest-header-title">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Kết quả gợi ý (Bấm để xem chi tiết)
+          </span>
+        </div>
+        <div class="admin-suggest-list">
+          ${suggestions.map((s, idx) => {
+            const title = typeof s === "string" ? s : s.title;
+            const subtitle = typeof s === "object" ? s.subtitle : "";
+            const badge = typeof s === "object" ? s.badge : "";
+            const val = typeof s === "object" ? (s.value || s.title) : s;
+            return `
+              <div class="admin-suggest-item" data-action="select-suggest" data-index="${idx}" data-value="${escapeHtml(val)}">
+                <svg class="admin-suggest-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <div class="admin-suggest-content">
+                  <span class="admin-suggest-title">${highlightKeyword(title, query)}</span>
+                  ${subtitle ? `<span class="admin-suggest-subtitle">${escapeHtml(subtitle)}</span>` : ""}
+                </div>
+                ${badge ? `<span class="admin-suggest-badge">${escapeHtml(badge)}</span>` : ""}
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+      dropdown.hidden = false;
+    } catch (err) {
+      console.warn("Lỗi tải gợi ý:", err);
+      closeDropdown();
+    }
+  };
+
+  // Event: Focus -> hiển thị Lịch sử nếu rỗng, hoặc Gợi ý nếu đã có text
+  inputEl.addEventListener("focus", () => {
+    const val = inputEl.value.trim();
+    if (!val) {
+      renderHistory();
+    } else {
+      renderSuggestions(val);
+    }
+  });
+
+  // Event: Input (Debounce) -> CHỈ hiển thị dropdown gợi ý, TUYỆT ĐỐI KHÔNG lọc / thay đổi khu vực bảng hiển thị chung
+  inputEl.addEventListener("input", () => {
+    const val = inputEl.value.trim();
+    clearTimeout(debounceTimer);
+
+    if (!val) {
+      renderHistory();
+      // Khi người dùng xóa trắng ô tìm kiếm, mới khôi phục lại bảng danh sách ban đầu
+      debounceTimer = setTimeout(() => {
+        onSearch("", null);
+      }, debounceMs);
+      return;
+    }
+
+    // Khi gõ phím: CHỈ tìm kiếm gợi ý trên dropdown, KHÔNG đổi dữ liệu bảng chung
+    debounceTimer = setTimeout(() => {
+      renderSuggestions(val);
+    }, debounceMs);
+  });
+
+  // Event: Keydown (Enter, Escape, Arrow Up/Down)
+  inputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeDropdown();
+      return;
+    }
+
+    const items = dropdown.querySelectorAll(".admin-suggest-item[data-action='select-suggest'], .admin-suggest-item[data-action='select-history']");
+    if (e.key === "ArrowDown") {
+      if (dropdown.hidden || items.length === 0) return;
+      e.preventDefault();
+      activeIndex = (activeIndex + 1) % items.length;
+      items.forEach((it, idx) => it.classList.toggle("highlighted", idx === activeIndex));
+      if (items[activeIndex]) items[activeIndex].scrollIntoView({ block: "nearest" });
+      return;
+    }
+
+    if (e.key === "ArrowUp") {
+      if (dropdown.hidden || items.length === 0) return;
+      e.preventDefault();
+      activeIndex = (activeIndex - 1 + items.length) % items.length;
+      items.forEach((it, idx) => it.classList.toggle("highlighted", idx === activeIndex));
+      if (items[activeIndex]) items[activeIndex].scrollIntoView({ block: "nearest" });
+      return;
+    }
+
+    if (e.key === "Enter") {
+      clearTimeout(debounceTimer);
+      if (!dropdown.hidden && activeIndex >= 0 && items[activeIndex]) {
+        e.preventDefault();
+        items[activeIndex].click();
+      } else if (!dropdown.hidden && lastSuggestions.length > 0) {
+        // Nếu có gợi ý đang mở và bấm Enter, chọn gợi ý đầu tiên
+        e.preventDefault();
+        const firstItem = lastSuggestions[0];
+        const selectedVal = firstItem.value || firstItem.title;
+        inputEl.value = selectedVal;
+        saveHistoryItem(selectedVal);
+        closeDropdown();
+        if (typeof onSelect === "function") {
+          onSelect(firstItem);
+        }
+        if (typeof onSearch === "function") {
+          onSearch(selectedVal, firstItem);
+        }
+      } else {
+        // Khi bấm Enter không chọn gợi ý hoặc dropdown đang đóng: thực thi tìm kiếm bình thường trên bảng
+        e.preventDefault();
+        const currentVal = inputEl.value.trim();
+        saveHistoryItem(currentVal);
+        closeDropdown();
+        if (typeof onSearch === "function") {
+          onSearch(currentVal, null);
+        }
+      }
+    }
+  });
+
+  // Click on dropdown items: CHỈ KHI BẤM VÀO KẾT QUẢ MỚI HIỂN THỊ CHI TIẾT
+  dropdown.addEventListener("click", (e) => {
+    const clearBtn = e.target.closest("[data-action='clear-all']");
+    if (clearBtn) {
+      e.stopPropagation();
+      clearAllHistory();
+      closeDropdown();
+      return;
+    }
+
+    const removeBtn = e.target.closest("[data-action='remove-one']");
+    if (removeBtn) {
+      e.stopPropagation();
+      const valToRemove = removeBtn.getAttribute("data-value");
+      removeHistoryItem(valToRemove);
+      renderHistory();
+      return;
+    }
+
+    const suggestItem = e.target.closest("[data-action='select-suggest']");
+    if (suggestItem) {
+      e.stopPropagation();
+      const idx = parseInt(suggestItem.getAttribute("data-index"), 10);
+      const selectedItem = (!isNaN(idx) && lastSuggestions[idx]) ? lastSuggestions[idx] : null;
+      const selectedVal = suggestItem.getAttribute("data-value");
+      
+      inputEl.value = selectedVal;
+      saveHistoryItem(selectedVal);
+      closeDropdown();
+
+      // MỞ THÔNG TIN CHI TIẾT CỦA ĐỐI TƯỢNG VỪA CHỌN
+      if (typeof onSelect === "function" && selectedItem) {
+        onSelect(selectedItem);
+      }
+      if (typeof onSearch === "function") {
+        onSearch(selectedVal, selectedItem);
+      }
+      return;
+    }
+
+    const historyItem = e.target.closest("[data-action='select-history']");
+    if (historyItem) {
+      e.stopPropagation();
+      const selectedVal = historyItem.getAttribute("data-value");
+      inputEl.value = selectedVal;
+      saveHistoryItem(selectedVal);
+      closeDropdown();
+
+      // Khi bấm từ lịch sử: áp dụng tìm kiếm cho từ khóa đó
+      if (typeof onSearch === "function") {
+        onSearch(selectedVal, null);
+      }
+    }
+  });
+
+  // Click ra ngoài để đóng dropdown
+  document.addEventListener("click", (e) => {
+    if (!wrapper.contains(e.target)) {
+      closeDropdown();
+    }
+  });
+
+  return {
+    saveHistory: saveHistoryItem,
+    clearHistory: clearAllHistory,
+    close: closeDropdown,
+    refreshSuggestions: () => {
+      const val = inputEl.value.trim();
+      if (val) renderSuggestions(val);
+      else renderHistory();
+    }
+  };
+}

@@ -298,6 +298,96 @@
   }
 
   // ==========================================================
+  // 3.5. MODAL XEM CHI TIẾT SẢN PHẨM TẠI QUẦY (POS DETAIL MODAL)
+  // ==========================================================
+  function openPosProductDetailModal(prod) {
+    if (!prod) return;
+
+    const modal = document.getElementById("modal-pos-product-detail");
+    const content = document.getElementById("pos-product-detail-content");
+    const addBtn = document.getElementById("btn-pos-add-to-cart-from-detail");
+    if (!modal || !content) return;
+
+    const priceVal = Number(prod.price || 0);
+    const promoVal = prod.promotional_price !== null && prod.promotional_price !== undefined ? Number(prod.promotional_price) : null;
+    const finalPrice = promoVal !== null && promoVal >= 0 && promoVal < priceVal ? promoVal : priceVal;
+    const stock = Number(prod.stock_quantity || 0);
+    const categoryName = prod.category ? prod.category.name : (prod.category_name || "Chưa phân loại");
+    const skuCode = prod.sku || `SP-${String(prod.id).padStart(3, "0")}`;
+
+    // Hình ảnh đại diện
+    let imgUrl = "";
+    if (prod.product_images && prod.product_images.length > 0) {
+      const primaryImg = prod.product_images.find(i => i.is_primary === 1) || prod.product_images[0];
+      if (primaryImg && primaryImg.image_url) imgUrl = resolveImg(primaryImg.image_url);
+    } else if (prod.image_url) {
+      imgUrl = resolveImg(prod.image_url);
+    }
+
+    content.innerHTML = `
+      <div style="display: flex; gap: 16px; margin-bottom: 18px; align-items: center;">
+        <div style="width: 84px; height: 84px; border-radius: 10px; border: 1px solid #e2e8f0; overflow: hidden; flex-shrink: 0; background: #f8fafc; display: flex; align-items: center; justify-content: center;">
+          ${imgUrl ? `<img src="${escapeHtml(imgUrl)}" style="width: 100%; height: 100%; object-fit: cover;" alt="">` : `<span style="font-size: 28px;">📦</span>`}
+        </div>
+        <div style="flex: 1; min-width: 0;">
+          <h3 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 4px 0; line-height: 1.3;">${escapeHtml(prod.name)}</h3>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span style="font-family: monospace; font-size: 11.5px; background: #f1f5f9; padding: 2px 7px; border-radius: 4px; font-weight: 600; color: #334155;">SKU: ${escapeHtml(skuCode)}</span>
+            <span style="font-size: 11.5px; background: #eff6ff; color: #1d4ed8; padding: 2px 7px; border-radius: 4px; font-weight: 600;">${escapeHtml(categoryName)}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px;">
+        <div>
+          <small style="color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: 700;">Giá bán tại quầy</small>
+          <div style="font-size: 16px; font-weight: 800; color: #00288e; margin-top: 2px;">
+            ${fmtMoney(finalPrice)}
+            ${promoVal !== null && promoVal < priceVal ? `<span style="font-size: 12px; color: #94a3b8; text-decoration: line-through; font-weight: 400; margin-left: 4px;">${fmtMoney(priceVal)}</span>` : ""}
+          </div>
+        </div>
+        <div>
+          <small style="color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: 700;">Tồn kho thực tế</small>
+          <div style="font-size: 15px; font-weight: 700; color: ${stock > 0 ? '#059669' : '#dc2626'}; margin-top: 2px;">
+            ${stock > 0 ? `${stock} sản phẩm` : "Hết hàng"}
+          </div>
+        </div>
+      </div>
+
+      ${prod.description ? `
+        <div>
+          <small style="color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 4px;">Mô tả chi tiết</small>
+          <div style="font-size: 13px; color: #334155; line-height: 1.5; background: #ffffff; border: 1px solid #f1f5f9; border-radius: 8px; padding: 10px; max-height: 120px; overflow-y: auto;">
+            ${escapeHtml(prod.description)}
+          </div>
+        </div>
+      ` : ""}
+    `;
+
+    if (addBtn) {
+      addBtn.disabled = stock <= 0;
+      addBtn.onclick = () => {
+        addProductToCart(prod.id);
+        modal.classList.remove("show");
+        if (searchInput) {
+          searchInput.value = "";
+          searchInput.focus();
+        }
+      };
+    }
+
+    modal.classList.add("show");
+  }
+
+  // Đóng modal chi tiết POS qua data-close
+  document.querySelectorAll("[data-close='modal-pos-product-detail']").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const modal = document.getElementById("modal-pos-product-detail");
+      if (modal) modal.classList.remove("show");
+    });
+  });
+
+  // ==========================================================
   // 4. QUẢN LÝ GIỎ HÀNG TẠI QUẦY (POS CART)
   // ==========================================================
   function addProductToCart(productId) {
@@ -603,9 +693,85 @@
   // 7. GẮN SỰ KIỆN GIAO DIỆN (EVENT LISTENERS)
   // ==========================================================
   function setupEventListeners() {
-    // 1. Tìm kiếm sản phẩm
-    let searchDebounce = null;
-    if (searchInput) {
+    // 1. Tìm kiếm sản phẩm tại quầy (Debounce, Gợi ý trực tiếp, Lịch sử & Hiển thị kết quả ở khu vực hiển thị khi chọn)
+    if (searchInput && typeof setupAdminSearchAutocomplete === "function") {
+      setupAdminSearchAutocomplete({
+        input: searchInput,
+        storageKey: "shopease_admin_search_history_pos",
+        debounceMs: 250,
+        onSelect: (selected) => {
+          if (selected) {
+            const prod = selected.item || allProducts.find(p => p.id === selected.id);
+            if (prod) {
+              searchKeyword = prod.name;
+              if (searchInput) searchInput.value = prod.name;
+              if (searchClearBtn) searchClearBtn.style.display = "block";
+
+              // Đặt lại tab danh mục về "Tất cả" để không bị che khuất bởi bộ lọc danh mục
+              selectedCategoryId = "";
+              if (categoryTabs) {
+                categoryTabs.querySelectorAll(".pos-cat-pill").forEach(p => {
+                  p.classList.toggle("active", p.getAttribute("data-cat-id") === "");
+                });
+              }
+
+              // Hiển thị trực tiếp kết quả sản phẩm ở khu vực hiển thị chung (pos-products-grid)
+              displayedProducts = [prod];
+              renderProductsGrid(displayedProducts);
+            }
+          }
+        },
+        onSearch: (val, selectedItem) => {
+          const kw = (val || "").trim();
+          searchKeyword = kw;
+          if (!kw) {
+            if (searchClearBtn) searchClearBtn.style.display = "none";
+            filterAndRenderProducts();
+          } else {
+            if (searchClearBtn) searchClearBtn.style.display = "block";
+            if (selectedItem && (selectedItem.item || selectedItem.id)) {
+              const prod = selectedItem.item || allProducts.find(p => p.id === selectedItem.id);
+              if (prod) {
+                selectedCategoryId = "";
+                if (categoryTabs) {
+                  categoryTabs.querySelectorAll(".pos-cat-pill").forEach(p => {
+                    p.classList.toggle("active", p.getAttribute("data-cat-id") === "");
+                  });
+                }
+                displayedProducts = [prod];
+                renderProductsGrid(displayedProducts);
+                return;
+              }
+            }
+            filterAndRenderProducts();
+          }
+        },
+        getSuggestions: async (query) => {
+          const q = query.toLowerCase().trim();
+          const matches = (allProducts || []).filter(p => {
+            const nameMatch = (p.name || "").toLowerCase().includes(q);
+            const skuMatch = (p.sku || "").toLowerCase().includes(q);
+            const idMatch = String(p.id).includes(q);
+            return nameMatch || skuMatch || idMatch;
+          }).slice(0, 8);
+
+          return matches.map(p => {
+            const priceVal = Number(p.promotional_price !== null && p.promotional_price !== undefined ? p.promotional_price : p.price);
+            const priceStr = fmtMoney(priceVal);
+            const stock = Number(p.stock_quantity || 0);
+            return {
+              id: p.id,
+              title: p.name,
+              subtitle: `Mã SKU: ${p.sku || "N/A"} • ${priceStr}`,
+              badge: stock > 0 ? `Còn ${stock}` : "Hết hàng",
+              value: p.name,
+              item: p
+            };
+          });
+        }
+      });
+    } else if (searchInput) {
+      let searchDebounce = null;
       searchInput.addEventListener("input", (e) => {
         clearTimeout(searchDebounce);
         searchKeyword = e.target.value;
@@ -620,7 +786,10 @@
 
     if (searchClearBtn) {
       searchClearBtn.addEventListener("click", () => {
-        if (searchInput) searchInput.value = "";
+        if (searchInput) {
+          searchInput.value = "";
+          searchInput.dispatchEvent(new Event("input"));
+        }
         searchKeyword = "";
         searchClearBtn.style.display = "none";
         filterAndRenderProducts();

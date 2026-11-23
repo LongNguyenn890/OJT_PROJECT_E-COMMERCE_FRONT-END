@@ -427,8 +427,40 @@ function initFilterEvents() {
   const resetBtn = document.getElementById("btn-reset-filter");
   const refreshBtn = document.getElementById("btn-refresh-inventory");
 
-  // Tìm kiếm theo từ khóa có debounce
-  if (keywordInput) {
+  // Tìm kiếm theo từ khóa có Debounce 320ms, Lịch sử & Gợi ý tồn kho
+  if (keywordInput && typeof setupAdminSearchAutocomplete === "function") {
+    setupAdminSearchAutocomplete({
+      input: keywordInput,
+      storageKey: "shopease_admin_search_history_inventory",
+      debounceMs: 320,
+      onSelect: async (item) => {
+        if (item && item.id) {
+          await openStockLogsModal(item.id, item.title);
+        }
+      },
+      onSearch: () => {
+        applyFilters();
+      },
+      getSuggestions: async (query) => {
+        const q = query.toLowerCase();
+        const matches = (inventoryItemsCache || []).filter((item) => {
+          const name = String(item.product_name || "").toLowerCase();
+          const sku = String(item.sku || "").toLowerCase();
+          const cat = String(item.category_name || "").toLowerCase();
+          return name.includes(q) || sku.includes(q) || cat.includes(q);
+        }).slice(0, 6);
+
+        return matches.map((item) => ({
+          id: item.product_id,
+          title: item.product_name,
+          subtitle: `Mã SKU: ${item.sku || "N/A"} • Danh mục: ${item.category_name || "Khác"}`,
+          badge: `Tồn: ${item.stock_quantity ?? 0}`,
+          value: item.product_name,
+          item: item,
+        }));
+      },
+    });
+  } else if (keywordInput) {
     keywordInput.addEventListener("input", () => {
       clearTimeout(searchDebounceTimer);
       searchDebounceTimer = setTimeout(() => {

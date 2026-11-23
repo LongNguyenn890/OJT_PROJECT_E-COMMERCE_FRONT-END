@@ -397,6 +397,9 @@ function renderProductsTable(products) {
         </td>
         <td style="text-align: center;">
           <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <button type="button" class="btn-prod-action view" title="Xem chi tiết sản phẩm" onclick="openProductDetailModal(${prod.id})" style="color: #082e9e; background: #eff6ff; border-color: #bfdbfe;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
             <button type="button" class="btn-prod-action edit" title="Chỉnh sửa sản phẩm" onclick="openEditProductModal(${prod.id})">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
             </button>
@@ -520,8 +523,39 @@ function initFilterControls() {
   const resetBtn = document.getElementById("btn-reset-filters");
   const refreshBtn = document.getElementById("btn-refresh-products");
 
-  let debounceTimer = null;
-  if (searchInput) {
+  if (searchInput && typeof setupAdminSearchAutocomplete === "function") {
+    setupAdminSearchAutocomplete({
+      input: searchInput,
+      storageKey: "shopease_admin_search_history_products",
+      debounceMs: 320,
+      onSelect: async (item) => {
+        if (item && item.id) {
+          await openProductDetailModal(item.id);
+        }
+      },
+      onSearch: () => {
+        currentPage = 1;
+        loadProductsList();
+      },
+      getSuggestions: async (query) => {
+        try {
+          const res = await api.get("/products", { search: query, page_size: 6, is_visible: -1 });
+          const items = res?.items || [];
+          return items.map((p) => ({
+            id: p.id,
+            title: p.name,
+            subtitle: `Mã SKU: ${p.sku || "Chưa có"} • ${typeof formatMoney === "function" ? formatMoney(p.price) : p.price + " ₫"}`,
+            badge: Number(p.stock_quantity || 0) > 0 ? `Còn ${p.stock_quantity}` : "Hết hàng",
+            value: p.name,
+            item: p,
+          }));
+        } catch (_) {
+          return [];
+        }
+      },
+    });
+  } else if (searchInput) {
+    let debounceTimer = null;
     searchInput.addEventListener("input", () => {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
@@ -860,7 +894,8 @@ function initProductForm() {
     const categoryId = catSelect && catSelect.value ? parseInt(catSelect.value, 10) : null;
     const price = priceInput ? Math.round(parseFloat(priceInput.value)) : 0;
     const promoPrice = (promoInput && promoInput.value !== "") ? Math.round(parseFloat(promoInput.value)) : null;
-    const stock = stockInput ? parseInt(stockInput.value, 10) : 0;
+    const rawStock = stockInput ? stockInput.value.trim() : "";
+    const stock = rawStock === "" ? 0 : parseInt(rawStock, 10);
     const isVisible = visibilitySelect ? parseInt(visibilitySelect.value, 10) : 1;
     const description = (descInput ? descInput.value : "").trim();
 
@@ -1200,6 +1235,12 @@ function openCreateProductModal() {
     skuInput.value = `SP-${Date.now().toString().slice(-4)}${Math.floor(1000 + Math.random() * 9000)}`;
   }
 
+  // Số lượng tồn kho mặc định là 0 nếu người dùng không điền
+  const stockInput = document.getElementById("prod-stock");
+  if (stockInput) {
+    stockInput.value = "0";
+  }
+
   openModal("modal-product");
   const nameInput = document.getElementById("prod-name");
   if (nameInput) nameInput.focus();
@@ -1303,6 +1344,108 @@ async function toggleProductVisibility(id, newVisibility) {
     }
   }
 }
+
+/**
+ * Mở modal xem thông tin chi tiết sản phẩm
+ */
+window.openProductDetailModal = async function (id) {
+  const content = document.getElementById("product-detail-content");
+  if (!content) return;
+
+  openModal("modal-product-detail");
+  content.innerHTML = `
+    <div style="text-align: center; padding: 40px; color: var(--admin-text-muted);">
+      <span class="btn-op-spinner" style="width: 22px; height: 22px; border-width: 2.5px; margin-bottom: 8px;"></span>
+      <div>Đang tải chi tiết thông tin sản phẩm...</div>
+    </div>
+  `;
+
+  try {
+    const prod = await api.get(`/products/${id}`);
+    if (!prod) throw new Error("Không tìm thấy thông tin sản phẩm");
+
+    const categoryName = prod.category ? prod.category.name : "Chưa phân loại";
+    const skuCode = prod.sku || `SP-${String(prod.id).padStart(3, "0")}`;
+    const priceVal = Number(prod.price || 0);
+    const promoVal = prod.promotional_price !== null && prod.promotional_price !== undefined ? Number(prod.promotional_price) : null;
+    const stock = Number(prod.stock_quantity || 0);
+    const isVisible = Number(prod.is_visible) === 1;
+
+    // Ảnh sản phẩm
+    let imagesHtml = "";
+    if (prod.product_images && prod.product_images.length > 0) {
+      imagesHtml = `
+        <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 16px;">
+          ${prod.product_images.map(img => {
+            const url = resolveImageUrl(img.image_url);
+            return `<img src="${escapeHtml(url)}" style="width: 72px; height: 72px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0; flex-shrink: 0;" alt="">`;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    content.innerHTML = `
+      ${imagesHtml}
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px;">
+        <div>
+          <h3 style="font-size: 18px; font-weight: 700; color: var(--admin-text-main); margin: 0 0 6px 0;">${escapeHtml(prod.name)}</h3>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span class="badge-sku" style="font-size: 12px;">Mã SKU: ${escapeHtml(skuCode)}</span>
+            <span class="badge-status info" style="font-size: 12px;">${escapeHtml(categoryName)}</span>
+            ${isVisible 
+              ? `<span class="badge-status success" style="font-size: 12px;">Đang bán</span>` 
+              : `<span class="badge-status muted" style="font-size: 12px;">Tạm ẩn</span>`}
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+        <div>
+          <small style="color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: 600;">Giá niêm yết</small>
+          <div style="font-size: 15px; font-weight: 700; color: #0f172a; margin-top: 2px;">${formatVND(priceVal)}</div>
+        </div>
+        <div>
+          <small style="color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: 600;">Giá khuyến mãi</small>
+          <div style="font-size: 15px; font-weight: 700; color: ${promoVal ? '#dc2626' : '#64748b'}; margin-top: 2px;">
+            ${promoVal ? formatVND(promoVal) : "Không áp dụng"}
+          </div>
+        </div>
+        <div>
+          <small style="color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: 600;">Số lượng tồn kho</small>
+          <div style="font-size: 15px; font-weight: 700; color: ${stock > 0 ? '#047857' : '#dc2626'}; margin-top: 2px;">
+            ${stock.toLocaleString("vi-VN")} cái
+          </div>
+        </div>
+        <div>
+          <small style="color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: 600;">Ngày tạo / cập nhật</small>
+          <div style="font-size: 13px; color: #334155; margin-top: 2px;">
+            ${prod.created_at ? formatDateTime(prod.created_at) : "--"}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h4 style="font-size: 13px; font-weight: 700; text-transform: uppercase; color: #475569; margin: 0 0 6px 0;">Mô tả sản phẩm</h4>
+        <div style="font-size: 13.5px; line-height: 1.6; color: #334155; white-space: pre-line; background: #ffffff; border: 1px solid #f1f5f9; border-radius: 8px; padding: 12px;">
+          ${prod.description ? escapeHtml(prod.description) : "<em style='color: #94a3b8;'>Chưa có mô tả chi tiết cho sản phẩm này.</em>"}
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px;">
+        <button type="button" class="btn-admin-primary" style="padding: 8px 18px; font-size: 13px;" onclick="closeModal('modal-product-detail'); openEditProductModal(${prod.id});">
+          <span>Chỉnh sửa thông tin</span>
+        </button>
+      </div>
+    `;
+  } catch (err) {
+    content.innerHTML = `
+      <div style="text-align: center; padding: 30px; color: #ef4444;">
+        <div style="font-weight: 600; font-size: 14px;">Không thể tải chi tiết sản phẩm</div>
+        <div style="font-size: 12.5px; color: #64748b; margin-top: 4px;">${escapeHtml(err.message || "Lỗi kết nối")}</div>
+      </div>
+    `;
+  }
+};
 
 /**
  * Mở modal xác nhận xóa sản phẩm
