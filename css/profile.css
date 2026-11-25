@@ -741,6 +741,27 @@
   background: #e2e7ff;
 }
 
+.btn-profile-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-profile-danger:hover {
+  background: #fecaca;
+  color: #b91c1c;
+  border-color: #f87171;
+}
+
 .btn-profile-save {
   display: inline-flex;
   align-items: center;
@@ -1100,21 +1121,39 @@
 }
 
 .btn-modal-close {
-  background: none;
-  border: none;
-  padding: 4px;
-  cursor: pointer;
-  color: #94a3b8;
-  border-radius: 8px;
-  transition: all 0.2s;
-  display: flex;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.btn-modal-close svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.2;
 }
 
 .btn-modal-close:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #ef4444;
+  transform: rotate(90deg) scale(1.06);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+.btn-modal-close:active {
+  transform: rotate(90deg) scale(0.95);
 }
 
 .modal-form-body {
@@ -1496,6 +1535,283 @@
   text-align: center;
   padding: 12px;
   margin: 0;
+}
+
+/* ==========================================================
+   7. KHỐI LỊCH SỬ ĐƠN MUA ĐÃ HOÀN THÀNH TRÊN PROFILE
+   ========================================================== */
+.profile-completed-orders-section {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #edf2f7;
+}
+
+.completed-orders-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.completed-orders-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.completed-orders-title h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.badge-completed-count {
+  background: #ecfdf5;
+  color: #059669;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  border: 1px solid #a7f3d0;
+}
+
+.completed-orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Card từng đơn hoàn thành */
+.completed-order-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 18px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.completed-order-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 40, 142, 0.06);
+}
+
+.completed-order-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed #e2e8f0;
+}
+
+.completed-order-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+}
+
+.order-code-tag {
+  font-weight: 700;
+  color: #00288e;
+  font-family: monospace;
+  font-size: 13.5px;
+}
+
+.order-date-text {
+  color: #64748b;
+  font-size: 12.5px;
+}
+
+.badge-status-completed {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #ecfdf5;
+  color: #059669;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  border: 1px solid #a7f3d0;
+}
+
+/* Danh sách món hàng trong đơn */
+.completed-order-items {
+  padding: 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.completed-item-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.completed-item-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  flex-shrink: 0;
+}
+
+.completed-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.completed-item-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.completed-item-qty {
+  font-size: 12.5px;
+  color: #64748b;
+}
+
+.completed-item-subtotal {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Chân card đơn hàng */
+.completed-order-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.completed-order-receiver {
+  font-size: 12.5px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.completed-order-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.completed-order-total {
+  font-size: 13.5px;
+  color: #475569;
+}
+
+.completed-order-total strong {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: #00288e;
+  margin-left: 4px;
+}
+
+.completed-order-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-order-reorder {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #00288e;
+  color: #ffffff !important;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.btn-order-reorder:hover {
+  background: #001f70;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 40, 142, 0.2);
+}
+
+.btn-order-detail-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.btn-order-detail-link:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* Empty state */
+.completed-orders-empty {
+  text-align: center;
+  padding: 36px 20px;
+  background: #f8fafc;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 14px;
+}
+
+.completed-orders-empty .empty-icon-box {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 12px;
+  background: #e2e8f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.completed-orders-empty .empty-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 6px 0;
+}
+
+.completed-orders-empty .empty-sub {
+  font-size: 13px;
+  color: #64748b;
+  max-width: 420px;
+  margin: 0 auto;
+  line-height: 1.5;
 }
 
 /* 6. RESPONSIVE MEDIA QUERIES */

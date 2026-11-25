@@ -676,14 +676,14 @@ tbody tr:hover {
    ========================================================== */
 
 #toast-container {
-  position: fixed;
-  top: 24px;
-  right: 24px;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  pointer-events: none;
+  position: fixed !important;
+  top: 24px !important;
+  right: 24px !important;
+  z-index: 999999 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  pointer-events: none !important;
 }
 
 .toast {
@@ -706,6 +706,7 @@ tbody tr:hover {
   opacity: 0;
   transform: translateX(60px);
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.22), 0 10px 15px -5px rgba(0, 0, 0, 0.1);
 }
 
 .toast.toast-show {
@@ -1094,3 +1095,74 @@ tbody tr:hover {
 .user-tool-wrapper:focus-within .user-caret {
   transform: rotate(180deg);
 }
+
+/* ==========================================================
+   CIRCULAR CLOSE BUTTON (ĐỒNG BỘ TOÀN HỆ THỐNG THEO THIẾT KẾ)
+   Áp dụng đồng bộ cho tất cả modal/drawer trên mọi trang
+   ========================================================== */
+.btn-modal-close:not(.voucher-modal-footer *),
+.modal-close-btn,
+.qr-modal-close-btn,
+.shipping-edit-close,
+.btn-close-modal,
+.popover-close-btn {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+  border-radius: 50% !important;
+  border: 1px solid #e2e8f0 !important;
+  background: #f8fafc !important;
+  color: #64748b !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  font-size: 20px !important;
+  font-weight: 400 !important;
+  line-height: 1 !important;
+  outline: none !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  box-sizing: border-box !important;
+  text-decoration: none !important;
+}
+
+.btn-modal-close:not(.voucher-modal-footer *) svg,
+.modal-close-btn svg,
+.qr-modal-close-btn svg,
+.shipping-edit-close svg,
+.btn-close-modal svg,
+.popover-close-btn svg {
+  width: 16px !important;
+  height: 16px !important;
+  stroke-width: 2.2 !important;
+  stroke: currentColor !important;
+  display: block !important;
+}
+
+.btn-modal-close:not(.voucher-modal-footer *):hover,
+.modal-close-btn:hover,
+.qr-modal-close-btn:hover,
+.shipping-edit-close:hover,
+.btn-close-modal:hover,
+.popover-close-btn:hover {
+  background: #fee2e2 !important;
+  border-color: #fecaca !important;
+  color: #ef4444 !important;
+  transform: rotate(90deg) scale(1.06) !important;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2) !important;
+}
+
+.btn-modal-close:not(.voucher-modal-footer *):active,
+.modal-close-btn:active,
+.qr-modal-close-btn:active,
+.shipping-edit-close:active,
+.btn-close-modal:active,
+.popover-close-btn:active {
+  transform: rotate(90deg) scale(0.95) !important;
+}
+

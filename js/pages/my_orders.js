@@ -301,7 +301,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="empty-icon-box">📦</div>
           <h3>Chưa có đơn hàng nào</h3>
           <p>Bạn hiện chưa có đơn hàng nào trong mục này. Khám phá các sản phẩm hot và mua sắm ngay nhé!</p>
-          <a href="customer-home.html#products" class="btn-empty-shop">
+          <a href="customer-home.html#products" class="btn-empty-shop" style="color: #ffffff !important;">
             Khám phá sản phẩm ngay
           </a>
         </div>
@@ -939,6 +939,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let successProducts = 0;
     let totalQuantityAdded = 0;
     let failedNames = [];
+    const addedProductIds = [];
 
     for (const item of itemsToBuy) {
       try {
@@ -948,6 +949,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         successProducts++;
         totalQuantityAdded += (item.buyQty || 1);
+        addedProductIds.push(item.product_id);
       } catch (err) {
         console.error("Lỗi khi thêm sản phẩm vào giỏ:", item, err);
         failedNames.push(item.product_name || `SP #${item.product_id}`);
@@ -961,7 +963,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (successProducts > 0) {
-      showToast(`Đã thêm thành công ${successProducts} sản phẩm (${totalQuantityAdded} món) vào giỏ hàng của bạn!`, "success");
+      // Lưu danh sách sản phẩm mua lại để trang giỏ hàng tự động tích chọn
+      if (addedProductIds.length > 0) {
+        sessionStorage.setItem("reorder_product_ids", JSON.stringify(addedProductIds));
+      }
+      showToast(`Đã thêm thành công ${successProducts} sản phẩm vào giỏ hàng! Đang chuyển đến giỏ hàng...`, "success");
+      setTimeout(() => {
+        window.location.href = "cart.html";
+      }, 700);
+      return;
     }
     if (failedNames.length > 0) {
       showToast(`Không thể thêm ${failedNames.length} sản phẩm do hết hàng hoặc tạm khóa: ${failedNames.join(", ")}`, "warning");

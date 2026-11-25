@@ -36,8 +36,14 @@ function showToast(message, type = "success") {
   if (!container) {
     container = document.createElement("div");
     container.id = "toast-container";
-    container.style.cssText = "position: fixed; top: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 12px; pointer-events: none;";
+    container.style.cssText = "position: fixed; top: 24px; right: 24px; z-index: 999999; display: flex; flex-direction: column; gap: 12px; pointer-events: none;";
     document.body.appendChild(container);
+  } else {
+    // Đảm bảo toast-container luôn có z-index cao nhất và nằm ở cuối body (trên mọi pop-up/modal)
+    container.style.zIndex = "999999";
+    if (document.body.lastElementChild !== container) {
+      document.body.appendChild(container);
+    }
   }
 
   // Cấu hình màu sắc, ánh sáng shadow và icon theo từng trạng thái
@@ -87,7 +93,7 @@ function showToast(message, type = "success") {
     color: #131b2e;
     border: 1px solid #e5e7eb;
     border-left: 5px solid ${currentCfg.color};
-    box-shadow: -8px 0 20px -3px ${currentCfg.glow}, 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+    box-shadow: -8px 0 20px -3px ${currentCfg.glow}, 0 20px 35px -5px rgba(0, 0, 0, 0.22), 0 10px 15px -5px rgba(0, 0, 0, 0.1);
     display: flex;
     align-items: flex-start;
     gap: 12px;

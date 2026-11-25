@@ -438,26 +438,47 @@ function initFilterEvents() {
           await openStockLogsModal(item.id, item.title);
         }
       },
-      onSearch: () => {
-        applyFilters();
+      onSearch: (val) => {
+        const kw = (val || "").trim();
+        currentKeyword = kw;
+        if (keywordInput) keywordInput.value = kw;
+        currentPage = 1;
+        loadInventoryList();
       },
       getSuggestions: async (query) => {
-        const q = query.toLowerCase();
-        const matches = (inventoryItemsCache || []).filter((item) => {
-          const name = String(item.product_name || "").toLowerCase();
-          const sku = String(item.sku || "").toLowerCase();
-          const cat = String(item.category_name || "").toLowerCase();
-          return name.includes(q) || sku.includes(q) || cat.includes(q);
-        }).slice(0, 6);
+        const rawQ = query.trim();
+        const q = rawQ.toLowerCase();
+        let matches = [];
 
-        return matches.map((item) => ({
-          id: item.product_id,
-          title: item.product_name,
-          subtitle: `Mã SKU: ${item.sku || "N/A"} • Danh mục: ${item.category_name || "Khác"}`,
-          badge: `Tồn: ${item.stock_quantity ?? 0}`,
-          value: item.product_name,
-          item: item,
-        }));
+        // 1. Tìm kiếm toàn diện qua API /inventory với từ khóa
+        try {
+          const res = await api.get("/inventory", { keyword: rawQ, page_size: 6 });
+          if (res && Array.isArray(res.items)) {
+            matches = res.items;
+          }
+        } catch (_) {}
+
+        // 2. Dự phòng tìm kiếm trong cache nếu API lỗi hoặc offline
+        if (matches.length === 0 && inventoryItemsCache && inventoryItemsCache.length > 0) {
+          matches = (inventoryItemsCache || []).filter((item) => {
+            const name = String(item.name || item.product_name || "").toLowerCase();
+            const sku = String(item.sku || "").toLowerCase();
+            const cat = String(item.category_name || "").toLowerCase();
+            return name.includes(q) || sku.includes(q) || cat.includes(q);
+          }).slice(0, 6);
+        }
+
+        return matches.map((item) => {
+          const prodName = item.name || item.product_name || `Sản phẩm #${item.product_id}`;
+          return {
+            id: item.product_id,
+            title: prodName,
+            subtitle: `Mã SKU: ${item.sku || "N/A"} • Danh mục: ${item.category_name || "Khác"}`,
+            badge: `Tồn: ${item.stock_quantity ?? 0}`,
+            value: prodName,
+            item: item,
+          };
+        });
       },
     });
   } else if (keywordInput) {

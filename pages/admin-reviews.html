@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShopEase - Quản lý Đánh giá & Phản hồi</title>
+  <link rel="icon" href="../assets/images/logo_shop.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Liberation+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/admin-products.css">
+  <style>
+    .admin-modal-overlay.show,
+    .admin-modal-overlay.active {
+      display: flex !important;
+    }
+
+    /* Nút thao tác nhanh đồng bộ */
+    .review-actions-cell {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      flex-wrap: nowrap;
+      vertical-align: middle;
+    }
+    .btn-review-action {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      max-width: 32px;
+      padding: 0;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      background-color: transparent;
+      color: #64748b;
+      transition: all 0.15s ease;
+      box-sizing: border-box;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .btn-review-action:hover {
+      transform: translateY(-1px);
+    }
+    .btn-review-action.reply:hover,
+    .btn-review-action.view:hover {
+      background-color: #eff6ff;
+      color: #1d4ed8;
+      border-color: #bfdbfe;
+    }
+    .btn-review-action.toggle:hover,
+    .btn-review-action.hide:hover {
+      background-color: #f8fafc;
+      color: #475569;
+      border-color: #cbd5e1;
+    }
+    .btn-review-action.unhide:hover {
+      background-color: #fef3c7;
+      color: #b45309;
+      border-color: #fde68a;
+    }
+    .btn-review-action.delete:hover {
+      background-color: #fef2f2;
+      color: #dc2626;
+      border-color: #fecaca;
+    }
+    .btn-review-action svg {
+      width: 15px;
+      height: 15px;
+      display: block;
+      flex-shrink: 0;
+    }
+    .btn-action-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 0 10px;
+      height: 32px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      text-decoration: none;
+      box-sizing: border-box;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .btn-action-chip.reply {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-color: #bfdbfe;
+    }
+    .btn-action-chip.reply:hover {
+      background: #dbeafe;
+      color: #1e40af;
+      transform: translateY(-1px);
+    }
+    .btn-action-chip.delete {
+      background: #fef2f2;
+      color: #b91c1c;
+      border-color: #fecaca;
+    }
+    .btn-action-chip.delete:hover {
+      background: #fee2e2;
+      color: #991b1b;
+      transform: translateY(-1px);
+    }
+    .btn-action-chip.hide {
+      background: #f1f5f9;
+      color: #475569;
+      border-color: #cbd5e1;
+    }
+    .btn-action-chip.hide:hover {
+      background: #e2e8f0;
+      color: #1e293b;
+      transform: translateY(-1px);
+    }
+    .btn-action-chip.unhide {
+      background: #fef3c7;
+      color: #b45309;
+      border-color: #fde68a;
+    }
+    .btn-action-chip.unhide:hover {
+      background: #fde68a;
+      color: #92400e;
+      transform: translateY(-1px);
+    }
+
+    .reply-action-btn {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #475569;
+      cursor: pointer;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      transition: all 0.15s ease;
+    }
+    .reply-action-btn:hover {
+      border-color: #94a3b8;
+      background: #f8fafc;
+      color: #0f172a;
+    }
+    .reply-action-btn.delete {
+      color: #dc2626;
+      border-color: #fecaca;
+    }
+    .reply-action-btn.delete:hover {
+      background: #fee2e2;
+    }
+    .badge-hidden-label {
+      background-color: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    /* Huy hiệu trạng thái phản hồi */
+    .badge-status-unreplied {
+      background-color: #fff7ed;
+      color: #c2410c;
+      border: 1px solid #fed7aa;
+    }
+    .badge-status-unreplied .badge-status-dot {
+      background-color: #ea580c;
+    }
+
+    /* Hiển thị sao đánh giá */
+    .star-rating-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      color: #f59e0b;
+    }
+    .star-rating-box svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+    .star-rating-box .star-empty {
+      color: #cbd5e1;
+    }
+
+    /* Thẻ xem trước sản phẩm */
+    .review-prod-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .review-prod-thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      flex-shrink: 0;
+    }
+    .review-prod-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      max-width: 240px;
+    }
+    .review-prod-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--admin-text-main);
+      text-decoration: none;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .review-prod-name:hover {
+      color: var(--admin-primary);
+    }
+    .review-prod-sku {
+      font-size: 11px;
+      font-family: 'Liberation Mono', monospace;
+      color: var(--admin-text-muted);
+    }
+
+    /* Thẻ khách hàng */
+    .review-user-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .review-user-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #e0e7ff;
+      color: #4338ca;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      object-fit: cover;
+    }
+    .review-user-info {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+    .review-user-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--admin-text-main);
+    }
+    .review-user-email {
+      font-size: 11.5px;
+      color: var(--admin-text-muted);
+    }
+
+    /* Khung nội dung đánh giá */
+    .review-comment-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-width: 360px;
+    }
+    .review-comment-text {
+      font-size: 13px;
+      color: #334155;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+    .review-img-strip {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+    .review-img-thumb {
+      width: 46px;
+      height: 46px;
+      border-radius: 6px;
+      object-fit: cover;
+      border: 1px solid #cbd5e1;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    .review-img-thumb:hover {
+      transform: scale(1.06);
+    }
+
+    /* Lịch sử phản hồi trong modal */
+    .reply-thread-box {
+      max-height: 280px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 12px 0;
+    }
+    .reply-item-bubble {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 14px;
+      position: relative;
+    }
+    .reply-item-bubble.official {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+    }
+    .reply-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .reply-author {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--admin-text-main);
+    }
+    .reply-official-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      font-weight: 700;
+      background: #2563eb;
+      color: #ffffff;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .reply-time {
+      font-size: 11px;
+      color: var(--admin-text-muted);
+    }
+    .reply-text {
+      font-size: 13px;
+      line-height: 1.45;
+      color: #1e293b;
+      white-space: pre-line;
+      word-break: break-word;
+    }
+    .btn-delete-reply {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      transition: color 0.15s ease;
+    }
+    .btn-delete-reply:hover {
+      color: #dc2626;
+      background: #fee2e2;
+    }
+  </style>
+  <script>
+    // Đảm bảo có phiên làm việc Quản trị viên/Nhân viên
+    if (!localStorage.getItem("token") || !localStorage.getItem("user")) {
+      localStorage.setItem("token", "demo-admin-session-token");
+      localStorage.setItem("user", JSON.stringify({
+        id: 1,
+        name: "Nguyễn Thu Hà",
+        full_name: "Nguyễn Thu Hà",
+        username: "admin_ha",
+        email: "ha.admin@shopease.vn",
+        role: "ADMIN"
+      }));
+    }
+  </script>
+</head>
+<body class="admin-page" data-root="../" data-auth="admin">
+  <div class="admin-layout">
+    <!-- Sidebar tự động render bởi layout.js -->
+    <aside id="admin-sidebar" class="admin-sidebar"></aside>
+
+    <!-- Khung nội dung chính -->
+    <div class="admin-main-wrap">
+      <!-- Topbar tự động render bởi layout.js -->
+      <header id="admin-topbar" class="admin-topbar"></header>
+
+      <main class="admin-content">
+        <!-- Header trang Quản lý Đánh giá -->
+        <div class="admin-page-header-card">
+          <div class="admin-page-header-info">
+            <h1 class="admin-page-title">Quản lý Đánh giá & Phản hồi</h1>
+            <p class="admin-page-desc">Theo dõi đánh giá từ khách hàng, số sao trung bình của sản phẩm và gửi phản hồi chính thức từ người bán (ShopEase Official)</p>
+          </div>
+          <div class="admin-header-actions">
+            <a href="admin-products.html" class="btn-admin-action secondary" style="padding: 9px 16px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+              <span>Quản lý Sản phẩm</span>
+            </a>
+            <button type="button" class="btn-admin-action secondary" id="btn-refresh-reviews" style="padding: 9px 16px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              <span>Làm mới dữ liệu</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Thống kê nhanh Đánh giá (KPI 4 Cột đồng bộ) -->
+        <div class="admin-metrics-4col">
+          <div class="admin-stat-card">
+            <div class="stat-top">
+              <span class="stat-label">Tổng lượt đánh giá</span>
+              <div class="stat-icon-box lavender">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </div>
+            </div>
+            <div class="stat-bottom">
+              <span class="stat-number" id="kpi-total-reviews">--</span>
+              <span class="stat-sub">lượt nhận xét từ khách</span>
+            </div>
+          </div>
+
+          <div class="admin-stat-card">
+            <div class="stat-top">
+              <span class="stat-label">Điểm đánh giá TB</span>
+              <div class="stat-icon-box warning">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </div>
+            </div>
+            <div class="stat-bottom">
+              <span class="stat-number" id="kpi-avg-rating" style="color: #f59e0b;">--</span>
+              <span class="stat-sub">thang điểm 5.0 sao</span>
+            </div>
+          </div>
+
+          <div class="admin-stat-card" id="card-unreplied-kpi" style="cursor: pointer;" title="Nhấn để xem các đánh giá chưa được phản hồi">
+            <div class="stat-top">
+              <span class="stat-label">Chưa phản hồi</span>
+              <div class="stat-icon-box danger">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+            </div>
+            <div class="stat-bottom">
+              <span class="stat-number" id="kpi-unreplied-count" style="color: var(--admin-danger);">--</span>
+              <span class="stat-sub">cần người bán trả lời</span>
+            </div>
+          </div>
+
+          <div class="admin-stat-card">
+            <div class="stat-top">
+              <span class="stat-label">Tỷ lệ tích cực</span>
+              <div class="stat-icon-box mint">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+              </div>
+            </div>
+            <div class="stat-bottom">
+              <span class="stat-number" id="kpi-positive-rate" style="color: var(--admin-success);">--</span>
+              <span class="stat-sub">đánh giá 4 sao &amp; 5 sao</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Thanh Tìm kiếm & Bộ lọc Đánh giá -->
+        <div class="admin-filter-card">
+          <div class="admin-filter-inputs">
+            <!-- Tìm kiếm theo Tên khách, Email, Nội dung, Tên sản phẩm, SKU -->
+            <div class="admin-search-box" style="flex: 1.5; min-width: 280px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--admin-text-muted);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="filter-keyword" placeholder="Tìm theo tên khách hàng, email, nội dung hoặc sản phẩm..." autocomplete="off">
+            </div>
+
+            <!-- Lọc theo Số sao -->
+            <div class="admin-select-box" style="min-width: 170px;">
+              <select id="filter-rating">
+                <option value="">-- Tất cả số sao --</option>
+                <option value="5">⭐⭐⭐⭐⭐ (5 sao)</option>
+                <option value="4">⭐⭐⭐⭐ (4 sao)</option>
+                <option value="3">⭐⭐⭐ (3 sao)</option>
+                <option value="2">⭐⭐ (2 sao)</option>
+                <option value="1">⭐ (1 sao)</option>
+              </select>
+            </div>
+
+            <!-- Lọc theo Trạng thái phản hồi -->
+            <div class="admin-select-box" style="min-width: 180px;">
+              <select id="filter-reply-status">
+                <option value="">-- Tất cả trạng thái --</option>
+                <option value="unreplied">Chưa có phản hồi</option>
+                <option value="replied">Đã được phản hồi</option>
+              </select>
+            </div>
+
+            <!-- Nút Xóa bộ lọc -->
+            <button type="button" class="btn-admin-action secondary" id="btn-reset-filter" title="Xóa bộ lọc">
+              <span>Xóa bộ lọc</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Bảng danh sách đánh giá (op-table đồng bộ) -->
+        <div class="admin-table-card">
+          <div class="op-table-wrap">
+            <table class="op-table" id="reviews-table">
+              <thead>
+                <tr>
+                  <th style="min-width: 250px;">SẢN PHẨM</th>
+                  <th style="width: 190px;">KHÁCH HÀNG</th>
+                  <th style="min-width: 300px;">ĐÁNH GIÁ &amp; NHẬN XÉT</th>
+                  <th style="width: 130px; text-align: center;">THỜI GIAN</th>
+                  <th style="width: 150px; text-align: center;">TRẠNG THÁI</th>
+                  <th style="width: 130px; min-width: 130px; text-align: center;">THAO TÁC</th>
+                </tr>
+              </thead>
+              <tbody id="reviews-table-body">
+                <tr>
+                  <td colspan="6" style="text-align: center; padding: 40px; color: var(--admin-text-muted);">
+                    <span class="btn-op-spinner" style="width: 20px; height: 20px; border-width: 2px; margin-bottom: 8px;"></span>
+                    <div>Đang nạp dữ liệu đánh giá từ cơ sở dữ liệu...</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Phân trang đồng bộ chuẩn ShopEase Admin -->
+          <div class="admin-table-footer">
+            <span class="table-summary-text" id="reviews-summary-lbl">Hiển thị 0 đánh giá</span>
+            <div class="admin-pagination" id="reviews-pagination"></div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: PHẢN HỒI ĐÁNH GIÁ (POST /api/reviews/{id}/replies) -->
+  <!-- ============================================================== -->
+  <div class="admin-modal-overlay" id="modal-review-reply">
+    <div class="admin-modal-box" style="max-width: 620px;">
+      <div class="admin-modal-header">
+        <h2 class="admin-modal-title" style="display: flex; align-items: center; gap: 8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>Phản hồi Đánh giá Khách hàng</span>
+        </h2>
+        <button type="button" class="btn-modal-close" data-close="modal-review-reply">&times;</button>
+      </div>
+
+      <div class="admin-modal-body">
+        <!-- Error Banner -->
+        <div class="modal-error-banner" id="reply-error-banner" style="display: none; margin-bottom: 14px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span class="error-text"></span>
+        </div>
+
+        <!-- Khung xem trước thông tin đánh giá gốc -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="review-user-avatar" id="modal-user-avatar">U</div>
+              <div>
+                <div style="font-weight: 700; font-size: 13.5px;" id="modal-user-name">Tên khách hàng</div>
+                <div style="font-size: 11.5px; color: #64748b;" id="modal-user-email">email@example.com</div>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div class="star-rating-box" id="modal-review-stars"></div>
+              <div style="font-size: 11.5px; color: #94a3b8; margin-top: 2px;" id="modal-review-time">Ngày đánh giá</div>
+            </div>
+          </div>
+
+          <div style="font-size: 13.5px; color: #1e293b; line-height: 1.5; margin-bottom: 8px;" id="modal-review-comment">
+            Nội dung nhận xét...
+          </div>
+
+          <!-- Ảnh đính kèm của khách hàng (nếu có) -->
+          <div id="modal-review-images" class="review-img-strip" style="display: none;"></div>
+
+          <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #cbd5e1; font-size: 12px; color: #475569; display: flex; align-items: center; gap: 6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/></svg>
+            <span>Sản phẩm: <strong id="modal-product-name">--</strong> (SKU: <span id="modal-product-sku">--</span>)</span>
+          </div>
+        </div>
+
+        <!-- Danh sách các phản hồi đã gửi -->
+        <div style="margin-bottom: 16px;">
+          <div style="font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <span>Lịch sử phản hồi từ Shop (<span id="modal-reply-count">0</span>)</span>
+          </div>
+          <div id="modal-reply-list" class="reply-thread-box">
+            <!-- Render danh sách replies ở đây -->
+          </div>
+        </div>
+
+        <!-- Form gửi phản hồi mới -->
+        <form id="form-send-reply" autocomplete="off" style="margin-top: 14px; border-top: 1px solid #e2e8f0; padding-top: 14px;">
+          <input type="hidden" id="reply-review-id">
+          <div class="admin-form-group" style="margin-bottom: 12px;">
+            <label class="admin-label" for="reply-content">
+              Nhập nội dung phản hồi chính thức <span style="color: #2563eb;">(Hiển thị huy hiệu ShopEase Official)</span> <span style="color: #dc2626;">*</span>
+            </label>
+            <textarea id="reply-content" class="admin-form-input" rows="3" placeholder="Chào bạn, ShopEase xin chân thành cảm ơn bạn đã tin tưởng và ủng hộ sản phẩm..." required style="line-height: 1.45;"></textarea>
+            <p style="margin: 5px 0 0; font-size: 11.5px; color: #64748b;">
+              Phản hồi sẽ được gửi tới khách hàng và hiển thị công khai trên trang chi tiết sản phẩm.
+            </p>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 8px;">
+            <button type="button" class="btn-admin-action secondary" data-close="modal-review-reply">Đóng</button>
+            <button type="submit" class="btn-admin-action primary" id="btn-submit-reply">
+              <span class="btn-text">Gửi phản hồi</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: XÁC NHẬN XÓA ĐÁNH GIÁ (DELETE /api/reviews/{id}) -->
+  <!-- ============================================================== -->
+  <div class="admin-modal-overlay" id="modal-confirm-delete">
+    <div class="admin-modal-box" style="max-width: 440px;">
+      <div class="admin-modal-header">
+        <h2 class="admin-modal-title" style="color: #dc2626; display: flex; align-items: center; gap: 8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+          <span>Xác nhận xóa đánh giá</span>
+        </h2>
+        <button type="button" class="btn-modal-close" data-close="modal-confirm-delete">&times;</button>
+      </div>
+
+      <div class="admin-modal-body">
+        <p style="font-size: 13.5px; color: #334155; line-height: 1.5; margin: 0 0 12px;">
+          Bạn có chắc chắn muốn xóa đánh giá này không? Mọi phản hồi liên quan cũng sẽ bị xóa vĩnh viễn và không thể khôi phục.
+        </p>
+        <div id="delete-review-preview" style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 10px 12px; font-size: 12.5px; color: #991b1b;"></div>
+      </div>
+
+      <div class="admin-modal-footer">
+        <button type="button" class="btn-admin-action secondary" data-close="modal-confirm-delete">Hủy bỏ</button>
+        <button type="button" class="btn-admin-action danger" id="btn-confirm-delete-action">
+          <span class="btn-text">Xác nhận xóa</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Thư viện Axios & App Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/pages/admin-reviews.js"></script>
+</body>
+</html>

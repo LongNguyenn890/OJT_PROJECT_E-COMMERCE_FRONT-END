@@ -12,13 +12,18 @@
   <link rel="stylesheet" href="../css/admin.css">
   <style>
     /* Bố cục trang POS Bán tại quầy */
-    body.admin-page {
-      overflow-x: hidden;
+    html, body.admin-page {
+      overflow-x: clip !important;
+      overflow-y: auto !important;
+    }
+    .admin-layout {
+      overflow: visible !important;
     }
     .admin-main-wrap {
       min-width: 0;
       max-width: calc(100vw - var(--admin-sidebar-width));
-      overflow-x: hidden;
+      overflow-x: clip !important;
+      overflow-y: visible !important;
     }
     @media (max-width: 992px) {
       .admin-main-wrap {
@@ -35,6 +40,7 @@
       width: 100%;
       max-width: 100%;
       box-sizing: border-box;
+      position: relative;
     }
     @media (max-width: 1200px) {
       .pos-main-container {
@@ -173,7 +179,7 @@
       color: #ffffff;
     }
 
-    /* Lưới sản phẩm */
+    /* Lưới sản phẩm có vùng cuộn độc lập trên màn hình POS */
     .pos-products-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -181,6 +187,29 @@
       width: 100%;
       max-width: 100%;
       box-sizing: border-box;
+    }
+    @media (min-width: 993px) {
+      .pos-products-grid {
+        max-height: calc(100vh - 280px);
+        min-height: 420px;
+        overflow-y: auto;
+        padding-right: 6px;
+        scroll-behavior: smooth;
+      }
+      .pos-products-grid::-webkit-scrollbar {
+        width: 6px;
+      }
+      .pos-products-grid::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+      }
+      .pos-products-grid::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+      .pos-products-grid::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
     }
     @media (max-width: 640px) {
       .pos-products-grid {
@@ -344,15 +373,17 @@
       border-radius: 12px;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
       position: sticky;
-      top: 80px;
+      top: calc(var(--admin-topbar-height, 64px) + 16px);
       width: 380px;
       min-width: 380px;
       max-width: 100%;
       box-sizing: border-box;
-      max-height: calc(100vh - 100px);
+      height: fit-content;
+      max-height: calc(100vh - var(--admin-topbar-height, 64px) - 32px);
       overflow: hidden;
+      z-index: 50;
     }
 
     .pos-cart-header {
@@ -757,7 +788,7 @@
       <!-- Topbar tự động render bởi layout.js -->
       <header id="admin-topbar" class="admin-topbar"></header>
 
-      <main class="admin-content" style="max-width: 100%; box-sizing: border-box; overflow-x: hidden; padding: 20px;">
+      <main class="admin-content" style="max-width: 100%; box-sizing: border-box; overflow-x: clip; overflow-y: visible; padding: 20px;">
         <!-- Header trang POS -->
         <div class="admin-page-header-card" style="margin-bottom: 16px;">
           <div class="admin-page-header-info">

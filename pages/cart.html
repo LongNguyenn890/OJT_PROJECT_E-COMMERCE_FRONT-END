@@ -35,60 +35,24 @@
   <header id="app-header"></header>
 
   <main class="cart-main">
-    <!-- 1. BỘ TIẾN TRÌNH 3 BƯỚC (STEPPER WIZARD) -->
-    <div class="cart-stepper-container">
-      <div class="cart-stepper" id="cart-stepper">
-        <!-- Bước 1: Giỏ hàng -->
-        <div class="stepper-item completed" id="step-1">
-          <div class="stepper-circle">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="8" cy="21" r="1"></circle>
-              <circle cx="19" cy="21" r="1"></circle>
-              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
-            </svg>
-          </div>
-          <div class="stepper-text">
-            <span class="stepper-step">Bước 1</span>
-            <span class="stepper-title">Giỏ hàng</span>
-          </div>
-        </div>
-
-        <!-- Line 1-2 -->
-        <div class="stepper-line active" id="line-1-2"></div>
-
-        <!-- Bước 2: Thông tin & Thanh toán -->
-        <div class="stepper-item active" id="step-2">
-          <div class="stepper-circle">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="1" y="3" width="15" height="13"></rect>
-              <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
-              <circle cx="5.5" cy="18.5" r="2.5"></circle>
-              <circle cx="18.5" cy="18.5" r="2.5"></circle>
-            </svg>
-          </div>
-          <div class="stepper-text">
-            <span class="stepper-step">Bước 2</span>
-            <span class="stepper-title">Thông tin &amp; Thanh toán</span>
-          </div>
-        </div>
-
-        <!-- Line 2-3 -->
-        <div class="stepper-line" id="line-2-3"></div>
-
-        <!-- Bước 3: Hoàn tất -->
-        <div class="stepper-item pending" id="step-3">
-          <div class="stepper-circle">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 14 14"></polyline>
-            </svg>
-          </div>
-          <div class="stepper-text">
-            <span class="stepper-step">Bước 3</span>
-            <span class="stepper-title">Hoàn tất</span>
-          </div>
-        </div>
-      </div>
+    <!-- 1. Thanh điều hướng phân cấp (Breadcrumb) -->
+    <div class="cart-breadcrumb-container" style="max-width: var(--shop-container-max, 1240px); margin: 0 auto 8px; padding: 14px 16px 0;">
+      <nav class="se-breadcrumb" aria-label="Đường dẫn điều hướng">
+        <ol class="se-breadcrumb-list">
+          <li class="se-breadcrumb-item">
+            <a href="customer-home.html" class="se-breadcrumb-link">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              <span>Trang chủ</span>
+            </a>
+          </li>
+          <li class="se-breadcrumb-separator" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </li>
+          <li class="se-breadcrumb-item se-breadcrumb-current" aria-current="page">
+            Giỏ hàng &amp; Thanh toán
+          </li>
+        </ol>
+      </nav>
     </div>
 
     <!-- 2. BỐ CỤC 2 CỘT (CART & CHECKOUT LAYOUT) -->
@@ -116,10 +80,21 @@
           <!-- Thanh Chọn tất cả sản phẩm -->
           <div class="cart-select-all-bar" id="cart-select-all-bar" style="display: none;">
             <label class="cart-select-all-label">
-              <input type="checkbox" id="select-all-checkbox" class="cart-custom-checkbox" checked>
+              <input type="checkbox" id="select-all-checkbox" class="cart-custom-checkbox">
               <span id="select-all-label-text">Chọn tất cả (0 sản phẩm)</span>
             </label>
-            <span id="selected-summary-count" style="font-size: 12.5px; color: var(--color-primary, #00288e); font-weight: 600;"></span>
+            <div class="cart-select-all-actions">
+              <span id="selected-summary-count" style="font-size: 12.5px; color: var(--color-primary, #00288e); font-weight: 600;"></span>
+              <button type="button" class="btn-clear-cart" id="btn-clear-all-cart" title="Xóa toàn bộ sản phẩm khỏi giỏ hàng">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+                <span>Xóa tất cả</span>
+              </button>
+            </div>
           </div>
 
           <!-- Danh sách hàng trong giỏ -->
@@ -158,10 +133,10 @@
           <div class="shipping-default-card" id="shipping-default-card">
             <div class="shipping-default-top">
               <div class="shipping-user-meta">
-                <strong class="shipping-recipient-name" id="preview-recipient-name">Đang tải...</strong>
+                <strong class="shipping-recipient-name" id="preview-recipient-name">Chưa có người nhận</strong>
                 <span class="shipping-meta-divider">|</span>
-                <span class="shipping-recipient-phone" id="preview-recipient-phone">09xxxxxxxx</span>
-                <span class="shipping-default-badge" id="preview-default-badge">
+                <span class="shipping-recipient-phone" id="preview-recipient-phone">Chưa có SĐT</span>
+                <span class="shipping-default-badge" id="preview-default-badge" style="display: none;">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="20 6 9 17 4 12"/></svg>
                   Mặc định
                 </span>
@@ -170,15 +145,41 @@
 
             <div class="shipping-address-detail">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0; margin-top:2px; color: var(--color-primary, #00288e);"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-              <span id="preview-recipient-address">Đang tải địa chỉ nhận hàng...</span>
+              <span id="preview-recipient-address">Vui lòng nhập địa chỉ nhận hàng để tiếp tục đặt hàng...</span>
+            </div>
+          </div>
+
+          <!-- HỘP CHỌN ĐỊA CHỈ TỪ SỔ ĐỊA CHỈ (KHI CÓ NHIỀU ĐỊA CHỈ) -->
+          <div class="shipping-address-selector-card" id="shipping-address-selector-card" style="display: none;">
+            <div class="shipping-edit-heading">
+              <span style="font-weight: 700; color: #0f172a; font-size: 14.5px;">Chọn địa chỉ nhận hàng</span>
+              <button type="button" class="shipping-edit-close" id="btn-close-address-selector" title="Đóng" aria-label="Đóng danh sách">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <div class="address-book-list" id="address-book-list">
+              <!-- Nạp động danh sách địa chỉ qua JS -->
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed #e2e8f0;">
+              <button type="button" class="btn-confirm-address" id="btn-open-add-new-address" style="background: #eff6ff; color: #1d4ed8; border: 1.5px solid #bfdbfe;">
+                + Thêm địa chỉ mới
+              </button>
             </div>
           </div>
 
           <!-- 2. HỘP CHỈNH SỬA ĐỊA CHỈ (EDIT DRAWER - MẶC ĐỊNH ẨN, MỞ KHI BẤM NÚT SỬA) -->
           <div class="shipping-edit-card" id="shipping-edit-card" style="display: none;">
             <div class="shipping-edit-heading">
-              <span style="font-weight: 700; color: #0f172a; font-size: 14.5px;">Chỉnh sửa thông tin nhận hàng</span>
-              <button type="button" class="shipping-edit-close" id="btn-close-edit-shipping" title="Đóng">&times;</button>
+              <span id="shipping-edit-title" style="font-weight: 700; color: #0f172a; font-size: 14.5px;">Chỉnh sửa thông tin nhận hàng</span>
+              <button type="button" class="shipping-edit-close" id="btn-close-edit-shipping" title="Đóng" aria-label="Đóng chỉnh sửa">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
             </div>
 
           <form id="shipping-form" novalidate onsubmit="return false;">
@@ -190,7 +191,7 @@
                   <span class="input-left-icon">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                   </span>
-                  <input type="text" id="shipping-name" class="custom-input" placeholder="Ví dụ: Nguyễn Văn An" required>
+                  <input type="text" id="shipping-name" class="custom-input" placeholder="Nhập họ và tên người nhận" required>
                 </div>
                 <div class="field-error-msg" id="name-error"></div>
               </div>
@@ -202,7 +203,7 @@
                   <span class="input-left-icon">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
                   </span>
-                  <input type="tel" id="shipping-phone" class="custom-input" placeholder="0912345678" maxlength="11" required>
+                  <input type="tel" id="shipping-phone" class="custom-input" placeholder="Nhập số điện thoại nhận hàng" maxlength="11" required>
                   <span class="input-right-status" id="phone-valid-icon" title="Số điện thoại hợp lệ">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                   </span>
@@ -210,17 +211,54 @@
                 <div class="field-error-msg" id="phone-error"></div>
               </div>
 
-              <!-- Địa chỉ giao hàng tận nơi -->
+              <!-- Tỉnh / Thành phố -->
+              <div class="form-field-wrapper">
+                <label class="form-field-label" for="shipping-province">Tỉnh / Thành phố <span class="required">*</span></label>
+                <div class="form-input-container">
+                  <span class="input-left-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect width="16" height="20" x="4" y="2" rx="2" ry="2"/>
+                      <path d="M9 22v-4h6v4"/>
+                      <path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/>
+                    </svg>
+                  </span>
+                  <input type="text" id="shipping-province" class="custom-input" placeholder="Nhập tỉnh / thành phố" required>
+                </div>
+                <div class="field-error-msg" id="province-error"></div>
+              </div>
+
+              <!-- Quận / Huyện -->
+              <div class="form-field-wrapper">
+                <label class="form-field-label" for="shipping-district">Quận / Huyện <span class="required">*</span></label>
+                <div class="form-input-container">
+                  <span class="input-left-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M3 21h18"/>
+                      <path d="M5 21V7l8-4v18"/>
+                      <path d="M19 21V11l-6-4"/>
+                      <path d="M9 9v.01"/>
+                      <path d="M9 13v.01"/>
+                      <path d="M9 17v.01"/>
+                    </svg>
+                  </span>
+                  <input type="text" id="shipping-district" class="custom-input" placeholder="Nhập quận / huyện" required>
+                </div>
+                <div class="field-error-msg" id="district-error"></div>
+              </div>
+
+              <!-- Địa chỉ cụ thể (Số nhà, tên đường...) -->
               <div class="form-field-wrapper form-group-full">
-                <label class="form-field-label" for="shipping-address">Địa chỉ giao hàng nhận hàng tận nơi <span class="required">*</span></label>
+                <label class="form-field-label" for="shipping-street">Địa chỉ cụ thể (Số nhà, tên đường, tòa nhà...) <span class="required">*</span></label>
                 <div class="form-input-container">
                   <span class="input-left-icon">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
                   </span>
-                  <input type="text" id="shipping-address" class="custom-input" placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố" required>
+                  <input type="text" id="shipping-street" class="custom-input" placeholder="Nhập số nhà, tên đường, tòa nhà..." required>
                 </div>
-                <div class="field-error-msg" id="address-error"></div>
+                <div class="field-error-msg" id="street-error"></div>
               </div>
+
+              <input type="hidden" id="shipping-address" value="">
 
                 <!-- Tùy chọn lưu làm mặc định cho các đơn hàng sau -->
                 <div class="form-group-full" style="margin-top: 4px;">
@@ -230,8 +268,8 @@
                   </label>
                 </div>
 
-                <!-- Nút thao tác Lưu & Hủy -->
-                <div class="shipping-edit-actions form-group-full">
+                <!-- Nút thao tác Lưu & Hủy & Xóa -->
+                <div class="shipping-edit-actions form-group-full" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                   <button type="button" class="btn-confirm-address" id="btn-save-address-change">
                     Xác nhận địa chỉ
                   </button>
@@ -251,7 +289,7 @@
                 <span class="input-left-icon" style="top: 12px; align-items: flex-start;">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                 </span>
-                <textarea id="shipping-note" class="custom-textarea" rows="2" placeholder="Giao trong giờ hành chính, vui lòng gọi trước khi tới..."></textarea>
+                <textarea id="shipping-note" class="custom-textarea" rows="2" placeholder="Nhập ghi chú cho đơn vị vận chuyển (tùy chọn)..."></textarea>
               </div>
             </div>
           </div>
@@ -345,7 +383,7 @@
             <div class="voucher-bar-unselected" id="voucher-bar-unselected">
               <div class="voucher-bar-left">
                 <span class="voucher-bar-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00288e" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
                     <line x1="7" y1="7" x2="7.01" y2="7"/>
                   </svg>
@@ -371,6 +409,15 @@
                 </button>
               </div>
             </div>
+          </div>
+
+          <!-- Cảnh báo khi chưa có địa chỉ nhận hàng -->
+          <div id="cart-no-address-hint" style="display: none; margin-bottom: 12px; padding: 10px 14px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; font-size: 13px; color: #e11d48; line-height: 1.4;">
+            <div style="font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Chưa có địa chỉ nhận hàng
+            </div>
+            <span>Vui lòng thêm thông tin nhận hàng ở khung bên trái để mở khóa nút đặt hàng.</span>
           </div>
 
           <!-- Nút Đặt hàng ngay -->
@@ -497,7 +544,12 @@
             <p class="qr-modal-subtitle">Sử dụng App ngân hàng bất kỳ để quét mã (Tự động điền đúng số tiền)</p>
           </div>
         </div>
-        <button type="button" class="qr-modal-close-btn" id="btn-close-qr-modal" title="Đóng">&times;</button>
+        <button type="button" class="qr-modal-close-btn" id="btn-close-qr-modal" title="Đóng" aria-label="Đóng popup">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
       </div>
 
       <!-- Body Modal: Bố cục 2 cột (Cột QR & Cột thông tin tài khoản) -->
@@ -605,50 +657,97 @@
       <div class="voucher-modal-header">
         <div class="voucher-modal-header-left">
           <div class="voucher-modal-icon-badge">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2.3">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
               <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
               <line x1="7" y1="7" x2="7.01" y2="7"/>
             </svg>
           </div>
           <div>
-            <h3 class="voucher-modal-title">Chọn ShopEase Voucher</h3>
-            <p class="voucher-modal-desc">Áp dụng mã giảm giá để nhận thêm ưu đãi cho đơn hàng</p>
+            <h3 class="voucher-modal-title">ShopEase Voucher & Ưu đãi</h3>
+            <p class="voucher-modal-desc">Áp dụng hoặc đổi điểm thưởng lấy mã giảm giá cho đơn hàng</p>
           </div>
         </div>
-        <button type="button" class="modal-close-btn" id="btn-close-voucher-modal" title="Đóng">&times;</button>
+        <button type="button" class="modal-close-btn" id="btn-close-voucher-modal" title="Đóng" aria-label="Đóng popup">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
       </div>
 
-      <!-- Banner Điểm thưởng của khách hàng -->
+      <!-- Banner Điểm thưởng của khách hàng đồng bộ thiết kế ShopEase -->
       <div class="voucher-points-banner" id="voucher-points-banner">
         <div class="points-banner-left">
           <span class="points-coin-icon">🪙</span>
-          <span>Điểm thưởng hiện có: <strong id="user-points-val" style="color: #ea580c; font-size: 14px;">0</strong> điểm</span>
+          <span>Điểm thưởng của bạn: <strong id="user-points-val" class="points-val-text">0</strong> điểm</span>
         </div>
         <div class="points-banner-right">
-          <span class="points-policy-tooltip" title="Đơn hàng trên 500k: Cứ mỗi 10k vượt 500k nhận 1 điểm khi Admin duyệt đơn">ℹ️ Quy tắc tích điểm</span>
+          <button type="button" class="btn-banner-redeem" id="btn-banner-redeem-tab" title="Đổi điểm lấy mã giảm giá">
+            <span>🎁 Đổi voucher ngay</span>
+          </button>
+          <span class="points-policy-link" id="btn-show-points-rule" title="Đơn hàng trên 500k: Cứ mỗi 10k vượt 500k nhận 1 điểm khi Admin duyệt đơn">ℹ️ Quy tắc</span>
         </div>
       </div>
 
-      <div class="voucher-modal-search-bar">
-        <div class="modal-search-input-wrap">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="modal-voucher-input" placeholder="Nhập mã voucher giảm giá..." autocomplete="off" spellcheck="false">
-        </div>
-        <button type="button" id="btn-modal-apply-code" class="btn-modal-apply">Áp dụng</button>
+      <!-- Thanh chuyển Tab: Voucher của bạn vs Kho đổi voucher -->
+      <div class="voucher-modal-tabs">
+        <button type="button" class="voucher-tab-btn active" id="tab-btn-my-vouchers" data-tab="my-vouchers">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          Voucher của bạn (<span id="my-vouchers-count">0</span>)
+        </button>
+        <button type="button" class="voucher-tab-btn" id="tab-btn-redeem-vouchers" data-tab="redeem-tiers">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/></svg>
+          Kho đổi voucher <span class="hot-badge">Ưu đãi</span>
+        </button>
       </div>
 
-      <div class="voucher-modal-body">
-        <div class="voucher-list-header">
-          <span class="voucher-list-title">Mã giảm giá có thể áp dụng</span>
-          <span class="voucher-eligible-note" id="voucher-eligible-note"></span>
+      <!-- PANE 1: DANH SÁCH VOUCHER CỦA BẠN ĐỂ ÁP DỤNG -->
+      <div class="voucher-tab-pane active" id="pane-my-vouchers">
+        <div class="voucher-modal-search-bar">
+          <div class="modal-search-input-wrap">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="modal-voucher-input" placeholder="Nhập mã voucher giảm giá..." autocomplete="off" spellcheck="false">
+          </div>
+          <button type="button" id="btn-modal-apply-code" class="btn-modal-apply">Áp dụng</button>
         </div>
-        <div class="voucher-cards-list" id="voucher-cards-list">
-          <!-- Danh sách thẻ voucher sẽ được render động bằng JavaScript -->
+
+        <div class="voucher-modal-body">
+          <div class="voucher-list-header">
+            <span class="voucher-list-title">Mã giảm giá có thể áp dụng</span>
+            <span class="voucher-eligible-note" id="voucher-eligible-note"></span>
+          </div>
+          <div class="voucher-cards-list" id="voucher-cards-list">
+            <!-- Danh sách thẻ voucher sẽ được render động bằng JavaScript -->
+          </div>
+        </div>
+      </div>
+
+      <!-- PANE 2: KHO ĐỔI VOUCHER BẰNG ĐIỂM THƯỞNG -->
+      <div class="voucher-tab-pane" id="pane-redeem-tiers" style="display: none;">
+        <div class="redeem-filter-bar">
+          <div class="redeem-filter-chips">
+            <button type="button" class="redeem-chip active" data-filter="all">Tất cả</button>
+            <button type="button" class="redeem-chip" data-filter="freeship">🚚 FreeShip</button>
+            <button type="button" class="redeem-chip" data-filter="percent">% Giảm giá</button>
+            <button type="button" class="redeem-chip" data-filter="fixed">💰 Cố định</button>
+          </div>
+          <span class="redeem-points-badge">
+            Ví điểm: <strong id="redeem-pane-points-val">0</strong> điểm
+          </span>
+        </div>
+
+        <div class="voucher-modal-body redeem-body">
+          <div class="redeem-tiers-grid" id="redeem-tiers-grid">
+            <!-- Danh sách các gói đổi voucher render động -->
+          </div>
         </div>
       </div>
 
       <div class="voucher-modal-footer">
-        <button type="button" class="btn-modal-close" id="btn-footer-close-voucher">Đóng</button>
+        <button type="button" class="btn-footer-toggle-tab" id="btn-footer-toggle-tab">
+          🎁 Đổi voucher bằng điểm
+        </button>
+        <button type="button" class="btn-modal-footer-close" id="btn-footer-close-voucher">Đóng</button>
       </div>
     </div>
   </div>

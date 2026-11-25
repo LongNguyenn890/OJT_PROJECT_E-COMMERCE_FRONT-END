@@ -36,11 +36,22 @@
 
   <!-- NỘI DUNG CHÍNH TRANG YÊU THÍCH -->
   <main class="wishlist-main">
-    <!-- Breadcrumbs -->
-    <nav class="wishlist-breadcrumbs" aria-label="Điều hướng phân cấp">
-      <a href="customer-home.html">Trang chủ</a>
-      <span class="crumb-sep">/</span>
-      <span class="crumb-current">Sản phẩm yêu thích</span>
+    <!-- Breadcrumbs phân cấp điều hướng chuẩn hệ thống -->
+    <nav class="se-breadcrumb" aria-label="Đường dẫn điều hướng" style="margin-bottom: 20px;">
+      <ol class="se-breadcrumb-list">
+        <li class="se-breadcrumb-item">
+          <a href="customer-home.html" class="se-breadcrumb-link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <span>Trang chủ</span>
+          </a>
+        </li>
+        <li class="se-breadcrumb-separator" aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </li>
+        <li class="se-breadcrumb-item se-breadcrumb-current" aria-current="page">
+          Sản phẩm yêu thích
+        </li>
+      </ol>
     </nav>
 
     <!-- Khối tiêu đề và nút thao tác nhanh -->

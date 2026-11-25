@@ -204,6 +204,16 @@ function productRatingMarkup(product) {
   </div>`;
 }
 
+// Thuật toán xáo trộn mảng Fisher-Yates để hiển thị ngẫu nhiên sản phẩm
+function shuffleArray(array) {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 function renderProducts() {
   const grid = document.getElementById("product-grid");
   if (!grid) return;
@@ -217,8 +227,15 @@ function renderProducts() {
                        product.promotional_price !== undefined &&
                        Number(product.promotional_price) >= 0 &&
                        Number(product.promotional_price) < Number(product.price);
+      let discountPercent = 0;
+      if (hasPromo && Number(product.price) > 0) {
+        discountPercent = Math.round(((Number(product.price) - Number(product.promotional_price)) / Number(product.price)) * 100);
+      }
       const catName = formatCategoryDisplayName(product.category);
       const categoryTag = catName ? `<span class="product-tag">${escapeHTML(catName)}</span>` : "";
+      const discountPill = (hasPromo && discountPercent > 0)
+        ? `<span class="product-discount-pill">-${discountPercent}%</span>`
+        : "";
       const displayPrice = hasPromo ? Number(product.promotional_price) : Number(product.price);
       const isWishlisted = (typeof Wishlist !== "undefined") ? Wishlist.isWishlisted(product.id) : false;
       return `
@@ -239,6 +256,7 @@ function renderProducts() {
             <div class="product-price">
               <strong class="price-current">${formatPrice(displayPrice)}</strong>
               ${hasPromo ? `<del class="product-old-price">${formatPrice(product.price)}</del>` : ""}
+              ${discountPill}
             </div>
             <div class="product-actions">
               <button class="light-button" data-action="details" data-id="${product.id}"><img src="${asset("chi tiết.svg")}" alt=""> Xem chi tiết</button>
@@ -284,8 +302,17 @@ async function loadProducts({ append = false } = {}) {
   const requestId = ++state.requestId;
   const requestedPage = append ? state.page + 1 : 1;
   const sortSelect = document.getElementById("sort-select");
+
+  // Kiểm tra nếu đang ở chế độ mặc định (Khám phá ngẫu nhiên) và không tìm kiếm / không lọc danh mục
+  const isDefaultSort = !sortSelect || sortSelect.value === "featured" || sortSelect.value === "random";
+  let targetPage = requestedPage;
+  if (!append && isDefaultSort && !state.searchKeyword && (!state.categoryIds || state.categoryIds.length === 0)) {
+    // Chọn ngẫu nhiên trang nguồn (1 đến 4) để sản phẩm được phân bổ đa dạng qua nhiều ngành hàng khi load / reload trang
+    targetPage = Math.floor(Math.random() * 4) + 1;
+  }
+
   const params = {
-    page: requestedPage,
+    page: targetPage,
     page_size: PAGE_SIZE,
     sort: sortSelect ? (
       sortSelect.value === "price-asc" ? "price_asc" :
@@ -322,7 +349,20 @@ async function loadProducts({ append = false } = {}) {
   try {
     const result = await api.get("/products", params);
     if (requestId !== state.requestId) return;
-    const items = result.items || [];
+    let items = result.items || [];
+    if (!items.length && targetPage > 1) {
+      // Fallback về trang 1 nếu trang ngẫu nhiên không có sản phẩm
+      const fallbackResult = await api.get("/products", { ...params, page: 1 });
+      items = fallbackResult.items || [];
+    }
+    // Xáo trộn ngẫu nhiên thứ tự khi ở chế độ mặc định (Khám phá ngẫu nhiên)
+    if (isDefaultSort) {
+      items = shuffleArray(items);
+    }
+    // Sắp xếp theo tên A-Z nếu người dùng chọn
+    if (sortSelect && sortSelect.value === "name") {
+      items.sort((a, b) => (a.name || "").localeCompare(b.name || "", "vi"));
+    }
     state.products = append ? [...state.products, ...items] : items;
     state.page = requestedPage;
     state.total = Number(result.total || 0);
@@ -737,6 +777,16 @@ window.applyCustomerSearch = function (keyword) {
   state.searchKeyword = String(keyword !== undefined ? keyword : (document.getElementById("shop-search")?.value || "")).trim();
   const searchInput = document.getElementById("shop-search");
   if (searchInput) searchInput.value = state.searchKeyword;
+  if (state.searchKeyword) {
+    try {
+      const KEY_SEARCH_HISTORY = "shopease_search_history";
+      let history = JSON.parse(localStorage.getItem(KEY_SEARCH_HISTORY) || "[]");
+      history = history.filter(item => item && item.toLowerCase() !== state.searchKeyword.toLowerCase());
+      history.unshift(state.searchKeyword);
+      history = history.slice(0, 10);
+      localStorage.setItem(KEY_SEARCH_HISTORY, JSON.stringify(history));
+    } catch (_) {}
+  }
   updateSearchMode();
   updateActiveFilterBar();
   state.page = 1;
@@ -749,12 +799,7 @@ document.getElementById("search-submit")?.addEventListener("click", () => {
   window.applyCustomerSearch(query);
 });
 
-document.addEventListener("keydown", event => {
-  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
-    event.preventDefault();
-    document.getElementById("shop-search")?.focus();
-  }
-});
+// Phím tắt Ctrl + K & Escape được quản lý tập trung và đồng bộ trong layout.js
 
 document.getElementById("pagination")?.addEventListener("click", event => {
   const button = event.target.closest("[data-load-more]");

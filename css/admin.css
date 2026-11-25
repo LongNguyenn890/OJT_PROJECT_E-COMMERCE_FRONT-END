@@ -54,7 +54,7 @@ body.admin-page {
   color: var(--admin-text-main);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 .admin-layout {
@@ -1303,7 +1303,7 @@ body.admin-page {
 }
 
 .btn-op-action {
-  height: 30px;
+  height: 32px;
   border-radius: 6px;
   border: 1px solid transparent;
   display: inline-flex;
@@ -1321,9 +1321,10 @@ body.admin-page {
   transform: scale(0.96);
 }
 
-/* 1. Nút Xem chi tiết: hình vuông bo góc 30x30, nền lavender nhạt */
+/* 1. Nút Xem chi tiết: hình vuông bo góc 32x32, nền lavender nhạt */
 .btn-op-action.btn-op-view {
-  width: 30px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   background-color: #eef2ff;
   color: #4338ca;
@@ -2213,16 +2214,33 @@ body.admin-page {
 }
 
 .btn-modal-close {
-  background: none;
-  border: none;
-  font-size: 24px;
-  line-height: 1;
-  color: var(--admin-text-muted);
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   padding: 0;
+  font-size: 20px;
+  line-height: 1;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 .btn-modal-close:hover {
-  color: var(--admin-text-main);
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #ef4444;
+  transform: rotate(90deg) scale(1.06);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+.btn-modal-close:active {
+  transform: rotate(90deg) scale(0.95);
 }
 
 .admin-modal-body {
@@ -3269,20 +3287,35 @@ select.realtime-interval-select:focus {
 }
 
 .order-date-popover .popover-close-btn {
-  background: transparent;
-  border: none;
-  color: #94a3b8;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
   font-size: 18px;
   line-height: 1;
-  cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 4px;
-  transition: color 0.15s, background-color 0.15s;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .order-date-popover .popover-close-btn:hover {
-  color: #0f172a;
-  background-color: #f1f5f9;
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #ef4444;
+  transform: rotate(90deg) scale(1.06);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+.order-date-popover .popover-close-btn:active {
+  transform: rotate(90deg) scale(0.95);
 }
 
 .order-date-popover .popover-presets {
@@ -3529,13 +3562,33 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .btn-admin-action.secondary {
-  background: var(--admin-lavender);
-  color: var(--admin-primary-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: var(--admin-lavender, #f1f5f9);
+  color: var(--admin-primary-dark, #001a61);
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
 }
 
 .btn-admin-action.secondary:hover {
   background: #dde1ff;
   color: #1e40af;
+  border-color: #bfdbfe;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(0, 40, 142, 0.12);
+}
+
+.btn-admin-action.secondary:active {
+  transform: translateY(0);
 }
 
 /* Đảm bảo toàn bộ khung bộ lọc của admin luôn nổi lên trên bảng và không bị che khuất */
@@ -3711,3 +3764,321 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   gap: 6px;
   font-weight: 500;
 }
+
+/* ==========================================================
+   ADMIN BREADCRUMB - PHÂN CẤP TRANG QUẢN TRỊ
+   ========================================================== */
+.admin-breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 12px;
+  margin-bottom: 6px;
+  color: var(--admin-text-muted, #757684);
+}
+
+.admin-bc-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--admin-primary, #00288e);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.admin-bc-link:hover {
+  color: var(--admin-primary-dark, #001a61);
+  text-decoration: underline;
+}
+
+.admin-bc-sep {
+  color: #cbd5e1;
+  font-size: 11px;
+  user-select: none;
+}
+
+.admin-bc-current {
+  color: var(--admin-text-main, #131b2e);
+  font-weight: 600;
+}
+
+/* ============================================================== */
+/* 13. HỆ THỐNG NÚT THAO TÁC BẢNG CHUẨN HÓA ĐỒNG ĐỀU (TABLE ACTION SYSTEM) */
+/* ============================================================== */
+
+/* Khung chứa các nút thao tác trong cột THAO TÁC của bảng */
+.prod-actions-row,
+.cat-actions-row,
+.user-actions-row,
+.order-actions-cell,
+.review-actions-cell,
+.op-actions-wrap,
+.admin-actions-cell,
+.table-actions-cell {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  flex-wrap: nowrap !important;
+  vertical-align: middle !important;
+}
+
+/* Các cột thao tác trong bảng */
+th.actions-header,
+td.actions-col,
+th[data-col="actions"],
+td[data-col="actions"] {
+  text-align: center !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+
+/* NÚT VUÔNG BIỂU TƯỢNG (Square Icon Buttons - Chuẩn 32x32px) */
+.btn-table-action.icon-only,
+.btn-table-action.view,
+.btn-table-action.print,
+.btn-prod-action,
+.btn-cat-action,
+.btn-user-action,
+.btn-review-action,
+.btn-op-action.btn-op-view {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+  padding: 0 !important;
+  border-radius: 6px !important;
+  border: 1px solid transparent !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+  background-color: transparent;
+  color: var(--admin-text-muted, #64748b);
+  line-height: 1 !important;
+}
+
+.btn-table-action.icon-only svg,
+.btn-table-action.view svg,
+.btn-table-action.print svg,
+.btn-prod-action svg,
+.btn-cat-action svg,
+.btn-user-action svg,
+.btn-review-action svg,
+.btn-op-action.btn-op-view svg {
+  width: 15px !important;
+  height: 15px !important;
+  display: block !important;
+  flex-shrink: 0 !important;
+}
+
+/* NÚT THAO TÁC DẠNG CHIP / BADGE (Có chữ + icon - Chiều cao chuẩn 32px) */
+.btn-action-chip,
+.btn-inv-chip,
+.btn-table-action:not(.view):not(.print),
+.btn-op-action:not(.btn-op-view) {
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 10px !important;
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  line-height: 1 !important;
+  transition: all 0.15s ease !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+  border: 1px solid transparent !important;
+  text-decoration: none !important;
+}
+
+.btn-action-chip svg,
+.btn-inv-chip svg,
+.btn-table-action:not(.view):not(.print) svg,
+.btn-op-action:not(.btn-op-view) svg {
+  width: 13px !important;
+  height: 13px !important;
+  display: block !important;
+  flex-shrink: 0 !important;
+}
+
+/* ĐỒNG BỘ HIỆU ỨNG HOVER & MÀU SẮC TRẠNG THÁI */
+/* 1. Xem chi tiết / Sửa / Phản hồi / Nhập kho (Xanh dương) */
+.btn-prod-action.view:hover,
+.btn-prod-action.edit:hover,
+.btn-cat-action.edit:hover,
+.btn-user-action.view:hover,
+.btn-user-action.edit:hover,
+.btn-review-action.reply:hover,
+.btn-review-action.view:hover,
+.btn-table-action.view:hover,
+.btn-op-action.btn-op-view:hover,
+.btn-action-chip.reply,
+.btn-inv-chip.import {
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border-color: #bfdbfe !important;
+}
+
+.btn-prod-action.view:hover,
+.btn-prod-action.edit:hover,
+.btn-cat-action.edit:hover,
+.btn-user-action.view:hover,
+.btn-user-action.edit:hover,
+.btn-review-action.reply:hover,
+.btn-review-action.view:hover,
+.btn-table-action.view:hover,
+.btn-op-action.btn-op-view:hover,
+.btn-action-chip.reply:hover,
+.btn-inv-chip.import:hover {
+  background-color: #dbeafe !important;
+  color: #1e40af !important;
+  border-color: #93c5fd !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 5px rgba(29, 78, 216, 0.12) !important;
+}
+
+/* 2. Xóa / Khóa (Đỏ nguy hiểm) */
+.btn-prod-action.delete:hover,
+.btn-cat-action.delete:hover,
+.btn-user-action.delete:hover,
+.btn-user-action.lock:hover,
+.btn-review-action.delete:hover,
+.btn-action-chip.delete {
+  background-color: #fef2f2 !important;
+  color: #dc2626 !important;
+  border-color: #fecaca !important;
+}
+
+.btn-prod-action.delete:hover,
+.btn-cat-action.delete:hover,
+.btn-user-action.delete:hover,
+.btn-user-action.lock:hover,
+.btn-review-action.delete:hover,
+.btn-action-chip.delete:hover {
+  background-color: #fee2e2 !important;
+  color: #b91c1c !important;
+  border-color: #fca5a5 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 5px rgba(220, 38, 38, 0.12) !important;
+}
+
+/* 3. Ẩn / Đổi trạng thái (Xám / Xanh đá) */
+.btn-prod-action.toggle:hover,
+.btn-review-action.toggle:hover,
+.btn-review-action.hide:hover,
+.btn-action-chip.hide {
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.btn-prod-action.toggle:hover,
+.btn-review-action.toggle:hover,
+.btn-review-action.hide:hover,
+.btn-action-chip.hide:hover {
+  background-color: #f1f5f9 !important;
+  color: #1e293b !important;
+  border-color: #94a3b8 !important;
+  transform: translateY(-1px) !important;
+}
+
+/* 4. Mở khóa / Hiện / Bỏ ẩn (Xanh ngọc / Hổ phách) */
+.btn-user-action.unlock:hover {
+  background-color: #ecfdf5 !important;
+  color: #059669 !important;
+  border-color: #a7f3d0 !important;
+  transform: translateY(-1px) !important;
+}
+
+.btn-review-action.unhide:hover {
+  background-color: #fef3c7 !important;
+  color: #b45309 !important;
+  border-color: #fde68a !important;
+  transform: translateY(-1px) !important;
+}
+  transform: translateY(-1px) !important;
+}
+
+.btn-action-chip.unhide {
+  background-color: #fef3c7 !important;
+  color: #b45309 !important;
+  border-color: #fde68a !important;
+}
+
+.btn-action-chip.unhide:hover {
+  background-color: #fde68a !important;
+  color: #92400e !important;
+  border-color: #f59e0b !important;
+  transform: translateY(-1px) !important;
+}
+
+/* 5. In ấn / Nhật ký kho (Slate) */
+.btn-table-action.print,
+.btn-inv-chip.logs {
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+}
+
+.btn-table-action.print:hover,
+.btn-inv-chip.logs:hover {
+  background-color: #f1f5f9 !important;
+  color: #1e293b !important;
+  border-color: #cbd5e1 !important;
+  transform: translateY(-1px) !important;
+}
+
+/* 6. Kiểm kê điều chỉnh kho (Tím) */
+.btn-inv-chip.adjust {
+  background-color: #fdf4ff !important;
+  color: #9333ea !important;
+  border-color: #f5d0fe !important;
+}
+
+.btn-inv-chip.adjust:hover {
+  background-color: #fae8ff !important;
+  color: #7e22ce !important;
+  border-color: #e9d5ff !important;
+  transform: translateY(-1px) !important;
+}
+
+/* 7. Duyệt đơn hàng / Hoàn thành (Emerald) */
+.btn-table-action.confirm-flow,
+.btn-op-action.approve {
+  background-color: #10b981 !important;
+  color: #ffffff !important;
+  border-color: #059669 !important;
+}
+
+.btn-table-action.confirm-flow:hover,
+.btn-op-action.approve:hover {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+  border-color: #047857 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25) !important;
+}
+
+/* Trạng thái khi nhấn giữ nút */
+.btn-prod-action:active,
+.btn-cat-action:active,
+.btn-user-action:active,
+.btn-table-action:active,
+.btn-action-chip:active,
+.btn-inv-chip:active,
+.btn-op-action:active {
+  transform: scale(0.96) !important;
+}
+
+

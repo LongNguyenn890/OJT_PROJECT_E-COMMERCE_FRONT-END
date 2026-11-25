@@ -159,6 +159,13 @@
                        item.promotional_price !== undefined &&
                        Number(item.promotional_price) >= 0 &&
                        Number(item.promotional_price) < Number(item.price);
+      let discountPercent = 0;
+      if (hasPromo && Number(item.price) > 0) {
+        discountPercent = Math.round(((Number(item.price) - Number(item.promotional_price)) / Number(item.price)) * 100);
+      }
+      const discountPill = (hasPromo && discountPercent > 0)
+        ? `<span class="product-discount-pill">-${discountPercent}%</span>`
+        : "";
       const displayPrice = hasPromo ? Number(item.promotional_price) : Number(item.price);
       const img = resolveImageUrl(item.image_url);
       const catName = item.category_name || "Sản phẩm";
@@ -186,6 +193,7 @@
             <div class="wishlist-card-price-box">
               <strong class="wishlist-price-current">${formatPrice(displayPrice)}</strong>
               ${hasPromo ? `<del class="wishlist-price-old">${formatPrice(item.price)}</del>` : ""}
+              ${discountPill}
             </div>
             <div class="wishlist-card-actions">
               <a href="product-detail.html?id=${item.id}" class="wl-btn-details">

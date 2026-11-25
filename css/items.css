@@ -200,22 +200,26 @@ html {
   gap: 6px;
 }
 
-.suggest-clear-btn {
-  background: transparent;
-  border: none;
-  color: #94a3b8;
-  font-size: 11.5px;
-  cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: 500;
-  text-transform: none;
-  transition: all 0.15s ease;
+.search-suggest-dropdown .suggest-clear-btn {
+  background: transparent !important;
+  border: none !important;
+  color: #94a3b8 !important;
+  font-size: 11.5px !important;
+  cursor: pointer !important;
+  padding: 3px 8px !important;
+  border-radius: 4px !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  height: auto !important;
+  line-height: 1.2 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  transition: all 0.15s ease !important;
 }
 
-.suggest-clear-btn:hover {
-  color: #dc2626;
-  background: #fee2e2;
+.search-suggest-dropdown .suggest-clear-btn:hover {
+  color: #dc2626 !important;
+  background: #fee2e2 !important;
 }
 
 .suggest-list {
@@ -357,22 +361,96 @@ html {
   padding: 12px 16px 16px;
 }
 
-.suggest-tag-chip {
-  padding: 5px 12px;
-  border-radius: 20px;
+.search-suggest-dropdown .suggest-tag-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 6px 14px !important;
+  border-radius: 20px !important;
+  background: #f8fafc !important;
+  color: #334155 !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  border: 1px solid #e2e8f0 !important;
+  cursor: pointer !important;
+  height: auto !important;
+  line-height: 1.3 !important;
+  white-space: nowrap !important;
+  transition: all 0.15s ease !important;
+}
+
+.search-suggest-dropdown .suggest-tag-chip:hover {
+  background: #eff6ff !important;
+  color: #00288e !important;
+  border-color: #bfdbfe !important;
+  transform: translateY(-1px);
+}
+
+/* LỊCH SỬ TÌM KIẾM */
+.suggest-history-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 16px 14px;
+}
+
+.suggest-history-chip {
+  display: inline-flex;
+  align-items: center;
   background: #f1f5f9;
-  color: #334155;
-  font-size: 12px;
-  font-weight: 500;
   border: 1px solid #e2e8f0;
-  cursor: pointer;
+  border-radius: 20px;
+  padding: 4px 8px 4px 12px;
+  font-size: 13px;
+  color: #334155;
   transition: all 0.15s ease;
 }
 
-.suggest-tag-chip:hover {
-  background: #eff6ff;
-  color: #082e9e;
-  border-color: #bfdbfe;
+.suggest-history-chip:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
+.history-chip-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: #334155;
+  font-weight: 500;
+  padding: 2px 0;
+}
+
+.history-chip-text:hover {
+  color: #00288e;
+}
+
+.history-chip-text svg {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.search-suggest-dropdown .history-chip-remove {
+  background: transparent !important;
+  border: none !important;
+  color: #94a3b8 !important;
+  font-size: 15px !important;
+  line-height: 1 !important;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-left: 4px !important;
+  transition: all 0.15s ease !important;
+}
+
+.search-suggest-dropdown .history-chip-remove:hover {
+  background: #fee2e2 !important;
+  color: #dc2626 !important;
 }
 
 #app-header .header-search input {
@@ -389,7 +467,8 @@ html {
   outline: none;
 }
 
-.header-search button,
+.header-search > button,
+#search-submit,
 .blue-button {
   border: 0;
   border-radius: 8px;
@@ -400,13 +479,15 @@ html {
   transition: background 0.2s;
 }
 
-.header-search button:hover,
+.header-search > button:hover,
+#search-submit:hover,
 .blue-button:hover {
   background: #1d4ed8;
   color: #ffffff;
 }
 
-.header-search button {
+.header-search > button,
+#search-submit {
   flex: 0 0 auto;
   white-space: nowrap;
   height: 36px;
@@ -504,7 +585,7 @@ html {
   justify-content: center;
   width: 24px;
   height: 24px;
-  color: #082e9e;
+  color: #00288e;
   flex-shrink: 0;
   margin-right: 5px;
 }
@@ -512,8 +593,38 @@ html {
 .orders-icon-wrap svg {
   width: 20px;
   height: 20px;
-  stroke: #082e9e;
+  transition: transform 0.2s;
+}
+
+.orders-icon-wrap svg .order-doc-bg {
+  fill: #e8effe;
+  stroke: #00288e;
   stroke-width: 2;
+  stroke-linejoin: round;
+  transition: fill 0.2s;
+}
+
+.orders-icon-wrap svg .order-doc-fold {
+  fill: #c7d7f7;
+  stroke: #00288e;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.orders-icon-wrap svg .order-doc-line {
+  fill: none;
+  stroke: #00288e;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.orders-tool:hover .orders-icon-wrap svg {
+  transform: scale(1.1);
+}
+
+.orders-tool:hover .orders-icon-wrap svg .order-doc-bg {
+  fill: #dbeafe;
 }
 
 /* 3. Wishlist Tool trong Header */
@@ -585,13 +696,6 @@ html {
   box-shadow: 0 1px 3px rgba(225, 29, 72, 0.3);
   box-sizing: border-box;
   line-height: 1;
-}
-  height: 20px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.9;
-  stroke-linecap: round;
-  stroke-linejoin: round;
 }
 
 /* 3. User Tool & Dropdown Menu */
@@ -2127,6 +2231,58 @@ html {
   pointer-events: none;
 }
 
+/* Nhóm huy hiệu góc trên ảnh sản phẩm (Ngành hàng + % Giảm giá) */
+.product-badges-group {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  pointer-events: none;
+  max-width: calc(100% - 46px);
+}
+
+.product-badges-group .product-tag {
+  position: static;
+  margin: 0;
+}
+
+/* Huy hiệu % Giảm giá nổi bật trên ảnh */
+.product-discount-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5px 7px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.35);
+  letter-spacing: -0.2px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* Thẻ % Giảm giá cạnh giá cũ */
+.product-discount-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  margin-left: 2px;
+}
+
 .favorite {
   position: absolute;
   right: 8px;
@@ -2984,15 +3140,20 @@ body.search-results-only .shop-main > .products-heading {
   gap: 8px;
 }
 
+.notify-heading-title svg {
+  color: #00288e;
+  flex-shrink: 0;
+}
+
 .notify-empty-icon {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: #f1f5f9;
+  background: #e8effe;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #94a3b8;
+  color: #00288e;
   margin-bottom: 4px;
 }
 

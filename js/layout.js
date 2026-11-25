@@ -146,6 +146,7 @@ function renderAdminLayout() {
   const isPosActive = currentPath.endsWith("/admin-pos.html");
   const isInventoryActive = currentPath.endsWith("/admin-inventory.html");
   const isReportsActive = currentPath.endsWith("/admin-reports.html");
+  const isReviewsActive = currentPath.endsWith("/admin-reviews.html") || currentPath.endsWith("/admin-reviews");
 
   if (sidebarElem) {
     sidebarElem.innerHTML = `
@@ -204,6 +205,11 @@ function renderAdminLayout() {
             <span>Quản lý Khách hàng</span>
           </a>
 
+          <a href="${root}pages/admin-reviews.html" class="admin-nav-item ${isReviewsActive ? "active" : ""}">
+            <svg class="admin-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Quản lý Đánh giá</span>
+          </a>
+
           <a href="${root}pages/admin-reports.html" class="admin-nav-item ${isReportsActive ? "active" : ""}">
             <svg class="admin-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
             <span>Thống kê &amp; Báo cáo</span>
@@ -229,7 +235,7 @@ function renderAdminLayout() {
           </button>
           <div class="admin-global-search">
             <svg class="admin-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" class="admin-search-input" placeholder="Tìm kiếm toàn cục (mã đơn, tên sản phẩm, khách hàng)..." aria-label="Tìm kiếm toàn cục">
+            <input type="text" class="admin-search-input" placeholder="Tìm kiếm toàn cục (mã đơn, tên sản phẩm, khách hàng)... (Ctrl + K)" aria-label="Tìm kiếm toàn cục">
           </div>
         </div>
 
@@ -358,6 +364,40 @@ function renderAdminLayout() {
         sidebarElem.classList.remove("show");
         backdrop.classList.remove("show");
       });
+    }
+
+    // Tự động bổ sung Breadcrumb phân cấp trang cho giao diện Quản trị
+    const headerInfo = document.querySelector(".admin-page-header-info");
+    if (headerInfo && !headerInfo.querySelector(".admin-breadcrumb")) {
+      const pageTitleMap = {
+        "admin-dashboard.html": "Tổng quan",
+        "admin-orders.html": "Quản lý Đơn hàng",
+        "admin-pos.html": "Bán tại quầy (POS)",
+        "admin-products.html": "Quản lý Sản phẩm",
+        "admin-categories.html": "Quản lý Danh mục",
+        "admin-inventory.html": "Quản lý Kho hàng",
+        "admin-staff.html": "Quản lý Nhân viên",
+        "admin-customers.html": "Quản lý Khách hàng",
+        "customer-management.html": "Quản lý Khách hàng",
+        "admin-reviews.html": "Quản lý Đánh giá & Phản hồi",
+        "admin-reports.html": "Thống kê & Báo cáo"
+      };
+      const pageFile = currentPath.split("/").pop() || "";
+      if (pageFile && pageFile !== "admin-dashboard.html" && pageTitleMap[pageFile]) {
+        const bc = document.createElement("nav");
+        bc.className = "admin-breadcrumb";
+        bc.setAttribute("aria-label", "Phân cấp trang quản trị");
+        bc.innerHTML = `
+          <a href="${root}pages/admin-dashboard.html" class="admin-bc-link">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+            <span>Tổng quan</span>
+          </a>
+          <span class="admin-bc-sep">/</span>
+          ${pageFile === "admin-reviews.html" ? `<a href="${root}pages/admin-products.html" class="admin-bc-link">Sản phẩm</a><span class="admin-bc-sep">/</span>` : ""}
+          <span class="admin-bc-current">${pageTitleMap[pageFile]}</span>
+        `;
+        headerInfo.insertBefore(bc, headerInfo.firstChild);
+      }
     }
   }
 }
@@ -558,7 +598,13 @@ function renderLayout() {
             <div class="orders-tool-wrapper">
               <button class="orders-tool" id="shop-orders-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="shop-orders-panel" title="Đơn mua gần đây">
                 <div class="orders-icon-wrap">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.75h8.5L20 8.2v11.05A1.75 1.75 0 0 1 18.25 21h-11A1.75 1.75 0 0 1 5.5 19.25v-13A2.5 2.5 0 0 1 8 3.75Z"/><path d="M15 4v4.5h4.5M8.5 12h7M8.5 15.5h7"/></svg>
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path class="order-doc-bg" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
+                    <path class="order-doc-fold" d="M14 2v6h6"/>
+                    <line class="order-doc-line" x1="16" y1="13" x2="8" y2="13"/>
+                    <line class="order-doc-line" x1="16" y1="17" x2="8" y2="17"/>
+                    <line class="order-doc-line" x1="10" y1="9" x2="8" y2="9"/>
+                  </svg>
                 </div>
                 <div class="header-tool-meta">
                   <small>Tra cứu</small>
@@ -569,7 +615,13 @@ function renderLayout() {
               <section class="orders-panel order-notify-panel" id="shop-orders-panel" hidden aria-label="Thông báo đơn hàng">
                 <div class="orders-panel-heading">
                   <div class="notify-heading-title">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
+                      <path d="M14 2v6h6"/>
+                      <line x1="16" y1="13" x2="8" y2="13"/>
+                      <line x1="16" y1="17" x2="8" y2="17"/>
+                      <line x1="10" y1="9" x2="8" y2="9"/>
+                    </svg>
                     <span>Cập nhật đơn hàng</span>
                   </div>
                   <a href="${root}pages/my_orders.html" class="notify-view-all-link">Xem tất cả ›</a>
@@ -979,9 +1031,15 @@ function renderLayout() {
         contentElem.innerHTML = `
           <div class="notify-empty-state">
             <div class="notify-empty-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
+                <path d="M14 2v6h6"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <line x1="10" y1="9" x2="8" y2="9"/>
+              </svg>
             </div>
-            <p class="notify-empty-title">Chưa có thông báo đơn hàng</p>
+            <p class="notify-empty-title">Chưa có đơn hàng nào</p>
             <p class="notify-empty-desc">Các cập nhật trạng thái đơn hàng của bạn sẽ được hiển thị tại đây.</p>
             <a href="${rootPath}pages/customer-home.html#products" class="notify-empty-btn">Khám phá sản phẩm</a>
           </div>
@@ -1119,6 +1177,10 @@ function renderLayout() {
           shopOrdersBtn.classList.remove("active");
         }
       });
+
+      if (new URLSearchParams(window.location.search).get("orders") === "1") {
+        setTimeout(() => shopOrdersBtn.click(), 150);
+      }
     }
 
     document.getElementById("app-footer").innerHTML = `<div class="shop-footer"><div class="footer-columns"><div><a class="shop-brand footer-brand" href="#"><img src="${root}assets/images/logo_shop.svg" alt="ShopEase"><span>ShopEase</span></a><p>Nền tảng mua sắm trực tuyến tiện lợi, giao hàng nhanh và thanh toán khi nhận hàng.</p><p>☎ Hotline: 1900 6868 (8:00 – 21:00)<br>✉ support@shopease.vn<br><img class="address-icon" src="${root}assets/images/địa chỉ.svg" alt=""> Tòa nhà Innovation, Cầu Giấy, Hà Nội</p></div><div><b>Chính sách khách hàng</b><a href="#">Chính sách giao hàng COD</a><a href="#">Đổi trả, đổi hàng 7 ngày</a><a href="#">Quy định bảo mật thông tin</a><a href="#">Chính sách bảo mật</a></div><div><b>Hỗ trợ mua sắm</b><a href="#">Hướng dẫn đặt hàng & thanh toán</a><a href="#">Chính sách đổi trả</a><a href="#">Chính sách đồng kiểm khi nhận hàng</a><a href="#">Trung tâm trợ giúp FAQ</a></div><div><b>Phương thức thanh toán & chứng nhận</b><span class="payment-badges"><img src="${root}assets/images/COD.svg" alt=""> Thanh toán khi nhận hàng</span><span class="payment-badges"><img src="${root}assets/images/chuyển khoản.svg" alt=""> Chuyển khoản</span></div></div><div class="footer-legal">© 2026 ShopEase Việt Nam. Bản quyền thuộc về Công ty TNHH Thương mại ShopEase.<span>Điều khoản sử dụng　　Chính sách bảo mật　　Liên hệ pháp nhân</span></div></div>`;
@@ -1292,6 +1354,42 @@ function setupSearchSuggestions(root, isCustomerHome) {
     return escapeHTML(text).replace(regex, "<mark>$1</mark>");
   };
 
+  const KEY_SEARCH_HISTORY = "shopease_search_history";
+
+  const getSearchHistory = () => {
+    try {
+      return JSON.parse(localStorage.getItem(KEY_SEARCH_HISTORY) || "[]");
+    } catch (_) {
+      return [];
+    }
+  };
+
+  const saveSearchHistory = (keyword) => {
+    const q = String(keyword || "").trim();
+    if (!q) return;
+    try {
+      let history = getSearchHistory();
+      history = history.filter(item => item && item.toLowerCase() !== q.toLowerCase());
+      history.unshift(q);
+      history = history.slice(0, 10);
+      localStorage.setItem(KEY_SEARCH_HISTORY, JSON.stringify(history));
+    } catch (_) {}
+  };
+
+  const removeSearchHistoryItem = (keyword) => {
+    try {
+      let history = getSearchHistory();
+      history = history.filter(item => item !== keyword && item.toLowerCase() !== String(keyword).toLowerCase());
+      localStorage.setItem(KEY_SEARCH_HISTORY, JSON.stringify(history));
+    } catch (_) {}
+  };
+
+  const clearSearchHistory = () => {
+    try {
+      localStorage.removeItem(KEY_SEARCH_HISTORY);
+    } catch (_) {}
+  };
+
   const getRecentViewed = () => {
     try {
       return JSON.parse(localStorage.getItem(KEY_RECENT) || "[]");
@@ -1303,6 +1401,9 @@ function setupSearchSuggestions(root, isCustomerHome) {
   const doSubmitSearch = (keyword) => {
     dropdown.hidden = true;
     const q = (keyword !== undefined ? keyword : input.value).trim();
+    if (q) {
+      saveSearchHistory(q);
+    }
     if (isCustomerHome && typeof window.applyCustomerSearch === "function") {
       window.applyCustomerSearch(q);
     } else {
@@ -1315,18 +1416,61 @@ function setupSearchSuggestions(root, isCustomerHome) {
   };
 
   const showRecentOrPopular = () => {
+    const searchHistory = getSearchHistory();
     const recents = getRecentViewed();
-    if (recents.length > 0) {
-      dropdown.innerHTML = `
+    const popularTags = ["iPhone 15", "Samsung Galaxy", "Bàn phím cơ", "Tai nghe không dây", "iPad Pro", "Laptop gaming"];
+
+    let html = "";
+
+    // 1. LỊCH SỬ TÌM KIẾM CỦA KHÁCH HÀNG (HIỂN THỊ ĐẦU TIÊN KHI CÓ DỮ LIỆU)
+    if (searchHistory.length > 0) {
+      html += `
         <div class="suggest-header">
           <span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Lịch sử tìm kiếm
+          </span>
+          <button type="button" class="suggest-clear-btn" id="btn-clear-search-history" title="Xóa toàn bộ lịch sử tìm kiếm">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px; margin-right: 3px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Xóa tất cả
+          </button>
+        </div>
+        <div class="suggest-history-wrap">
+          ${searchHistory.map(kw => `
+            <div class="suggest-history-chip">
+              <span class="history-chip-text" data-search-history-val="${escapeHTML(kw)}" title="Tìm kiếm lại '${escapeHTML(kw)}'">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                ${escapeHTML(kw)}
+              </span>
+              <button type="button" class="history-chip-remove" data-remove-history="${escapeHTML(kw)}" title="Xóa từ khóa này" aria-label="Xóa">&times;</button>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    // 2. KHỐI TÌM KIẾM PHỔ BIẾN
+    html += `
+      <div class="suggest-header" style="${searchHistory.length > 0 ? 'border-top: 1px solid #f1f5f9;' : ''}">
+        <span>🔥 Tìm kiếm phổ biến</span>
+      </div>
+      <div class="suggest-tags-wrap">
+        ${popularTags.map(tag => `<button type="button" class="suggest-tag-chip" data-search-tag="${escapeHTML(tag)}">${escapeHTML(tag)}</button>`).join("")}
+      </div>
+    `;
+
+    // 3. KHỐI SẢN PHẨM ĐÃ XEM GẦN ĐÂY
+    if (recents.length > 0) {
+      html += `
+        <div class="suggest-header" style="border-top: 1px solid #f1f5f9;">
+          <span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             Sản phẩm đã xem gần đây
           </span>
           <button type="button" class="suggest-clear-btn" id="btn-clear-suggest-recent">Xóa lịch sử</button>
         </div>
         <div class="suggest-list">
-          ${recents.slice(0, 5).map(item => {
+          ${recents.slice(0, 4).map(item => {
             const hasPromo = item.promotional_price && Number(item.promotional_price) < Number(item.price);
             return `
               <a href="${root}pages/product-detail.html?id=${item.id}" class="suggest-item">
@@ -1344,33 +1488,56 @@ function setupSearchSuggestions(root, isCustomerHome) {
           }).join("")}
         </div>
       `;
-
-      dropdown.querySelector("#btn-clear-suggest-recent")?.addEventListener("click", (e) => {
-        e.stopPropagation();
-        localStorage.removeItem(KEY_RECENT);
-        showRecentOrPopular();
-        if (typeof showToast === "function") showToast("Đã xóa lịch sử sản phẩm đã xem", "info");
-      });
-    } else {
-      const popularTags = ["iPhone 15", "Samsung Galaxy", "Bàn phím cơ", "Tai nghe không dây", "iPad Pro", "Laptop"];
-      dropdown.innerHTML = `
-        <div class="suggest-header">
-          <span>🔥 Tìm kiếm phổ biến</span>
-        </div>
-        <div class="suggest-tags-wrap">
-          ${popularTags.map(tag => `<button type="button" class="suggest-tag-chip" data-search-tag="${escapeHTML(tag)}">${escapeHTML(tag)}</button>`).join("")}
-        </div>
-      `;
-
-      dropdown.querySelectorAll("[data-search-tag]").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const tag = btn.dataset.searchTag;
-          input.value = tag;
-          doSubmitSearch(tag);
-        });
-      });
     }
+
+    dropdown.innerHTML = html;
+
+    // Gắn sự kiện click tìm kiếm từ lịch sử
+    dropdown.querySelectorAll("[data-search-history-val]").forEach(span => {
+      span.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const val = span.getAttribute("data-search-history-val");
+        input.value = val;
+        doSubmitSearch(val);
+      });
+    });
+
+    // Gắn sự kiện xóa từng mục lịch sử
+    dropdown.querySelectorAll("[data-remove-history]").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const val = btn.getAttribute("data-remove-history");
+        removeSearchHistoryItem(val);
+        showRecentOrPopular();
+      });
+    });
+
+    // Gắn sự kiện xóa toàn bộ lịch sử tìm kiếm
+    dropdown.querySelector("#btn-clear-search-history")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      clearSearchHistory();
+      showRecentOrPopular();
+      if (typeof showToast === "function") showToast("Đã xóa toàn bộ lịch sử tìm kiếm", "info");
+    });
+
+    // Gắn sự kiện xóa lịch sử sản phẩm đã xem
+    dropdown.querySelector("#btn-clear-suggest-recent")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      localStorage.removeItem(KEY_RECENT);
+      showRecentOrPopular();
+      if (typeof showToast === "function") showToast("Đã xóa lịch sử sản phẩm đã xem", "info");
+    });
+
+    // Gắn sự kiện click tag phổ biến
+    dropdown.querySelectorAll("[data-search-tag]").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const tag = btn.dataset.searchTag;
+        input.value = tag;
+        doSubmitSearch(tag);
+      });
+    });
+
     dropdown.hidden = false;
   };
 
@@ -1790,14 +1957,104 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// Đóng khi nhấn phím Escape
+// ==========================================================
+// HỆ THỐNG PHÍM TẮT TOÀN CỤC ĐỒNG BỘ CHO MỌI TRANG (GLOBAL SHORTCUTS)
+// ==========================================================
 document.addEventListener("keydown", (e) => {
+  const root = document.body.dataset.root || "./";
+  const isInputActive = ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName) || document.activeElement?.isContentEditable;
+  const keyLower = e.key.toLowerCase();
+
+  // 1. Phím tắt Tìm kiếm: Ctrl + K (hoặc Cmd + K trên Mac), hoặc phím "/" khi không ở trong ô nhập liệu
+  if (((e.ctrlKey || e.metaKey) && keyLower === "k") || (e.key === "/" && !isInputActive)) {
+    const shopSearch = document.getElementById("shop-search");
+    const adminSearch = document.querySelector(".admin-search-input") || document.getElementById("search-input") || document.getElementById("search-products");
+    const targetSearch = shopSearch || adminSearch;
+    if (targetSearch) {
+      e.preventDefault();
+      targetSearch.focus();
+      if (typeof targetSearch.select === "function") {
+        targetSearch.select();
+      }
+      return;
+    }
+  }
+
+  // 2. Phím tắt Escape: Đóng toàn bộ Modal, Pop-up, Dropdown, Menu, Lightbox
   if (e.key === "Escape") {
+    // a. Đóng search suggestion dropdown
+    const searchDropdown = document.getElementById("search-suggest-dropdown");
+    if (searchDropdown && !searchDropdown.hidden) {
+      searchDropdown.hidden = true;
+    }
+
+    // b. Đóng dropdown select tùy biến
     document.querySelectorAll(".agy-custom-select.is-open").forEach((el) => {
       el.classList.remove("is-open");
       const tr = el.querySelector(".agy-select-trigger");
       if (tr) tr.setAttribute("aria-expanded", "false");
     });
+
+    // c. Đóng dropdown tài khoản người dùng
+    document.querySelectorAll(".shop-user-menu.open, .user-dropdown-menu.active, .user-tool-wrapper.active").forEach((el) => {
+      el.classList.remove("open", "active");
+    });
+
+    // d. Đóng các modal khách hàng
+    document.querySelectorAll(".profile-modal-overlay").forEach((m) => {
+      m.style.display = "none";
+    });
+    document.querySelectorAll(".modal-overlay.active, .cart-modal-overlay.active").forEach((m) => {
+      m.classList.remove("active");
+    });
+    document.querySelectorAll(".detail-image-lightbox").forEach((lb) => {
+      lb.setAttribute("hidden", "");
+    });
+
+    // e. Đóng các modal admin
+    document.querySelectorAll(".admin-modal-overlay.show, .admin-modal-overlay.active").forEach((m) => {
+      m.classList.remove("show", "active");
+      if (m.style.display === "flex") m.style.display = "none";
+    });
+    return;
+  }
+
+  // 3. Phím tắt điều hướng nhanh (Alt + Phím)
+  if (e.altKey && !e.ctrlKey && !e.metaKey) {
+    if (document.body.classList.contains("shop-page")) {
+      // Điều hướng nhanh phía Khách hàng
+      if (keyLower === "h") {
+        e.preventDefault();
+        window.location.href = `${root}pages/customer-home.html`;
+      } else if (keyLower === "c") {
+        e.preventDefault();
+        window.location.href = `${root}pages/cart.html`;
+      } else if (keyLower === "o") {
+        e.preventDefault();
+        window.location.href = `${root}pages/my_orders.html`;
+      } else if (keyLower === "w") {
+        e.preventDefault();
+        window.location.href = `${root}pages/wishlist.html`;
+      } else if (keyLower === "p") {
+        e.preventDefault();
+        window.location.href = `${root}pages/profile.html`;
+      }
+    } else if (document.body.classList.contains("admin-page")) {
+      // Điều hướng nhanh phía Quản trị
+      if (keyLower === "d") {
+        e.preventDefault();
+        window.location.href = `${root}pages/admin-dashboard.html`;
+      } else if (keyLower === "p") {
+        e.preventDefault();
+        window.location.href = `${root}pages/admin-products.html`;
+      } else if (keyLower === "o") {
+        e.preventDefault();
+        window.location.href = `${root}pages/admin-orders.html`;
+      } else if (keyLower === "r") {
+        e.preventDefault();
+        window.location.href = `${root}pages/admin-reviews.html`;
+      }
+    }
   }
 });
 

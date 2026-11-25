@@ -974,6 +974,7 @@ body.shop-page {
 
 .btn-action-contact:hover {
   background-color: var(--figma-primary-hover);
+  color: #ffffff !important;
 }
 
 /* Nút mua lại (COMPLETED) */
@@ -1068,19 +1069,28 @@ body.shop-page {
 }
 
 .btn-empty-shop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin-top: 12px;
   padding: 10px 24px;
-  background-color: var(--figma-primary);
-  color: #ffffff;
+  background-color: var(--figma-primary, #00288e);
+  color: #ffffff !important;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 700;
   text-decoration: none;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
 }
 
-.btn-empty-shop:hover {
-  background-color: var(--figma-primary-hover);
+.btn-empty-shop:hover,
+.btn-empty-shop:focus,
+.btn-empty-shop:active {
+  background-color: var(--figma-primary-hover, #001f70);
+  color: #ffffff !important;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0, 40, 142, 0.25);
+  transform: translateY(-1px);
 }
 
 /* MODAL STYLES (BR-09 & FR-025) */
@@ -1154,12 +1164,35 @@ body.shop-page {
 }
 
 .btn-close-modal {
-  background: transparent;
-  border: none;
-  font-size: 24px;
-  color: var(--figma-text-muted);
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  padding: 0;
+  font-size: 20px;
   line-height: 1;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.btn-close-modal:hover {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #ef4444;
+  transform: rotate(90deg) scale(1.06);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+.btn-close-modal:active {
+  transform: rotate(90deg) scale(0.95);
 }
 
 .modal-body {

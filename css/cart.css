@@ -182,6 +182,42 @@
   user-select: none;
 }
 
+.cart-select-all-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.btn-clear-cart {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: #dc2626;
+  border: 1px solid transparent;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-clear-cart:hover {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.btn-clear-cart:active {
+  background: #fee2e2;
+  transform: scale(0.98);
+}
+
+.btn-clear-cart svg {
+  flex-shrink: 0;
+}
+
 .cart-custom-checkbox {
   width: 19px;
   height: 19px;
@@ -1202,6 +1238,95 @@
   line-height: 1.5;
 }
 
+/* Khối Chọn địa chỉ từ Sổ địa chỉ */
+.shipping-address-selector-card {
+  background: #ffffff;
+  border: 1.5px solid var(--color-primary, #00288e);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 18px;
+  box-shadow: 0 4px 16px rgba(0, 40, 142, 0.08);
+  animation: slideDownFade 0.25s ease;
+}
+
+.address-book-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 12px 0;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.address-book-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.address-book-item:hover {
+  border-color: #94a3b8;
+  background: #f1f5f9;
+}
+
+.address-book-item.active {
+  border-color: var(--color-primary, #00288e);
+  background: #eff6ff;
+}
+
+.address-book-radio {
+  margin-top: 3px;
+  cursor: pointer;
+  accent-color: var(--color-primary, #00288e);
+}
+
+.address-book-info {
+  flex: 1;
+}
+
+.address-book-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.address-book-name {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 13.5px;
+}
+
+.address-book-phone {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.address-book-badge {
+  background: #dbeafe;
+  color: #1e40af;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.address-book-detail {
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.45;
+}
+
 /* Khối Form Chỉnh sửa địa chỉ (Edit Drawer) */
 .shipping-edit-card {
   background: #ffffff;
@@ -1233,21 +1358,41 @@
   border-bottom: 1px dashed #e2e8f0;
 }
 
+/* Nút đóng Popup & Drawer chuẩn hiện đại (Circular Close Button) */
+.modal-close-btn,
+.qr-modal-close-btn,
 .shipping-edit-close {
-  background: none;
-  border: none;
-  font-size: 22px;
-  line-height: 1;
-  color: #94a3b8;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 6px;
-  transition: all 0.15s ease;
+  padding: 0;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
+.modal-close-btn:hover,
+.qr-modal-close-btn:hover,
 .shipping-edit-close:hover {
-  color: #ef4444;
   background: #fee2e2;
+  border-color: #fecaca;
+  color: #ef4444;
+  transform: rotate(90deg) scale(1.06);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+.modal-close-btn:active,
+.qr-modal-close-btn:active,
+.shipping-edit-close:active {
+  transform: rotate(90deg) scale(0.95);
 }
 
 .shipping-edit-actions {
@@ -1450,20 +1595,6 @@
   color: #64748b;
 }
 
-.qr-modal-close-btn {
-  background: none;
-  border: none;
-  font-size: 26px;
-  color: #94a3b8;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-  transition: all 0.15s ease;
-}
-
-.qr-modal-close-btn:hover {
-  color: #ef4444;
-}
 
 /* Thân modal 2 cột */
 .qr-modal-body {
@@ -1748,8 +1879,8 @@
  * 10. THANH CHỌN VOUCHER NHỎ GỌN & MODAL KHO VOUCHER CỦA BẠN
  * ========================================================== */
 .cart-voucher-compact-bar {
-  background: #fffaf5;
-  border: 1.5px solid #fed7aa;
+  background: #f8faff;
+  border: 1.5px solid #dbeafe;
   border-radius: 10px;
   padding: 10px 14px;
   margin-bottom: 16px;
@@ -1759,9 +1890,14 @@
 }
 
 .cart-voucher-compact-bar:hover {
-  border-color: #ea580c;
-  background: #fff7ed;
-  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.08);
+  border-color: #00288e;
+  background: #eff6ff;
+  box-shadow: 0 3px 10px rgba(0, 40, 142, 0.1);
+  transform: translateY(-1px);
+}
+
+.cart-voucher-compact-bar:active {
+  transform: translateY(0);
 }
 
 .voucher-bar-unselected,
@@ -1783,31 +1919,33 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  background: #ffedd5;
-  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 7px;
   flex-shrink: 0;
+  color: #00288e;
 }
 
 .voucher-bar-label {
   font-size: 13.5px;
   font-weight: 600;
-  color: #9a3412;
+  color: #1e293b;
 }
 
 .voucher-bar-right {
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #ea580c;
+  color: #00288e;
   font-size: 12.5px;
-  font-weight: 600;
+  font-weight: 700;
   flex-shrink: 0;
 }
 
 .voucher-tag-pill {
-  background: #059669;
+  background: #00288e;
   color: #ffffff;
   padding: 2.5px 8px;
   border-radius: 5px;
@@ -1820,14 +1958,14 @@
 .voucher-tag-desc {
   font-size: 12.5px;
   font-weight: 600;
-  color: #065f46;
+  color: #1e40af;
   white-space: nowrap;
 }
 
 .voucher-bar-change {
-  color: #ea580c;
+  color: #00288e;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   margin-right: 4px;
 }
 
@@ -1853,38 +1991,6 @@
   background: #fee2e2;
 }
 
-/* Banner Điểm thưởng trong Modal */
-.voucher-points-banner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 22px;
-  background: #fff7ed;
-  border-bottom: 1px dashed #fed7aa;
-  font-size: 12.5px;
-  color: #9a3412;
-}
-
-.points-banner-left {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 600;
-}
-
-.points-coin-icon {
-  font-size: 15px;
-}
-
-.points-policy-tooltip {
-  font-size: 11.5px;
-  color: #c2410c;
-  background: #ffedd5;
-  padding: 2px 8px;
-  border-radius: 4px;
-  cursor: help;
-}
-
 /* Giao diện khi tài khoản chưa có Voucher nào */
 .voucher-empty-state {
   text-align: center;
@@ -1894,7 +2000,8 @@
 .voucher-empty-icon {
   width: 52px;
   height: 52px;
-  background: #fff7ed;
+  background: #eff6ff;
+  color: #00288e;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1931,7 +2038,7 @@
   color: #0f172a;
 }
 
-/* MODAL CHỌN VOUCHER */
+/* MODAL CHỌN VOUCHER (ĐỒNG BỘ CHUẨN SHOPEASE BRAND) */
 .voucher-modal-overlay {
   display: none;
   position: fixed;
@@ -1951,11 +2058,11 @@
 .voucher-modal-container {
   background: #ffffff;
   width: 100%;
-  max-width: 520px;
+  max-width: 580px;
   border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.22);
   overflow: hidden;
-  animation: modalScaleUp 0.25s ease;
+  animation: modalScaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   max-height: 90vh;
   display: flex;
   flex-direction: column;
@@ -1965,7 +2072,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 22px;
+  padding: 18px 24px;
   border-bottom: 1px solid #f1f5f9;
   background: #ffffff;
 }
@@ -1977,19 +2084,20 @@
 }
 
 .voucher-modal-icon-badge {
-  width: 38px;
-  height: 38px;
-  background: #fff7ed;
-  border: 1px solid #ffedd5;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #00288e 0%, #1d4ed8 100%);
+  color: #ffffff;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 3px 8px rgba(0, 40, 142, 0.25);
 }
 
 .voucher-modal-title {
   margin: 0;
-  font-size: 16px;
+  font-size: 16.5px;
   font-weight: 700;
   color: #0f172a;
 }
@@ -2000,10 +2108,129 @@
   color: #64748b;
 }
 
+/* Banner Điểm thưởng trong Modal (Đồng bộ Navy & Gold) */
+.voucher-points-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 22px;
+  background: linear-gradient(135deg, #f8faff 0%, #eff6ff 100%);
+  border-bottom: 1px solid #dbeafe;
+  font-size: 13px;
+  color: #1e3a8a;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.points-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.points-coin-icon {
+  font-size: 18px;
+}
+
+.points-val-text {
+  color: #d97706;
+  font-size: 15.5px;
+  font-weight: 800;
+}
+
+.points-banner-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-banner-redeem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  background: linear-gradient(135deg, #00288e 0%, #1d4ed8 100%);
+  color: #ffffff !important;
+  border: none;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 40, 142, 0.2);
+  transition: all 0.15s ease;
+}
+
+.btn-banner-redeem:hover {
+  background: linear-gradient(135deg, #001f70 0%, #1e40af 100%);
+  transform: translateY(-1px);
+}
+
+.points-policy-link {
+  font-size: 11.5px;
+  color: #2563eb;
+  background: #ffffff;
+  padding: 3px 8px;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.points-policy-link:hover {
+  background: #dbeafe;
+}
+
+/* Thanh chuyển Tab trong Modal */
+.voucher-modal-tabs {
+  display: flex;
+  background: #ffffff;
+  border-bottom: 1.5px solid #e2e8f0;
+  padding: 0 22px;
+  gap: 16px;
+}
+
+.voucher-tab-btn {
+  padding: 12px 14px;
+  background: none;
+  border: none;
+  border-bottom: 2.5px solid transparent;
+  color: #64748b;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.2s ease;
+  margin-bottom: -1.5px;
+}
+
+.voucher-tab-btn:hover {
+  color: #00288e;
+}
+
+.voucher-tab-btn.active {
+  color: #00288e;
+  border-bottom-color: #00288e;
+  font-weight: 700;
+}
+
+.voucher-tab-btn .hot-badge {
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 10px;
+  text-transform: uppercase;
+}
+
+/* Search bar áp dụng mã thủ công */
 .voucher-modal-search-bar {
   display: flex;
   gap: 8px;
-  padding: 14px 22px;
+  padding: 12px 22px;
   background: #f8fafc;
   border-bottom: 1px solid #f1f5f9;
 }
@@ -2014,15 +2241,16 @@
   align-items: center;
   gap: 8px;
   background: #ffffff;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #cbd5e1;
   border-radius: 8px;
   padding: 0 12px;
   height: 40px;
+  transition: all 0.15s ease;
 }
 
 .modal-search-input-wrap:focus-within {
-  border-color: #ea580c;
-  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12);
+  border-color: #00288e;
+  box-shadow: 0 0 0 3px rgba(0, 40, 142, 0.1);
 }
 
 .modal-search-input-wrap input {
@@ -2031,29 +2259,30 @@
   width: 100%;
   font-size: 13.5px;
   text-transform: uppercase;
+  color: #0f172a;
 }
 
 .btn-modal-apply {
-  padding: 0 18px;
+  padding: 0 20px;
   height: 40px;
-  background: #ea580c;
+  background: #00288e;
   color: #ffffff;
   border: none;
   border-radius: 8px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .btn-modal-apply:hover {
-  background: #c2410c;
+  background: #001f70;
 }
 
 .voucher-modal-body {
   padding: 16px 22px;
   overflow-y: auto;
-  flex: 1;
+  max-height: 380px;
 }
 
 .voucher-list-header {
@@ -2064,7 +2293,7 @@
 }
 
 .voucher-list-title {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
   color: #475569;
   text-transform: uppercase;
@@ -2073,7 +2302,8 @@
 
 .voucher-eligible-note {
   font-size: 12px;
-  color: #64748b;
+  color: #00288e;
+  font-weight: 600;
 }
 
 .voucher-cards-list {
@@ -2086,7 +2316,7 @@
 .voucher-ticket-card {
   position: relative;
   display: flex;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #cbd5e1;
   border-radius: 12px;
   background: #ffffff;
   overflow: hidden;
@@ -2094,8 +2324,8 @@
 }
 
 .voucher-ticket-card:hover {
-  border-color: #fb923c;
-  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.08);
+  border-color: #00288e;
+  box-shadow: 0 4px 12px rgba(0, 40, 142, 0.08);
 }
 
 .voucher-ticket-card.is-applied {
@@ -2112,13 +2342,13 @@
 .ticket-left-side {
   width: 125px;
   min-width: 125px;
-  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 14px 8px;
-  border-right: 1.5px dashed #fed7aa;
+  border-right: 1.5px dashed #bfdbfe;
   text-align: center;
   position: relative;
 }
@@ -2131,7 +2361,7 @@
 .ticket-badge-tag {
   font-size: 11px;
   font-weight: 800;
-  color: #c2410c;
+  color: #00288e;
   letter-spacing: 0.5px;
   word-break: break-all;
 }
@@ -2143,7 +2373,7 @@
 .ticket-discount-text {
   font-size: 13.5px;
   font-weight: 800;
-  color: #9a3412;
+  color: #1d4ed8;
   margin-top: 4px;
   white-space: nowrap;
 }
@@ -2188,22 +2418,22 @@
 }
 
 .btn-ticket-action {
-  padding: 5px 14px;
+  padding: 6px 14px;
   border-radius: 6px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   border: none;
   transition: all 0.15s ease;
 }
 
 .btn-ticket-action.btn-apply {
-  background: #ea580c;
+  background: #00288e;
   color: #ffffff;
 }
 
 .btn-ticket-action.btn-apply:hover {
-  background: #c2410c;
+  background: #001f70;
 }
 
 .btn-ticket-action.btn-applied {
@@ -2218,27 +2448,268 @@
   cursor: not-allowed;
 }
 
+/* Empty State Trong Modal Voucher */
+.voucher-empty-state {
+  text-align: center;
+  padding: 24px 16px;
+}
+
+.voucher-empty-icon {
+  width: 58px;
+  height: 58px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #00288e;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+
+.voucher-empty-title {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+
+.voucher-empty-desc {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.btn-empty-redeem-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 22px;
+  background: linear-gradient(135deg, #00288e 0%, #1d4ed8 100%);
+  color: #ffffff !important;
+  border: none;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 40, 142, 0.2);
+  margin-bottom: 18px;
+  transition: all 0.2s ease;
+}
+
+.btn-empty-redeem-cta:hover {
+  background: linear-gradient(135deg, #001f70 0%, #1e40af 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 40, 142, 0.25);
+}
+
+.voucher-points-guide-box {
+  background: #f8faff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 12.5px;
+  color: #334155;
+  line-height: 1.6;
+}
+
+.voucher-points-guide-box strong {
+  color: #0f172a;
+}
+
+/* PANE 2: KHO ĐỔI VOUCHER TỪ ĐIỂM */
+.redeem-filter-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 22px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.redeem-filter-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.redeem-chip {
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.redeem-chip:hover {
+  border-color: #00288e;
+  color: #00288e;
+}
+
+.redeem-chip.active {
+  background: #00288e;
+  color: #ffffff;
+  border-color: #00288e;
+}
+
+.redeem-points-badge {
+  font-size: 12px;
+  color: #1e3a8a;
+  background: #eef2ff;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #c7d2fe;
+}
+
+.redeem-points-badge strong {
+  color: #d97706;
+  font-size: 13.5px;
+}
+
+.redeem-body {
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.redeem-tiers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+  padding-bottom: 8px;
+}
+
+.redeem-tier-card {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.redeem-tier-card:hover {
+  border-color: #00288e;
+  box-shadow: 0 4px 12px rgba(0, 40, 142, 0.08);
+  transform: translateY(-2px);
+}
+
+.tier-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.tier-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.4;
+}
+
+.tier-points-tag {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  padding: 2.5px 7.5px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tier-card-condition {
+  font-size: 11.5px;
+  color: #64748b;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.btn-redeem-action {
+  width: 100%;
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s ease;
+}
+
+.btn-redeem-action.can-redeem {
+  background: #059669;
+  color: #ffffff;
+}
+
+.btn-redeem-action.can-redeem:hover {
+  background: #047857;
+}
+
+.btn-redeem-action.need-more {
+  background: #f1f5f9;
+  color: #94a3b8;
+  border: 1px solid #e2e8f0;
+  cursor: not-allowed;
+}
+
+/* Modal Footer */
 .voucher-modal-footer {
   padding: 14px 22px;
   background: #f8fafc;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid #e2e8f0;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.btn-modal-close {
-  padding: 8px 20px;
+.btn-footer-toggle-tab {
+  padding: 8px 16px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #00288e;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-footer-toggle-tab:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.btn-modal-footer-close,
+.voucher-modal-footer .btn-modal-close {
+  padding: 8px 22px;
   background: #ffffff;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
   color: #475569;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.btn-modal-close:hover {
+.btn-modal-footer-close:hover,
+.voucher-modal-footer .btn-modal-close:hover {
   background: #f1f5f9;
   color: #1e293b;
 }

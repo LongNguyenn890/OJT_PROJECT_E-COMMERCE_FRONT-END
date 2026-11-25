@@ -1074,6 +1074,192 @@
   margin: 0;
 }
 
+/* ==========================================================
+   PHẢN HỒI BÌNH LUẬN (COMMENT REPLIES)
+   ========================================================== */
+.review-replies-wrap {
+  margin-top: 12px;
+  padding-left: 14px;
+  border-left: 2px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.review-reply-item {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  transition: border-color 0.15s ease;
+}
+
+.review-reply-item.is-seller-reply {
+  background: #f8faff;
+  border: 1px solid #c7d7f7;
+}
+
+.reply-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.reply-author-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.reply-author-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--pd-text-dark);
+}
+
+.seller-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--pd-primary, #00288e);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  line-height: 1.3;
+}
+
+.seller-badge svg {
+  flex-shrink: 0;
+}
+
+.reply-date {
+  font-size: 11.5px;
+  color: var(--pd-text-muted);
+}
+
+.reply-content {
+  margin: 0;
+  color: #334155;
+  line-height: 1.5;
+  font-size: 13px;
+}
+
+.review-footer-bar {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-toggle-reply {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--pd-primary, #00288e);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-toggle-reply:hover {
+  background: #eef2ff;
+  color: #001f70;
+}
+
+.review-reply-form-wrap {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.reply-form-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reply-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 60px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.reply-textarea:focus {
+  border-color: var(--pd-primary, #00288e);
+  box-shadow: 0 0 0 2px rgba(0, 40, 142, 0.12);
+}
+
+.reply-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-cancel-reply {
+  padding: 6px 14px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-cancel-reply:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.btn-send-reply {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  background: var(--pd-primary, #00288e);
+  border: none;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-send-reply:hover {
+  background: #001f70;
+}
+
+.btn-send-reply:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .product-review-entry {
   margin: 0 0 24px;
 }
@@ -1121,112 +1307,234 @@
   font-size: 16px;
 }
 
+/* Nhóm chọn sao đánh giá */
 .review-star-picker {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 3px;
-  margin-bottom: 14px;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 6px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  width: fit-content;
 }
 
 .review-star-choice {
-  padding: 0 2px;
   border: 0;
+  padding: 2px 3px;
   background: transparent;
   color: #cbd5e1;
   font-size: 26px;
   line-height: 1;
   cursor: pointer;
+  transition: transform 0.15s ease, color 0.15s ease;
 }
 
-.review-star-choice:hover,
+.review-star-choice:hover {
+  transform: scale(1.25);
+  color: #f59e0b;
+}
+
 .review-star-choice.selected {
-  color: var(--pd-yellow);
+  color: #f59e0b;
 }
 
 #review-rating-label {
-  margin-left: 8px;
-  color: var(--pd-text-muted);
-  font-size: 12px;
+  margin-left: 10px;
+  padding-left: 10px;
+  border-left: 1px solid #cbd5e1;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 130px;
+}
+
+#review-rating-label.has-rating {
+  color: #b45309;
+  font-weight: 600;
 }
 
 .review-comment-label {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   color: var(--pd-text-dark);
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
+}
+
+.review-comment-label span {
+  font-size: 12px;
+  font-weight: 400;
+  color: #64748b;
+  margin-left: 4px;
 }
 
 .product-review-form textarea {
   box-sizing: border-box;
   width: 100%;
-  min-height: 96px;
-  padding: 10px 12px;
-  border: 1px solid var(--pd-border);
-  border-radius: 7px;
+  min-height: 105px;
+  padding: 12px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
   background: #ffffff;
   color: var(--pd-text-dark);
   font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
   resize: vertical;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .product-review-form textarea:focus {
-  outline: 2px solid #bfdbfe;
-  border-color: var(--pd-border-focus);
+  outline: none;
+  border-color: #00288e;
+  box-shadow: 0 0 0 3px rgba(0, 40, 142, 0.12);
 }
 
 .review-image-label {
-  margin-top: 12px;
+  margin-top: 16px;
 }
 
-.review-image-label span,
-.review-image-hint {
-  color: var(--pd-text-muted);
-  font-size: 11px;
-  font-weight: 400;
+/* Khu vực tải ảnh hiện đại, trực quan (Modern Upload Dropzone) */
+.review-upload-area {
+  position: relative;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 16px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.review-image-input {
-  display: block;
-  width: 100%;
-  padding: 8px;
-  border: 1px dashed #cbd5e1;
-  border-radius: 7px;
+.review-upload-area:hover,
+.review-upload-area.dragover {
+  border-color: #00288e;
+  background: #f0f4ff;
+}
+
+.review-image-file-hidden {
+  display: none !important;
+}
+
+.review-upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.review-upload-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
   background: #ffffff;
-  color: var(--pd-text-body);
-  font-size: 12px;
+  color: #00288e;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2px;
 }
 
-.review-image-hint {
-  display: block;
-  margin-top: 5px;
+.review-upload-text {
+  font-size: 13.5px;
+  color: #334155;
+  font-weight: 500;
 }
 
-.review-image-preview-wrap {
+.upload-action-text {
+  color: #00288e;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.review-upload-subtext {
+  font-size: 11.5px;
+  color: #64748b;
+}
+
+/* Card xem trước ảnh được chọn */
+.review-image-preview-card {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 10px;
-  color: var(--pd-text-muted);
-  font-size: 12px;
-}
-
-.review-image-preview-wrap img {
-  width: 58px;
-  height: 58px;
-  border-radius: 7px;
-  border: 1px solid var(--pd-border);
-  object-fit: cover;
-}
-
-.review-image-remove {
-  padding: 4px 8px;
-  border: 1px solid var(--pd-border);
-  border-radius: 6px;
+  gap: 14px;
   background: #ffffff;
-  color: var(--pd-text-body);
-  cursor: pointer;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  text-align: left;
 }
+
+.review-preview-img-container {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+}
+
+.review-preview-img-container img {
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
+}
+
+.review-preview-remove-btn {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid #ffffff;
+  background: #e11d48;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  transition: transform 0.15s ease, background-color 0.15s ease;
+  padding: 0;
+}
+
+.review-preview-remove-btn:hover {
+  background: #be123c;
+  transform: scale(1.1);
+}
+
+.review-preview-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.review-file-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.review-file-status {
+  font-size: 11.5px;
+  color: #16a34a;
+  font-weight: 500;
+}
+
+.review-comment-empty {
+  color: #94a3b8;
+  font-style: italic;
+  font-size: 13px;
+}
+
 
 .review-form-footer {
   display: flex;
@@ -1341,16 +1649,33 @@
   z-index: 2;
   top: -18px;
   right: -18px;
-  width: 40px;
-  height: 40px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e2e8f0;
   border-radius: 50%;
-  background: #ffffff;
-  color: #0f172a;
-  font-size: 28px;
+  background: #f8fafc;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
   line-height: 1;
   cursor: pointer;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.detail-image-lightbox-close:hover {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #ef4444;
+  transform: rotate(90deg) scale(1.06);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+}
+
+.detail-image-lightbox-close:active {
+  transform: rotate(90deg) scale(0.95);
 }
 
 @media (max-width: 600px) {
@@ -1496,4 +1821,56 @@
 .btn-back-home:hover {
   background: var(--pd-primary-hover);
   color: #ffffff;
+}
+
+/* ==========================================================
+   PRODUCT CARD DISCOUNT BADGES & PILLS
+   ========================================================== */
+.product-badges-group {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  pointer-events: none;
+  max-width: calc(100% - 46px);
+}
+
+.product-badges-group .product-tag {
+  position: static;
+  margin: 0;
+}
+
+.product-discount-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5px 7px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.35);
+  letter-spacing: -0.2px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.product-discount-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  margin-left: 2px;
 }

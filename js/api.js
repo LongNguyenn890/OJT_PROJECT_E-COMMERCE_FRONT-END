@@ -99,15 +99,22 @@ http.interceptors.response.use(
   },
 );
 
+function normalizeApiPath(path) {
+  if (typeof path === "string" && path.startsWith("/api/")) {
+    return path.slice(4); // bỏ '/api', giữ lại '/...'
+  }
+  return path;
+}
+
 const api = {
   get: (path, params, config) => {
     const actualParams = (params && params.params && typeof params.params === "object") ? params.params : params;
-    return http.get(path, { params: actualParams, ...config }).then((res) => res.data);
+    return http.get(normalizeApiPath(path), { params: actualParams, ...config }).then((res) => res.data);
   },
-  post: (path, body, config) => http.post(path, body, config).then((res) => res.data),
-  put: (path, body, config) => http.put(path, body, config).then((res) => res.data),
-  patch: (path, body, config) => http.patch(path, body, config).then((res) => res.data),
-  delete: (path, config) => http.delete(path, config).then((res) => res.data),
+  post: (path, body, config) => http.post(normalizeApiPath(path), body, config).then((res) => res.data),
+  put: (path, body, config) => http.put(normalizeApiPath(path), body, config).then((res) => res.data),
+  patch: (path, body, config) => http.patch(normalizeApiPath(path), body, config).then((res) => res.data),
+  delete: (path, config) => http.delete(normalizeApiPath(path), config).then((res) => res.data),
 };
 
 // Đảm bảo api có thể truy cập qua window.api

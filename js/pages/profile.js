@@ -36,6 +36,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const navItemAddresses = document.getElementById("nav-item-addresses");
   const navItemChangePwd = document.getElementById("nav-item-change-pwd");
   const navAddressCountBadge = document.getElementById("nav-address-count-badge");
+  const navItemOrders = document.getElementById("nav-item-orders");
+  const navOrdersCountBadge = document.getElementById("nav-orders-count-badge");
 
   // 2.2 Thẻ định danh cột trái (Side card)
   const sideAvatarImg = document.getElementById("side-avatar-img");
@@ -103,6 +105,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const btnOpenAddAddr = document.getElementById("btn-open-add-addr");
   const addressesListContainer = document.getElementById("addresses-list-container");
 
+  // 2.7 Khối Chuyên mục riêng: Lịch sử đơn mua đã hoàn thành (Tách biệt hoàn toàn như Đổi mật khẩu & Sổ địa chỉ)
+  const ordersProfileCard = document.getElementById("orders-profile-card");
+
   // Khối tóm tắt địa chỉ bên dưới thông tin cá nhân (Chế độ xem)
   const addressOverviewCard = document.getElementById("address-overview-card");
   const overviewAddrName = document.getElementById("overview-addr-name");
@@ -111,6 +116,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const overviewAddrStreet = document.getElementById("overview-addr-street");
   const overviewAddrLocation = document.getElementById("overview-addr-location");
   const btnEditOverviewAddress = document.getElementById("btn-edit-overview-address");
+  const btnDeleteOverviewAddress = document.getElementById("btn-delete-overview-address");
 
   // Modal thêm / chỉnh sửa địa chỉ
   const addressModal = document.getElementById("address-modal");
@@ -118,6 +124,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const addrModalDesc = document.getElementById("addr-modal-desc");
   const btnCloseAddrModal = document.getElementById("btn-close-addr-modal");
   const btnCancelAddrModal = document.getElementById("btn-cancel-addr-modal");
+  const btnDeleteAddrModal = document.getElementById("btn-delete-addr-modal");
   const btnSaveAddrText = document.getElementById("btn-save-addr-text");
   const addressModalForm = document.getElementById("address-modal-form");
   const addrIdHidden = document.getElementById("addr-id-hidden");
@@ -138,15 +145,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   let pendingAvatarFile = null;
   let pendingAvatarAction = null; // "upload" | "delete" | null
 
-  // 3. Tải dữ liệu hồ sơ & địa chỉ
+  // 3. Tải dữ liệu hồ sơ, địa chỉ & đơn hàng hoàn thành
   await loadUserProfile();
   await loadUserAddresses();
+  await loadCompletedOrders();
 
-  // Kiểm tra tham số hash trên URL (ví dụ #addresses)
+  // Kiểm tra tham số hash trên URL (ví dụ #addresses hoặc #completed-orders)
   if (window.location.hash === "#addresses" || window.location.hash === "#address") {
     showAddressesMode();
   } else if (window.location.hash === "#password") {
     showPasswordMode();
+  } else if (window.location.hash === "#completed-orders" || window.location.hash === "#orders") {
+    showOrdersMode();
   }
 
   // Lắng nghe thay đổi hash trên URL từ thanh Navbar
@@ -155,6 +165,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       showAddressesMode();
     } else if (window.location.hash === "#password") {
       showPasswordMode();
+    } else if (window.location.hash === "#completed-orders" || window.location.hash === "#orders") {
+      showOrdersMode();
     } else {
       showViewMode();
     }
@@ -167,6 +179,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (navItemViewProfile) navItemViewProfile.classList.remove("active");
     if (navItemAddresses) navItemAddresses.classList.remove("active");
     if (navItemChangePwd) navItemChangePwd.classList.remove("active");
+    if (navItemOrders) navItemOrders.classList.remove("active");
   }
 
   function hideAllCards() {
@@ -174,6 +187,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (editProfileCard) editProfileCard.style.display = "none";
     if (passwordProfileCard) passwordProfileCard.style.display = "none";
     if (addressesProfileCard) addressesProfileCard.style.display = "none";
+    if (ordersProfileCard) ordersProfileCard.style.display = "none";
   }
 
   function showViewMode() {
@@ -237,6 +251,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (breadcrumbCurrentText) breadcrumbCurrentText.textContent = "Sổ địa chỉ nhận hàng";
   }
 
+  function showOrdersMode() {
+    hideAllCards();
+    resetNavActive();
+
+    if (ordersProfileCard) ordersProfileCard.style.display = "block";
+    if (navItemOrders) navItemOrders.classList.add("active");
+    if (breadcrumbCurrentText) breadcrumbCurrentText.textContent = "Lịch sử đơn mua";
+  }
+
   // Gắn sự kiện chuyển đổi trạng thái giao diện
   if (btnOpenEdit) btnOpenEdit.addEventListener("click", showEditMode);
   if (btnOpenPassword) btnOpenPassword.addEventListener("click", showPasswordMode);
@@ -247,6 +270,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     navItemViewProfile.addEventListener("click", (e) => {
       e.preventDefault();
       showViewMode();
+      window.location.hash = "";
     });
   }
 
@@ -254,6 +278,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     navItemAddresses.addEventListener("click", (e) => {
       e.preventDefault();
       showAddressesMode();
+      window.location.hash = "#addresses";
     });
   }
 
@@ -261,6 +286,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     navItemChangePwd.addEventListener("click", (e) => {
       e.preventDefault();
       showPasswordMode();
+      window.location.hash = "#password";
+    });
+  }
+
+  if (navItemOrders) {
+    navItemOrders.addEventListener("click", (e) => {
+      e.preventDefault();
+      showOrdersMode();
+      window.location.hash = "#completed-orders";
     });
   }
 
@@ -412,25 +446,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       } else if (currentUserData && Array.isArray(currentUserData.addresses) && currentUserData.addresses.length > 0) {
         userAddresses = currentUserData.addresses;
       } else {
-        userAddresses = list;
+        userAddresses = [];
       }
     } catch (err) {
       console.warn("Chưa gọi được API /auth/me/addresses, kiểm tra addresses trong currentUserData:", err);
-      if (currentUserData && Array.isArray(currentUserData.addresses)) {
+      if (currentUserData && Array.isArray(currentUserData.addresses) && currentUserData.addresses.length > 0) {
         userAddresses = currentUserData.addresses;
       } else {
-        // Mock mặc định nếu chưa có địa chỉ nào trong database
-        userAddresses = [
-          {
-            id: 1,
-            receiver_name: currentUserData?.full_name || "Nguyễn Văn A",
-            phone: currentUserData?.phone || "0987654321",
-            province: "Hà Nội",
-            ward: "Phường Quan Hoa, Quận Cầu Giấy",
-            street_detail: "Số 123 Đường Cầu Giấy",
-            is_default: 1
-          }
-        ];
+        userAddresses = [];
       }
     }
 
@@ -463,6 +486,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (overviewAddrBadge) {
         overviewAddrBadge.style.display = (defaultAddr.is_default === 1 || defaultAddr.is_default === true) ? "inline-flex" : "none";
       }
+      if (btnDeleteOverviewAddress) {
+        btnDeleteOverviewAddress.style.display = "inline-flex";
+      }
       if (btnEditOverviewAddress) {
         btnEditOverviewAddress.innerHTML = `
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -478,6 +504,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (overviewAddrStreet) overviewAddrStreet.textContent = "Bạn chưa lưu địa chỉ nhận hàng nào";
       if (overviewAddrLocation) overviewAddrLocation.textContent = "Vui lòng bấm nút để thêm địa chỉ giao hàng";
       if (overviewAddrBadge) overviewAddrBadge.style.display = "none";
+      if (btnDeleteOverviewAddress) {
+        btnDeleteOverviewAddress.style.display = "none";
+      }
       if (btnEditOverviewAddress) {
         btnEditOverviewAddress.innerHTML = `
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -501,6 +530,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         openEditAddressModal(defaultAddr);
       } else {
         openAddAddressModal();
+      }
+    });
+  }
+
+  // Sự kiện nút xóa địa chỉ ở khối thông tin cá nhân
+  if (btnDeleteOverviewAddress) {
+    btnDeleteOverviewAddress.addEventListener("click", () => {
+      const defaultAddr = userAddresses && userAddresses.length > 0
+        ? (userAddresses.find(a => a.is_default === 1 || a.is_default === true) || userAddresses[0])
+        : null;
+
+      if (defaultAddr) {
+        confirmDeleteAddress(defaultAddr);
       }
     });
   }
@@ -571,12 +613,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
                 Chỉnh sửa
               </button>
-              ${!isDefault ? `
-              <button type="button" class="btn-addr-link danger" data-action="delete" data-id="${addr.id}">
+              <button type="button" class="btn-addr-link danger" data-action="delete" data-id="${addr.id}" title="Xóa địa chỉ này">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                 Xóa
               </button>
-              ` : ''}
             </div>
             ${defaultBtn}
           </div>
@@ -626,6 +666,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     addrModalTitle.textContent = "Thêm địa chỉ nhận hàng mới";
     addrModalDesc.textContent = "Vui lòng nhập thông tin người nhận và địa chỉ giao hàng";
     btnSaveAddrText.textContent = "Lưu địa chỉ";
+    if (btnDeleteAddrModal) btnDeleteAddrModal.style.display = "none";
 
     // Giá trị mặc định
     addrFormName.value = currentUserData?.full_name || "";
@@ -653,6 +694,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     addrModalTitle.textContent = "Chỉnh sửa địa chỉ nhận hàng";
     addrModalDesc.textContent = "Cập nhật lại thông tin người nhận hoặc địa chỉ chi tiết";
     btnSaveAddrText.textContent = "Lưu thay đổi";
+
+    if (btnDeleteAddrModal) {
+      btnDeleteAddrModal.style.display = "inline-flex";
+      btnDeleteAddrModal.onclick = () => {
+        closeAddressModal();
+        confirmDeleteAddress(addr);
+      };
+    }
 
     addrFormName.value = addr.receiver_name || "";
     addrFormPhone.value = addr.phone || "";
@@ -806,16 +855,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Xóa địa chỉ
   function confirmDeleteAddress(addr) {
-    const isDefault = addr.is_default === 1 || addr.is_default === true;
-    if (isDefault && userAddresses.length > 1) {
-      showToast("Không thể xóa địa chỉ mặc định. Vui lòng thiết lập địa chỉ khác làm mặc định trước.", "warning");
-      return;
-    }
+    if (!addr) return;
+    const addrDesc = [addr.street_detail, addr.ward, addr.province].filter(Boolean).join(", ");
+    const confirmMsg = `Bạn có chắc chắn muốn xóa địa chỉ của "${addr.receiver_name}" (${addrDesc || addr.phone}) không?`;
 
     if (typeof showConfirmModal === "function") {
       showConfirmModal({
         title: "Xác nhận xóa địa chỉ",
-        message: `Bạn có chắc chắn muốn xóa địa chỉ của "${addr.receiver_name}" (${addr.street_detail}) không?`,
+        message: confirmMsg,
         confirmText: "Xóa địa chỉ",
         cancelText: "Hủy bỏ",
         type: "danger",
@@ -824,7 +871,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       });
     } else {
-      if (confirm(`Bạn có chắc chắn muốn xóa địa chỉ của "${addr.receiver_name}"?`)) {
+      if (confirm(confirmMsg)) {
         executeDeleteAddress(addr.id);
       }
     }
@@ -838,11 +885,36 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.warn("API DELETE address chưa phản hồi, xóa cục bộ:", errApi);
       }
 
-      userAddresses = userAddresses.filter(a => a.id !== id);
+      userAddresses = userAddresses.filter(a => String(a.id) !== String(id));
       // Nếu địa chỉ còn lại chưa có mặc định thì gán địa chỉ đầu tiên
-      if (userAddresses.length > 0 && !userAddresses.some(a => a.is_default === 1)) {
+      if (userAddresses.length > 0 && !userAddresses.some(a => a.is_default === 1 || a.is_default === true)) {
         userAddresses[0].is_default = 1;
+        try {
+          await api.patch(`/auth/me/addresses/${userAddresses[0].id}/default`);
+        } catch (_) {}
       }
+
+      if (currentUserData) {
+        currentUserData.addresses = userAddresses;
+      }
+
+      // Đồng bộ thông tin địa chỉ với giỏ hàng
+      try {
+        if (userAddresses.length === 0) {
+          localStorage.removeItem("shopease_shipping_info");
+        } else {
+          const def = userAddresses.find(a => a.is_default === 1 || a.is_default === true) || userAddresses[0];
+          localStorage.setItem("shopease_shipping_info", JSON.stringify({
+            name: def.receiver_name,
+            phone: def.phone,
+            province: def.province,
+            district: def.ward,
+            street: def.street_detail,
+            address: [def.street_detail, def.ward, def.province].filter(Boolean).join(", "),
+            is_default: true
+          }));
+        }
+      } catch (_) {}
 
       updateAddressCounters();
       renderAddressesList(userAddresses);
@@ -1435,5 +1507,202 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.error("Lỗi quy đổi voucher:", err);
       showToast("Không thể quy đổi: " + (err.message || "Lỗi kết nối máy chủ"), "error");
     }
+  }
+
+  // ==========================================================
+  // HÀM TẢI & HIỂN THỊ LỊCH SỬ ĐƠN MUA ĐÃ HOÀN THÀNH
+  // ==========================================================
+  async function loadCompletedOrders() {
+    const container = document.getElementById("completed-orders-container");
+    const countBadge = document.getElementById("completed-orders-count-badge");
+    const navOrdersBadge = document.getElementById("nav-orders-count-badge");
+
+    try {
+      let allOrders = [];
+      try {
+        const res = await api.get("/orders/my", { page: 1, page_size: 50 });
+        allOrders = res?.items || (Array.isArray(res) ? res : []);
+      } catch (errApi) {
+        console.warn("Không tải được đơn hàng từ API, kiểm tra dữ liệu demo/localStorage:", errApi);
+        try {
+          allOrders = JSON.parse(localStorage.getItem("shopease_orders") || "[]");
+        } catch (_) {}
+      }
+
+      function isCompletedStatus(status) {
+        if (!status) return false;
+        const s = String(status).toLowerCase().trim();
+        return (
+          s.includes("hoàn thành") ||
+          s.includes("completed") ||
+          s.includes("delivered") ||
+          s.includes("thành công") ||
+          s.includes("đã giao")
+        );
+      }
+
+      const completedOrders = (allOrders || []).filter(o => isCompletedStatus(o.status));
+
+      if (countBadge) {
+        countBadge.textContent = `${completedOrders.length} đơn`;
+      }
+      if (navOrdersBadge) {
+        navOrdersBadge.textContent = completedOrders.length;
+        navOrdersBadge.style.display = completedOrders.length > 0 ? "inline-flex" : "none";
+      }
+
+      if (!container) return;
+
+      if (completedOrders.length === 0) {
+        container.innerHTML = `
+          <div class="completed-orders-empty">
+            <div class="empty-icon-box">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+                <path d="M3 6h18"/>
+                <path d="M16 10a4 4 0 0 1-8 0"/>
+              </svg>
+            </div>
+            <p class="empty-title">Chưa có đơn mua nào hoàn thành</p>
+            <p class="empty-sub">Khi đơn hàng được giao thành công, thông tin sản phẩm và chi tiết đơn hàng sẽ tự động hiển thị tại đây để bạn tiện theo dõi và mua lại.</p>
+            <a href="customer-home.html" class="btn-profile-primary btn-sm" style="text-decoration: none; margin-top: 14px; display: inline-flex;">
+              Khám phá sản phẩm ngay
+            </a>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = completedOrders.map(order => {
+        const orderDate = order.completed_at || order.created_at || new Date().toISOString();
+        const formattedDate = typeof formatDateTime === "function" ? formatDateTime(orderDate) : orderDate;
+        const formattedTotal = typeof formatMoney === "function" ? formatMoney(order.total_amount) : `${order.total_amount} ₫`;
+        const paymentLabel = (order.payment_method === "BANK_TRANSFER" || order.payment_method === "chuyển khoản")
+          ? "Chuyển khoản QR"
+          : "COD khi nhận hàng";
+
+        const items = (order.items && order.items.length > 0) ? order.items : [
+          {
+            product_name: "Sản phẩm đặt mua tại ShopEase",
+            quantity: 1,
+            unit_price: order.total_amount || 0,
+            subtotal: order.total_amount || 0,
+            image_url: null
+          }
+        ];
+
+        const itemsHtml = items.map(it => {
+          let itImg = it.image_url;
+          if (!itImg) itImg = "../assets/images/logo_shop.svg";
+          else if (!itImg.startsWith("http") && !itImg.startsWith("../")) itImg = `../${itImg}`;
+
+          const itPrice = typeof formatMoney === "function" ? formatMoney(it.unit_price) : `${it.unit_price} ₫`;
+          const itSub = typeof formatMoney === "function" ? formatMoney(it.subtotal || it.unit_price * it.quantity) : `${it.subtotal} ₫`;
+
+          return `
+            <div class="completed-item-row">
+              <img src="${escapeHTML(itImg)}" alt="${escapeHTML(it.product_name)}" class="completed-item-thumb" onerror="this.src='../assets/images/logo_shop.svg'">
+              <div class="completed-item-info">
+                <h4 class="completed-item-name" title="${escapeHTML(it.product_name)}">${escapeHTML(it.product_name)}</h4>
+                <div class="completed-item-qty">Số lượng: <strong>${it.quantity}</strong> × ${itPrice}</div>
+              </div>
+              <div class="completed-item-subtotal">${itSub}</div>
+            </div>
+          `;
+        }).join("");
+
+        return `
+          <div class="completed-order-card" data-order-id="${order.id}">
+            <div class="completed-order-top">
+              <div class="completed-order-meta">
+                <span class="order-code-tag">#${escapeHTML(order.order_code || `DH-${order.id}`)}</span>
+                <span class="order-date-text">📅 ${formattedDate}</span>
+              </div>
+              <span class="badge-status-completed">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Hoàn thành
+              </span>
+            </div>
+
+            <div class="completed-order-items">
+              ${itemsHtml}
+            </div>
+
+            <div class="completed-order-bottom">
+              <div class="completed-order-total">
+                Thành tiền: <strong>${formattedTotal}</strong>
+              </div>
+              <div class="completed-order-actions">
+                <button type="button" class="btn-order-reorder btn-profile-reorder" data-order-id="${order.id}">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                  Mua lại
+                </button>
+                <a href="my_orders.html?orderId=${order.id}" class="btn-order-detail-link" title="Xem chi tiết đơn hàng">
+                  Chi tiết →
+                </a>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      // Gắn sự kiện Mua lại đơn hàng
+      setupCompletedOrdersReorder(completedOrders);
+
+    } catch (err) {
+      console.error("Lỗi khi tải lịch sử đơn mua hoàn thành:", err);
+      if (container) {
+        container.innerHTML = `
+          <div style="padding: 20px; text-align: center; color: #ef4444; font-size: 13.5px;">
+            Không thể tải lịch sử đơn mua đã hoàn thành. Vui lòng thử lại sau.
+          </div>
+        `;
+      }
+    }
+  }
+
+  function setupCompletedOrdersReorder(orders) {
+    const reorderBtns = document.querySelectorAll(".btn-profile-reorder");
+    reorderBtns.forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const orderId = btn.getAttribute("data-order-id");
+        const order = orders.find(o => String(o.id) === String(orderId));
+        if (!order || !order.items || order.items.length === 0) {
+          if (typeof showToast === "function") showToast("Đơn hàng không có sản phẩm để mua lại.", "warning");
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = `Đang thêm vào giỏ...`;
+
+        try {
+          const addedProductIds = [];
+          // Thêm các sản phẩm vào giỏ hàng
+          for (const it of order.items) {
+            try {
+              if (typeof api !== "undefined" && api.post) {
+                await api.post("/cart/items", { product_id: it.product_id, quantity: it.quantity || 1 });
+                addedProductIds.push(it.product_id);
+              }
+            } catch (_) {}
+          }
+
+          if (addedProductIds.length > 0) {
+            sessionStorage.setItem("reorder_product_ids", JSON.stringify(addedProductIds));
+          }
+
+          if (typeof showToast === "function") {
+            showToast("Đã thêm toàn bộ sản phẩm vào giỏ hàng! Đang mở giỏ hàng...", "success");
+          }
+          setTimeout(() => {
+            window.location.href = "cart.html";
+          }, 800);
+        } catch (err) {
+          if (typeof showToast === "function") showToast("Không thể mua lại: " + err.message, "error");
+          btn.disabled = false;
+          btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg> Mua lại`;
+        }
+      });
+    });
   }
 });

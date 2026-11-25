@@ -927,10 +927,5 @@
       loadCategories(),
       loadProducts(),
     ]);
-
-    // Tự động focus ô tìm kiếm để sẵn sàng gõ mã/tên sản phẩm
-    setTimeout(() => {
-      if (searchInput) searchInput.focus();
-    }, 400);
   });
 })();

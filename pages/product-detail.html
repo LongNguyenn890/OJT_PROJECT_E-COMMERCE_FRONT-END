@@ -342,15 +342,42 @@
                   <span id="review-rating-label">Chọn số sao</span>
                 </div>
                 <input type="hidden" id="review-rating-input" value="">
-                <label class="review-comment-label" for="review-comment-input">Nhận xét</label>
-                <textarea id="review-comment-input" rows="4" maxlength="1000" required placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm"></textarea>
-                <label class="review-comment-label review-image-label" for="review-image-input">Ảnh đính kèm <span>(không bắt buộc)</span></label>
-                <input id="review-image-input" class="review-image-input" type="file" accept="image/jpeg,image/png,image/webp">
-                <small class="review-image-hint">JPG, PNG hoặc WEBP, tối đa 5MB.</small>
-                <div id="review-image-preview-wrap" class="review-image-preview-wrap" hidden>
-                  <img id="review-image-preview" alt="Xem trước ảnh đánh giá">
-                  <span id="review-image-name"></span>
-                  <button id="review-image-remove" class="review-image-remove" type="button" aria-label="Bỏ ảnh đính kèm">Bỏ ảnh</button>
+                <label class="review-comment-label" for="review-comment-input">
+                  Nhận xét <span>(không bắt buộc)</span>
+                </label>
+                <textarea id="review-comment-input" rows="4" maxlength="1000" placeholder="Chia sẻ cảm nhận, trải nghiệm của bạn về sản phẩm (không bắt buộc)…"></textarea>
+                
+                <label class="review-comment-label review-image-label">
+                  Ảnh đính kèm <span>(không bắt buộc)</span>
+                </label>
+                <div class="review-upload-area" id="review-upload-dropzone">
+                  <input id="review-image-input" class="review-image-file-hidden" type="file" accept="image/jpeg,image/png,image/webp">
+                  <div class="review-upload-placeholder" id="review-upload-placeholder">
+                    <div class="review-upload-icon">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                      </svg>
+                    </div>
+                    <div class="review-upload-text">
+                      <span class="upload-action-text">Chọn ảnh thực tế</span> hoặc kéo thả vào đây
+                    </div>
+                    <div class="review-upload-subtext">Hỗ trợ JPG, PNG, WEBP tối đa 5MB</div>
+                  </div>
+
+                  <div id="review-image-preview-wrap" class="review-image-preview-card" hidden>
+                    <div class="review-preview-img-container">
+                      <img id="review-image-preview" alt="Xem trước ảnh đánh giá">
+                      <button id="review-image-remove" class="review-preview-remove-btn" type="button" title="Xóa ảnh này" aria-label="Bỏ ảnh đính kèm">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                      </button>
+                    </div>
+                    <div class="review-preview-info">
+                      <span id="review-image-name" class="review-file-name"></span>
+                      <span class="review-file-status">Đã tải lên sẵn sàng</span>
+                    </div>
+                  </div>
                 </div>
                 <div class="review-form-footer">
                   <span id="review-form-message" role="status"></span>
