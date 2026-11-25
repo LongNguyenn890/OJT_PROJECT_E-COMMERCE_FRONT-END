@@ -11,6 +11,6 @@ const isLocal =
 const CONFIG = {
   API_BASE_URL: isLocal
     ? "http://127.0.0.1:8000/api"
-    : "https://shopeasebackend-18ff7jr1t-ptit4.vercel.app/api",
+    : "https://ojt-project-e-commerce-back-end.vercel.app/api",
   APP_NAME: "ShopEase",
 };
