@@ -70,8 +70,11 @@
   function resolveImgUrl(url) {
     if (!url) return "../assets/images/logo_shop.svg";
     if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) return url;
+    const origin = (typeof CONFIG !== "undefined" && CONFIG.API_BASE_URL)
+      ? CONFIG.API_BASE_URL.replace(/\/api\/?$/, "")
+      : "http://127.0.0.1:8000";
     if (url.startsWith("/")) {
-      return `http://127.0.0.1:8000${url}`;
+      return `${origin}${url}`;
     }
     return `../${url}`;
   }
